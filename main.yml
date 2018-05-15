@@ -1,0 +1,109 @@
+---
+
+- name: vCloudDirectorAnsible
+  hosts: 10.172.158.140
+  environment:
+    env_user: terraformadmin
+    env_password: klj3lkj4lkf22ZX
+    env_host: csa-sandbox.eng.vmware.com
+    env_org: Terraform
+    env_api_version: 30.0
+    env_verify_ssl_certs: false
+  tasks:
+    # - name: create catalog
+    #   vcd_catalog:
+    #     name: test_catalog_100
+    #   register: output
+    - name: fetch vapps
+      no_log: False
+      vcd_fetch_vapp:
+        vdc: Terraform_VDC
+      register: output
+    # - name: create vapp vm
+    #   no_log: False
+    #   vcd_vapp_vm:
+    #     target_vm_name: "web1"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     source_vapp: "web"
+    #     source_vm_name: "web1" 
+    #     hostname: "vcdcell"
+    #     vmpassword: "rootpass" 
+    #     vmpassword_auto: "false"
+    #     vmpassword_reset: "false"
+    #     ip_allocation_mode: "DHCP"
+    #     state: "present"
+    #     all_eulas_accepted: "true"
+    #     # storage_profile: "Standard"
+    #     network: "web2Network"
+    #   register: output
+    # - name: delete vapp vm
+    #   vcd_vapp_vm:
+    #     source_vapp: "web2"
+    #     target_vm_name: "web1"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     state: "absent"
+    #   register: output
+    # - name: undeploy vapp vm
+    #   vcd_vapp_vm:
+    #     source_vapp: "web2"
+    #     target_vm_name: "web1"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     state: "undeployed"
+    #   register: output
+    # - name: power on vapp vm
+    #   vcd_vapp_vm:
+    #     source_vapp: "web2"
+    #     target_vm_name: "web1"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     operation: "poweron"
+    #   register: output
+    # - name: power off vapp vm
+    #   vcd_vapp_vm:
+    #     source_vapp: "web2"
+    #     target_vm_name: "web1"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     operation: "poweroff"
+    #   register: output
+    # - name: modify cpu vapp vm
+    #   vcd_vapp_vm:
+    #     source_vapp: "web2"
+    #     target_vm_name: "web1"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     virtual_cpus: 2
+    #     cores_per_socket: 2
+    #     operation: "modifycpu"
+    #   register: output
+    # - name: modify memory vapp vm
+    #   vcd_vapp_vm:
+    #     source_vapp: "web2"
+    #     target_vm_name: "web1"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     memory: 4096
+    #     operation: "modifymemory"
+    #   register: output
+    # - name: reload vapp vm
+    #   vcd_vapp_vm:
+    #     source_vapp: "web2"
+    #     target_vm_name: "web1"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     operation: "reloadvm"
+    #   register: output
+    - name: dump test output
+      debug:
+        msg: '{{ output }}'
