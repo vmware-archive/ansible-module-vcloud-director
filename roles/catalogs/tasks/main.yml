@@ -1,0 +1,12 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+---
+# tasks file for roles/catalogs
+- name: create catalog
+  vcd_catalog:
+    name: "{{ catalog_name }}"
+  register: output
+- assert:
+    that:
+      - "'Catalog {{ catalog_name }} has been created!' in output.msg"
