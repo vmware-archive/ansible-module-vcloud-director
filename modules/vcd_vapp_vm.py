@@ -1,4 +1,7 @@
-#!/usr/bin/python
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+# !/usr/bin/python
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',

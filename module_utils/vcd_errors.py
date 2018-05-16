@@ -1,11 +1,16 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
 
 class VCDVappCreationError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
+
 class VCDLoginError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
+
 
 class VDCNotFoundError(Exception):
     def __init__(self, msg):

@@ -1,3 +1,5 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
 
 import os
 from pyvcloud.vcd.client import Client
