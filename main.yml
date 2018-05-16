@@ -17,11 +17,31 @@
     #   vcd_catalog:
     #     name: test_catalog_100
     #   register: output
-    - name: fetch vapps
-      no_log: False
-      vcd_fetch_vapp:
-        vdc: Terraform_VDC
-      register: output
+    # - name: fetch vapps
+    #   no_log: False
+    #   vcd_fetch_vapp:
+    #     vdc: Terraform_VDC
+    #   register: output
+    # - name: create vapp vm
+    #   no_log: False
+    #   vcd_vapp_vm:
+    #     target_vm_name: "web2"
+    #     target_vapp: "web2"
+    #     source_vdc: "Terraform_VDC"
+    #     target_vdc: "Terraform_VDC"
+    #     source_catalog_name: "test_catalog"
+    #     source_template_name: "centos7"
+    #     source_vm_name: "CentOS7"
+    #     hostname: "vcdcell"
+    #     vmpassword: "rootpass" 
+    #     vmpassword_auto: "false"
+    #     vmpassword_reset: "false"
+    #     ip_allocation_mode: "DHCP"
+    #     state: "present"
+    #     all_eulas_accepted: "true"
+    #     # storage_profile: "Standard"
+    #     network: "web2Network"
+    #   register: output
     # - name: create vapp vm
     #   no_log: False
     #   vcd_vapp_vm:

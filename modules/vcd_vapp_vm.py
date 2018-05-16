@@ -170,6 +170,7 @@ VAPP_VM_STATES = ['present', 'absent', 'deployed', 'undeployed']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff',
                       'modifycpu', 'modifymemory', 'reloadvm']
 
+
 def vapp_vm_argument_spec():
     return dict(
         target_vm_name=dict(type='str', required=True),
@@ -214,8 +215,10 @@ def get_vapp_resource(module):
     org_resource = Org(client, resource=client.get_org())
 
     if source_vapp:
-        source_vdc_resource = VDC(client, resource=org_resource.get_vdc(source_vdc))
-        target_vdc_resource = VDC(client, resource=org_resource.get_vdc(target_vdc))
+        source_vdc_resource = VDC(
+            client, resource=org_resource.get_vdc(source_vdc))
+        target_vdc_resource = VDC(
+            client, resource=org_resource.get_vdc(target_vdc))
         source_vapp_resource_href = source_vdc_resource.get_resource_href(
             name=source_vapp, entity_type=EntityType.VAPP)
         target_vapp_resource_href = target_vdc_resource.get_resource_href(
@@ -224,25 +227,28 @@ def get_vapp_resource(module):
         target_vapp_resource = client.get_resource(target_vapp_resource_href)
 
     if source_catalog_name:
-        target_vdc_resource = VDC(client, resource=org_resource.get_vdc(target_vdc))
+        target_vdc_resource = VDC(
+            client, resource=org_resource.get_vdc(target_vdc))
         target_vapp_resource = target_vdc_resource.get_vapp(target_vapp)
-        catalog_item = org.get_catalog_item(source_catalog_name, source_template_name)
-        source_vapp_resource = client.get_resource(catalog_item.Entity.get('href'))
+        catalog_item = org_resource.get_catalog_item(
+            source_catalog_name, source_template_name)
+        source_vapp_resource = client.get_resource(
+            catalog_item.Entity.get('href'))
 
     return source_vapp_resource, target_vapp_resource
 
 
 def execute_task(task_monitor, task):
     task_state = task_monitor.wait_for_status(
-                    task=task,
-                    timeout=60,
-                    poll_frequency=2,
-                    fail_on_statuses=None,
-                    expected_target_statuses=[
-                        TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
-                        TaskStatus.CANCELED
-                    ],
-                    callback=None)
+        task=task,
+        timeout=60,
+        poll_frequency=2,
+        fail_on_statuses=None,
+        expected_target_statuses=[
+            TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+            TaskStatus.CANCELED
+        ],
+        callback=None)
 
     task_status = task_state.get('status')
     if task_status != TaskStatus.SUCCESS.value:
@@ -259,15 +265,13 @@ def add_vms(module, target_vapp, source_vapp_resource):
     vmpassword = module.params.get('vmpassword')
     vmpassword_auto = module.params.get('vmpassword_auto')
     vmpassword_reset = module.params.get('vmpassword_reset')
-    # cust_script = module.params.get('cust_script')
     network = module.params.get('network')
-    storage_profile = module.params.get('storage_profile')
     all_eulas_accepted = module.params.get('all_eulas_accepted')
     power_on = module.params.get('power_on')
     ip_allocation_mode = module.params.get('ip_allocation_mode')
-    memory = module.params.get('memory', '4MB')
-    cores_per_socket = module.params.get('cores_per_socket')
-    virtual_cpus = module.params.get('virtual_cpus')
+
+    # cust_script = module.params.get('cust_script')
+    # storage_profile = module.params.get('storage_profile')
 
     specs = [{
         'source_vm_name': source_vm_name,
@@ -278,22 +282,25 @@ def add_vms(module, target_vapp, source_vapp_resource):
         'password_auto': vmpassword_auto,
         'password_reset': vmpassword_reset,
         'ip_allocation_mode': ip_allocation_mode,
-        # 'cust_script': cust_script,
         'network': network,
+        # 'cust_script': cust_script,
         # 'storage_profile': storage_profile
     }]
 
-    vm_operation_res = target_vapp.add_vms(specs, power_on=power_on,
+    vm_operation_res = target_vapp.add_vms(specs,
+                                           power_on=power_on,
                                            all_eulas_accepted=all_eulas_accepted)
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, vm_operation_res)
+
 
 def delete_vms(client, target_vapp, target_vm_name):
     vm_operation_res = target_vapp.delete_vms([target_vm_name])
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, vm_operation_res)
+
 
 def undeploy(client, target_vapp, target_vm_name):
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
@@ -312,10 +319,16 @@ def power_on(client, target_vapp, target_vm_name):
 
     return execute_task(task_monitor, power_on_response)
 
+
 def power_off(client, target_vapp, target_vm_name):
     return undeploy(client, target_vapp, target_vm_name)
 
-def modify_cpu(client, target_vapp, target_vm_name, virtual_cpus, cores_per_socket):
+
+def modify_cpu(client, params):
+    target_vapp = params['target_vapp']
+    target_vm_name = params['target_vm_name']
+    virtual_cpus = params['virtual_cpus']
+    cores_per_socket = params['cores_per_socket']
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
     undeploy(client, target_vapp, target_vm_name)
@@ -323,6 +336,7 @@ def modify_cpu(client, target_vapp, target_vm_name, virtual_cpus, cores_per_sock
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, modify_cpu_response)
+
 
 def modify_memory(client, target_vapp, target_vm_name, memory):
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
@@ -332,6 +346,7 @@ def modify_memory(client, target_vapp, target_vm_name, memory):
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, modify_memory_response)
+
 
 def reload_vm(client, target_vapp, target_vm_name):
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
@@ -343,55 +358,46 @@ def reload_vm(client, target_vapp, target_vm_name):
 def manage_states(module, target_vapp, source_vapp_resource):
     state = module.params.get('state')
     client = module.client
+    target_vm_name = module.params.get('target_vm_name')
     if state == "present":
         return add_vms(module, target_vapp, source_vapp_resource)
 
     if state == "absent":
-        target_vm_name = module.params.get('target_vm_name')
         undeploy(client, target_vapp, target_vm_name)
-        
-        return delete_vms(client, target_vapp, [target_vm_name])
+        return delete_vms(client, target_vapp, target_vm_name)
 
     if state == "deployed":
-        target_vm_name = module.params.get('target_vm_name')
-        
         return power_on(client, target_vapp, target_vm_name)
 
     if state == "undeployed":
-        target_vm_name = module.params.get('target_vm_name')
-        
         return undeploy(client, target_vapp, target_vm_name)
 
 
 def manage_operations(module, target_vapp):
     operation = module.params.get('operation')
     client = module.client
+    target_vm_name = module.params.get('target_vm_name')
+
     if operation == "poweron":
-        target_vm_name = module.params.get('target_vm_name')
-        
         return power_on(client, target_vapp, target_vm_name)
 
     if operation == "poweroff":
-        target_vm_name = module.params.get('target_vm_name')
-        
         return power_off(client, target_vapp, target_vm_name)
 
     if operation == "modifycpu":
-        target_vm_name = module.params.get('target_vm_name')
-        virtual_cpus = module.params.get('virtual_cpus')
-        cores_per_socket = module.params.get('cores_per_socket')
-        
-        return modify_cpu(client, target_vapp, target_vm_name, virtual_cpus, cores_per_socket)
+        params = dict()
+        params['target_vapp'] = target_vapp
+        params['target_vm_name'] = target_vm_name
+        params['virtual_cpus'] = module.params.get('virtual_cpus')
+        params['cores_per_socket'] = module.params.get('cores_per_socket')
+
+        return modify_cpu(client, params)
 
     if operation == "modifymemory":
-        target_vm_name = module.params.get('target_vm_name')
         memory = module.params.get('memory')
-        
         return modify_memory(client, target_vapp, target_vm_name, memory)
 
     if operation == "reloadvm":
-        target_vm_name = module.params.get('target_vm_name')
-        
         return reload_vm(client, target_vapp, target_vm_name)
 
 
@@ -405,13 +411,9 @@ def main():
                               supports_check_mode=True)
     try:
         source_vapp_resource, target_vapp_resource = get_vapp_resource(module)
-        if module.params.get('source_catalog'):
-            module['source_vm_name'] = module.params.get('source_template_name')
-
         target_vapp = VApp(module.client, resource=target_vapp_resource)
         manage_states(module, target_vapp, source_vapp_resource)
         manage_operations(module, target_vapp)
- 
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
