@@ -3,24 +3,24 @@
 # ansible-module-vcloud-director
 
 ## Overview
+ansible-module-vcloud-director is a set of ansible modules that manage a VMware vCloud Director instance.
 
 ## Try it out
 
 ### Prerequisites
 
-* Prereq 1
-* Prereq 2
-* Prereq 3
+* The [pyvcloud](https://github.com/vmware/pyvcloud) module is required. 
 
 ### Build & Run
 
-1. Step 1
-2. Step 2
-3. Step 3
+1. pip install --user pyvcloud
+2. git clone https://github.com/vwmare/ansible-module-vcloud-director
+3. cd ansible-module-vcloud-director
 
 ## Documentation
 
 ## Releases & Major Branches
+
 
 ## Contributing
 
@@ -30,3 +30,4 @@ questions about the CLA process, please refer to our [FAQ](https://cla.vmware.co
 refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
+[BSD-2 License](LICENSE.txt)
