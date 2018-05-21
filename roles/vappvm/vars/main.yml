@@ -3,3 +3,5 @@
 
 ---
 # vars file for roles/vappvm
+vapp_vm_1: "test_vapp_vm_1"
+vapp_vm_2: "test_vapp_vm_2"

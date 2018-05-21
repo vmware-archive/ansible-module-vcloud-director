@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 client: vcd_vapp_vm
-short_description: This client is to create virtual machines under provided
+short_description: This module is to create virtual machines under provided vapp
 version_added: "2.4"
 description:
-    - "This client is to to create virtual machines under provided vapp"
+    - "This module is to to create virtual machines under provided vapp"
 options:
     user:
         description:
@@ -99,8 +99,12 @@ options:
         required: false
     state:
         description:
-            - state of new virtual machines ('present'/'absent'/'deployed'/'undeployed')
-        required: true
+            - state of new virtual machines ('present'/'absent').One from state or operation has to be provided.
+        required: false
+    operation:
+        description:
+            - operations performed over new vapp ('poweron'/'poweroff'/'modifycpu'/'modifymemory'/'reloadvm').One from state or operation has to be provided.
+        required: false
     all_eulas_accepted:
         description:
             - "true" / "false"
@@ -164,9 +168,9 @@ from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.client import VcdErrorResponseException
-from ansible.module_utils.vcd_errors import VCDLoginError, VappVmCreateError
+from ansible.module_utils.vcd_errors import VappVmCreateError
 
-VAPP_VM_STATES = ['present', 'absent', 'deployed', 'undeployed']
+VAPP_VM_STATES = ['present', 'absent']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff',
                       'modifycpu', 'modifymemory', 'reloadvm']
 
@@ -188,12 +192,12 @@ def vapp_vm_argument_spec():
         cust_script=dict(type='str', required=False),
         network=dict(type='str', required=False),
         storage_profile=dict(type='str', required=False),
-        all_eulas_accepted=dict(type='bool', required=False, default=True),
-        ip_allocation_mode=dict(type='str', required=False, default='DHCP'),
-        virtual_cpus=dict(type='int', required=False, default=2),
-        cores_per_socket=dict(type='int', required=False, default=2),
-        memory=dict(type='str', required=False, default='4MB'),
-        power_on=dict(type='str', required=False, default=True),
+        all_eulas_accepted=dict(type='bool', required=False),
+        ip_allocation_mode=dict(type='str', required=False),
+        virtual_cpus=dict(type='int', required=False),
+        cores_per_socket=dict(type='int', required=False),
+        memory=dict(type='str', required=False),
+        power_on=dict(type='bool', required=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False)
     )
@@ -254,7 +258,7 @@ def execute_task(task_monitor, task):
     if task_status != TaskStatus.SUCCESS.value:
         raise VappVmCreateError(etree.tostring(task_state, pretty_print=True))
 
-    return 'operation status : {0} '.format(task_status)
+    return 1
 
 
 def add_vms(module, target_vapp, source_vapp_resource):
@@ -266,8 +270,8 @@ def add_vms(module, target_vapp, source_vapp_resource):
     vmpassword_auto = module.params.get('vmpassword_auto')
     vmpassword_reset = module.params.get('vmpassword_reset')
     network = module.params.get('network')
-    all_eulas_accepted = module.params.get('all_eulas_accepted')
-    power_on = module.params.get('power_on')
+    all_eulas_accepted = module.params.get('all_eulas_accepted', True)
+    power_on = module.params.get('power_on', True)
     ip_allocation_mode = module.params.get('ip_allocation_mode')
 
     # cust_script = module.params.get('cust_script')
@@ -295,23 +299,19 @@ def add_vms(module, target_vapp, source_vapp_resource):
     return execute_task(task_monitor, vm_operation_res)
 
 
-def delete_vms(client, target_vapp, target_vm_name):
+def delete_vms(module, target_vapp):
+    client = module.client
+    target_vm_name = module.params.get('target_vm_name')
+    power_off(module, target_vapp)
     vm_operation_res = target_vapp.delete_vms([target_vm_name])
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, vm_operation_res)
 
 
-def undeploy(client, target_vapp, target_vm_name):
-    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-    vm = VM(client, resource=vapp_vm_resource)
-    vm_operation_res = vm.undeploy()
-    task_monitor = client.get_task_monitor()
-
-    return execute_task(task_monitor, vm_operation_res)
-
-
-def power_on(client, target_vapp, target_vm_name):
+def power_on(module, target_vapp):
+    client = module.client
+    target_vm_name = module.params.get('target_vm_name')
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
     power_on_response = vm.power_on()
@@ -320,35 +320,47 @@ def power_on(client, target_vapp, target_vm_name):
     return execute_task(task_monitor, power_on_response)
 
 
-def power_off(client, target_vapp, target_vm_name):
-    return undeploy(client, target_vapp, target_vm_name)
-
-
-def modify_cpu(client, params):
-    target_vapp = params['target_vapp']
-    target_vm_name = params['target_vm_name']
-    virtual_cpus = params['virtual_cpus']
-    cores_per_socket = params['cores_per_socket']
+def power_off(module, target_vapp):
+    client = module.client
+    target_vm_name = module.params.get('target_vm_name')
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
-    undeploy(client, target_vapp, target_vm_name)
+    vm_operation_res = vm.undeploy()
+    task_monitor = client.get_task_monitor()
+
+    return execute_task(task_monitor, vm_operation_res)
+
+
+def modify_cpu(module, target_vapp):
+    client = module.client
+    target_vm_name = module.params.get('target_vm_name')
+    virtual_cpus = module.params.get('virtual_cpus')
+    cores_per_socket = module.params.get('cores_per_socket')
+    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
+    vm = VM(client, resource=vapp_vm_resource)
+    power_off(module, target_vapp)
     modify_cpu_response = vm.modify_cpu(virtual_cpus, cores_per_socket)
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, modify_cpu_response)
 
 
-def modify_memory(client, target_vapp, target_vm_name, memory):
+def modify_memory(module, target_vapp):
+    client = module.client
+    target_vm_name = module.params.get('target_vm_name')
+    memory = module.params.get('memory')
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
-    undeploy(client, target_vapp, target_vm_name)
+    power_off(module, target_vapp)
     modify_memory_response = vm.modify_memory(memory)
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, modify_memory_response)
 
 
-def reload_vm(client, target_vapp, target_vm_name):
+def reload_vm(module, target_vapp):
+    client = module.client
+    target_vm_name = module.params.get('target_vm_name')
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
 
@@ -357,48 +369,38 @@ def reload_vm(client, target_vapp, target_vm_name):
 
 def manage_states(module, target_vapp, source_vapp_resource):
     state = module.params.get('state')
-    client = module.client
     target_vm_name = module.params.get('target_vm_name')
     if state == "present":
-        return add_vms(module, target_vapp, source_vapp_resource)
+        add_vms(module, target_vapp, source_vapp_resource)
+        return 'Vapp VM {} has been created.'.format(target_vm_name)
 
     if state == "absent":
-        undeploy(client, target_vapp, target_vm_name)
-        return delete_vms(client, target_vapp, target_vm_name)
-
-    if state == "deployed":
-        return power_on(client, target_vapp, target_vm_name)
-
-    if state == "undeployed":
-        return undeploy(client, target_vapp, target_vm_name)
+        delete_vms(module, target_vapp)
+        return 'Vapp VM {} has been deleted.'.format(target_vm_name)
 
 
 def manage_operations(module, target_vapp):
     operation = module.params.get('operation')
-    client = module.client
     target_vm_name = module.params.get('target_vm_name')
-
     if operation == "poweron":
-        return power_on(client, target_vapp, target_vm_name)
+        power_on(module, target_vapp)
+        return 'Vapp VM {} has been powered on.'.format(target_vm_name)
 
     if operation == "poweroff":
-        return power_off(client, target_vapp, target_vm_name)
+        power_off(module, target_vapp)
+        return 'Vapp VM {} has been powered off.'.format(target_vm_name)
 
     if operation == "modifycpu":
-        params = dict()
-        params['target_vapp'] = target_vapp
-        params['target_vm_name'] = target_vm_name
-        params['virtual_cpus'] = module.params.get('virtual_cpus')
-        params['cores_per_socket'] = module.params.get('cores_per_socket')
-
-        return modify_cpu(client, params)
+        modify_cpu(module, target_vapp)
+        return 'Vapp VM {} has been updated.'.format(target_vm_name)
 
     if operation == "modifymemory":
-        memory = module.params.get('memory')
-        return modify_memory(client, target_vapp, target_vm_name, memory)
+        modify_memory(module, target_vapp)
+        return 'Vapp VM {} has been updated.'.format(target_vm_name)
 
     if operation == "reloadvm":
-        return reload_vm(client, target_vapp, target_vm_name)
+        reload_vm(module, target_vapp)
+        return 'Vapp VM {} has been reloaded.'.format(target_vm_name)
 
 
 def main():
@@ -412,13 +414,17 @@ def main():
     try:
         source_vapp_resource, target_vapp_resource = get_vapp_resource(module)
         target_vapp = VApp(module.client, resource=target_vapp_resource)
-        manage_states(module, target_vapp, source_vapp_resource)
-        manage_operations(module, target_vapp)
+
+        if module.params.get('state'):
+            response['msg'] = manage_states(module, target_vapp, source_vapp_resource)
+        elif module.params.get('operation'):
+            response['msg'] = manage_operations(module, target_vapp)
+        else:
+            raise Exception('One of from state/operation should be provided.')
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
 
-    response['msg'] = "Operation Successful!"
     module.exit_json(**response)
 
 

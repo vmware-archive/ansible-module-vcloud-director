@@ -8,10 +8,11 @@
   vcd_fetch_vapp:
     vdc: Terraform_VDC
   register: output
-- name: create vapp vm
+
+- name: create vapp vm "{{ vapp_vm_1 }}" from catalog
   no_log: False
   vcd_vapp_vm:
-    target_vm_name: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
@@ -24,14 +25,20 @@
     vmpassword_reset: "false"
     ip_allocation_mode: "DHCP"
     state: "present"
+    power_on: False
     all_eulas_accepted: "true"
     # storage_profile: "Standard"
     network: "web2Network"
   register: output
-- name: create vapp vm
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been created.' in output.msg"
+
+- name: create vapp vm "{{ vapp_vm_2 }}" from vapp
   no_log: False
   vcd_vapp_vm:
-    target_vm_name: "web1"
+    target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
@@ -43,50 +50,76 @@
     vmpassword_reset: "false"
     ip_allocation_mode: "DHCP"
     state: "present"
+    power_on: False
     all_eulas_accepted: "true"
     # storage_profile: "Standard"
     network: "web2Network"
   register: output
-- name: delete vapp vm
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been created.' in output.msg"
+
+- name: power off "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
     source_vapp: "web2"
-    target_vm_name: "web1"
-    target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
-    target_vdc: "Terraform_VDC"
-    state: "absent"
-  register: output
-- name: undeploy vapp vm
-  vcd_vapp_vm:
-    source_vapp: "web2"
-    target_vm_name: "web1"
-    target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
-    target_vdc: "Terraform_VDC"
-    state: "undeployed"
-  register: output
-- name: power on vapp vm
-  vcd_vapp_vm:
-    source_vapp: "web2"
-    target_vm_name: "web1"
-    target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
-    target_vdc: "Terraform_VDC"
-    operation: "poweron"
-  register: output
-- name: power off vapp vm
-  vcd_vapp_vm:
-    source_vapp: "web2"
-    target_vm_name: "web1"
+    target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "poweroff"
   register: output
-- name: modify cpu vapp vm
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been powered off.' in output.msg"
+
+- name: power off "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
     source_vapp: "web2"
-    target_vm_name: "web1"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "poweroff"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been powered off.' in output.msg"
+
+- name: power on "{{ vapp_vm_1 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "poweron"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been powered on.' in output.msg"
+
+- name: power on "{{ vapp_vm_2 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "poweron"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been powered on.' in output.msg"
+
+- name: modify "{{ vapp_vm_1 }}" cpu vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
@@ -94,25 +127,165 @@
     cores_per_socket: 2
     operation: "modifycpu"
   register: output
-- name: modify memory vapp vm
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been updated.' in output.msg"
+
+- name: modify "{{ vapp_vm_2 }}" cpu vapp vm
   vcd_vapp_vm:
     source_vapp: "web2"
-    target_vm_name: "web1"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    virtual_cpus: 2
+    cores_per_socket: 2
+    operation: "modifycpu"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been updated.' in output.msg"
+
+- name: power on "{{ vapp_vm_1 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "poweron"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been powered on.' in output.msg"
+
+- name: power on "{{ vapp_vm_2 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "poweron"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been powered on.' in output.msg"
+
+- name: modify "{{ vapp_vm_1 }}" memory vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     memory: 4096
     operation: "modifymemory"
   register: output
-- name: reload vapp vm
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been updated.' in output.msg"
+
+- name: modify "{{ vapp_vm_2 }}" memory vapp vm
   vcd_vapp_vm:
     source_vapp: "web2"
-    target_vm_name: "web1"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    memory: 4096
+    operation: "modifymemory"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been updated.' in output.msg"
+
+- name: reload "{{ vapp_vm_1 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "reloadvm"
   register: output
-- name: dump test output
-  debug:
-    msg: '{{ output }}'
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been reloaded.' in output.msg"
+
+- name: reload "{{ vapp_vm_2 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "reloadvm"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been reloaded.' in output.msg"
+
+- name: power on "{{ vapp_vm_1 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "poweron"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been powered on.' in output.msg"
+
+- name: power on "{{ vapp_vm_2 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "poweron"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been powered on.' in output.msg"
+
+- name: delete "{{ vapp_vm_1 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    state: "absent"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been deleted.' in output.msg"
+
+- name: delete "{{ vapp_vm_2 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    state: "absent"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been deleted.' in output.msg"

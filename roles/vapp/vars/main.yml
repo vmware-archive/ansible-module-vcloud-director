@@ -1,0 +1,3 @@
+---
+# vars file for roles/vapp
+vapp_name: "test_vapp_100"
