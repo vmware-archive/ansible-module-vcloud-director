@@ -167,12 +167,14 @@ from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.client import VcdErrorResponseException
+from pyvcloud.vcd.client import VcdErrorResponseException, MissingLinkException
 from ansible.module_utils.vcd_errors import VappVmCreateError
+
 
 VAPP_VM_STATES = ['present', 'absent']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff',
-                      'modifycpu', 'modifymemory', 'reloadvm']
+                      'modifycpu', 'modifymemory', 'reloadvm',
+                      'deploy', 'undeploy']
 
 
 def vapp_vm_argument_spec():
@@ -302,7 +304,8 @@ def add_vms(module, target_vapp, source_vapp_resource):
 def delete_vms(module, target_vapp):
     client = module.client
     target_vm_name = module.params.get('target_vm_name')
-    power_off(module, target_vapp)
+
+    undeploy(module, target_vapp)
     vm_operation_res = target_vapp.delete_vms([target_vm_name])
     task_monitor = client.get_task_monitor()
 
@@ -310,25 +313,35 @@ def delete_vms(module, target_vapp):
 
 
 def power_on(module, target_vapp):
+    # try:
     client = module.client
     target_vm_name = module.params.get('target_vm_name')
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
+
     power_on_response = vm.power_on()
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, power_on_response)
+    # except VcdErrorResponseException:
+    #     # in case if VM is already powered on
+    #     pass
 
 
 def power_off(module, target_vapp):
+    # try:
     client = module.client
     target_vm_name = module.params.get('target_vm_name')
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
-    vm_operation_res = vm.undeploy()
+
+    vm_operation_res = vm.power_off()
     task_monitor = client.get_task_monitor()
 
     return execute_task(task_monitor, vm_operation_res)
+    # except VcdErrorResponseException:
+    #     # in case if VM is already powered off
+    #     pass
 
 
 def modify_cpu(module, target_vapp):
@@ -338,6 +351,7 @@ def modify_cpu(module, target_vapp):
     cores_per_socket = module.params.get('cores_per_socket')
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
+
     power_off(module, target_vapp)
     modify_cpu_response = vm.modify_cpu(virtual_cpus, cores_per_socket)
     task_monitor = client.get_task_monitor()
@@ -351,6 +365,7 @@ def modify_memory(module, target_vapp):
     memory = module.params.get('memory')
     vapp_vm_resource = target_vapp.get_vm(target_vm_name)
     vm = VM(client, resource=vapp_vm_resource)
+
     power_off(module, target_vapp)
     modify_memory_response = vm.modify_memory(memory)
     task_monitor = client.get_task_monitor()
@@ -365,6 +380,36 @@ def reload_vm(module, target_vapp):
     vm = VM(client, resource=vapp_vm_resource)
 
     return vm.reload()
+
+
+def deploy(module, target_vapp):
+    # try:
+    client = module.client
+    target_vm_name = module.params.get('target_vm_name')
+    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
+    vm = VM(client, resource=vapp_vm_resource)
+    vm_operation_res = vm.deploy()
+    task_monitor = client.get_task_monitor()
+
+    return execute_task(task_monitor, vm_operation_res)
+    # except MissingLinkException:
+    #     # in case if VM is already deployed
+    #     pass
+
+
+def undeploy(module, target_vapp):
+    # try:
+    client = module.client
+    target_vm_name = module.params.get('target_vm_name')
+    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
+    vm = VM(client, resource=vapp_vm_resource)
+    vm_operation_res = vm.undeploy()
+    task_monitor = client.get_task_monitor()
+
+    return execute_task(task_monitor, vm_operation_res)
+    # except MissingLinkException:
+    #     # in case if VM is already undeployed
+    #     pass
 
 
 def manage_states(module, target_vapp, source_vapp_resource):
@@ -402,6 +447,14 @@ def manage_operations(module, target_vapp):
         reload_vm(module, target_vapp)
         return 'Vapp VM {} has been reloaded.'.format(target_vm_name)
 
+    if operation == "deploy":
+        deploy(module, target_vapp)
+        return 'Vapp VM {} has been deployed.'.format(target_vm_name)
+
+    if operation == "undeploy":
+        undeploy(module, target_vapp)
+        return 'Vapp VM {} has been undeployed.'.format(target_vm_name)
+
 
 def main():
     argument_spec = vapp_vm_argument_spec()
@@ -416,7 +469,8 @@ def main():
         target_vapp = VApp(module.client, resource=target_vapp_resource)
 
         if module.params.get('state'):
-            response['msg'] = manage_states(module, target_vapp, source_vapp_resource)
+            response['msg'] = manage_states(
+                module, target_vapp, source_vapp_resource)
         elif module.params.get('operation'):
             response['msg'] = manage_operations(module, target_vapp)
         else:

@@ -25,7 +25,7 @@
     vmpassword_reset: "false"
     ip_allocation_mode: "DHCP"
     state: "present"
-    power_on: False
+    power_on: True
     all_eulas_accepted: "true"
     # storage_profile: "Standard"
     network: "web2Network"
@@ -50,7 +50,7 @@
     vmpassword_reset: "false"
     ip_allocation_mode: "DHCP"
     state: "present"
-    power_on: False
+    power_on: True
     all_eulas_accepted: "true"
     # storage_profile: "Standard"
     network: "web2Network"
@@ -148,34 +148,6 @@
     that:
       - "'Vapp VM {{ vapp_vm_2 }} has been updated.' in output.msg"
 
-- name: power on "{{ vapp_vm_1 }}" vapp vm
-  vcd_vapp_vm:
-    source_vapp: "web2"
-    target_vm_name: "{{ vapp_vm_1 }}"
-    target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
-    target_vdc: "Terraform_VDC"
-    operation: "poweron"
-  register: output
-
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been powered on.' in output.msg"
-
-- name: power on "{{ vapp_vm_2 }}" vapp vm
-  vcd_vapp_vm:
-    source_vapp: "web2"
-    target_vm_name: "{{ vapp_vm_2 }}"
-    target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
-    target_vdc: "Terraform_VDC"
-    operation: "poweron"
-  register: output
-
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been powered on.' in output.msg"
-
 - name: modify "{{ vapp_vm_1 }}" memory vapp vm
   vcd_vapp_vm:
     source_vapp: "web2"
@@ -234,33 +206,61 @@
     that:
       - "'Vapp VM {{ vapp_vm_2 }} has been reloaded.' in output.msg"
 
-- name: power on "{{ vapp_vm_1 }}" vapp vm
+- name: undeploy "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
     source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
-    operation: "poweron"
+    operation: "undeploy"
   register: output
 
 - assert:
     that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been powered on.' in output.msg"
+      - "'Vapp VM {{ vapp_vm_1 }} has been undeployed.' in output.msg"
 
-- name: power on "{{ vapp_vm_2 }}" vapp vm
+- name: undeploy "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
     source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
-    operation: "poweron"
+    operation: "undeploy"
   register: output
 
 - assert:
     that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been powered on.' in output.msg"
+      - "'Vapp VM {{ vapp_vm_2 }} has been undeployed.' in output.msg"
+
+- name: deploy "{{ vapp_vm_1 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_1 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "deploy"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_1 }} has been deployed.' in output.msg"
+
+- name: deploy "{{ vapp_vm_2 }}" vapp vm
+  vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    operation: "deploy"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp VM {{ vapp_vm_2 }} has been deployed.' in output.msg"
 
 - name: delete "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
