@@ -205,7 +205,7 @@ def vapp_vm_argument_spec():
     )
 
 
-def get_vapp_resource(module):
+def get_vapp_resources(module):
     '''
         If source_vapp and source_catalog both are
         given then priority will be given to
@@ -244,215 +244,207 @@ def get_vapp_resource(module):
     return source_vapp_resource, target_vapp_resource
 
 
-def execute_task(task_monitor, task):
-    task_state = task_monitor.wait_for_status(
-        task=task,
-        timeout=60,
-        poll_frequency=2,
-        fail_on_statuses=None,
-        expected_target_statuses=[
-            TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
-            TaskStatus.CANCELED
-        ],
-        callback=None)
+class VappVM(object):
+    def __init__(self, module, vapp_resource):
+        self.module = module
+        self.vapp = VApp(module.client, resource=vapp_resource)
 
-    task_status = task_state.get('status')
-    if task_status != TaskStatus.SUCCESS.value:
-        raise VappVmCreateError(etree.tostring(task_state, pretty_print=True))
+    def execute_task(self, task_monitor, task):
+        task_state = task_monitor.wait_for_status(
+            task=task,
+            timeout=60,
+            poll_frequency=2,
+            fail_on_statuses=None,
+            expected_target_statuses=[
+                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                TaskStatus.CANCELED
+            ],
+            callback=None)
 
-    return 1
+        task_status = task_state.get('status')
+        if task_status != TaskStatus.SUCCESS.value:
+            raise VappVmCreateError(etree.tostring(
+                task_state, pretty_print=True))
 
+        return 1
 
-def add_vms(module, target_vapp, source_vapp_resource):
-    client = module.client
-    source_vm_name = module.params.get('source_vm_name')
-    target_vm_name = module.params.get('target_vm_name')
-    hostname = module.params.get('hostname')
-    vmpassword = module.params.get('vmpassword')
-    vmpassword_auto = module.params.get('vmpassword_auto')
-    vmpassword_reset = module.params.get('vmpassword_reset')
-    network = module.params.get('network')
-    all_eulas_accepted = module.params.get('all_eulas_accepted', True)
-    power_on = module.params.get('power_on', True)
-    ip_allocation_mode = module.params.get('ip_allocation_mode')
+    def get_vm(self, vm_name):
+        vapp_vm_resource = self.vapp.get_vm(vm_name)
 
-    # cust_script = module.params.get('cust_script')
-    # storage_profile = module.params.get('storage_profile')
+        return VM(self.module.client, resource=vapp_vm_resource)
 
-    specs = [{
-        'source_vm_name': source_vm_name,
-        'vapp': source_vapp_resource,
-        'target_vm_name': target_vm_name,
-        'hostname': hostname,
-        'password': vmpassword,
-        'password_auto': vmpassword_auto,
-        'password_reset': vmpassword_reset,
-        'ip_allocation_mode': ip_allocation_mode,
-        'network': network,
-        # 'cust_script': cust_script,
-        # 'storage_profile': storage_profile
-    }]
+    def add_vms(self, source_vapp_resource):
+        client = self.module.client
+        params = self.module.params
+        source_vm_name = params.get('source_vm_name')
+        target_vm_name = params.get('target_vm_name')
+        hostname = params.get('hostname')
+        vmpassword = params.get('vmpassword')
+        vmpassword_auto = params.get('vmpassword_auto')
+        vmpassword_reset = params.get('vmpassword_reset')
+        network = params.get('network')
+        all_eulas_accepted = params.get('all_eulas_accepted', True)
+        power_on = params.get('power_on', True)
+        ip_allocation_mode = params.get('ip_allocation_mode')
 
-    vm_operation_res = target_vapp.add_vms(specs,
-                                           power_on=power_on,
-                                           all_eulas_accepted=all_eulas_accepted)
-    task_monitor = client.get_task_monitor()
+        # cust_script = module.params.get('cust_script')
+        # storage_profile = module.params.get('storage_profile')
 
-    return execute_task(task_monitor, vm_operation_res)
+        specs = [{
+            'source_vm_name': source_vm_name,
+            'vapp': source_vapp_resource,
+            'target_vm_name': target_vm_name,
+            'hostname': hostname,
+            'password': vmpassword,
+            'password_auto': vmpassword_auto,
+            'password_reset': vmpassword_reset,
+            'ip_allocation_mode': ip_allocation_mode,
+            'network': network,
+            # 'cust_script': cust_script,
+            # 'storage_profile': storage_profile
+        }]
 
-
-def delete_vms(module, target_vapp):
-    client = module.client
-    target_vm_name = module.params.get('target_vm_name')
-
-    undeploy(module, target_vapp)
-    vm_operation_res = target_vapp.delete_vms([target_vm_name])
-    task_monitor = client.get_task_monitor()
-
-    return execute_task(task_monitor, vm_operation_res)
-
-
-def power_on(module, target_vapp):
-    try:
-        client = module.client
-        target_vm_name = module.params.get('target_vm_name')
-        vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-        vm = VM(client, resource=vapp_vm_resource)
-
-        power_on_response = vm.power_on()
+        vm_operation_res = self.vapp.add_vms(specs,
+                                             power_on=power_on,
+                                             all_eulas_accepted=all_eulas_accepted)
         task_monitor = client.get_task_monitor()
 
-        return execute_task(task_monitor, power_on_response)
-    except VcdErrorResponseException:
-        # in case if VM is already powered on
-        pass
+        return self.execute_task(task_monitor, vm_operation_res)
 
+    def delete_vms(self, vm_name):
+        client = self.module.client
 
-def power_off(module, target_vapp):
-    try:
-        client = module.client
-        target_vm_name = module.params.get('target_vm_name')
-        vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-        vm = VM(client, resource=vapp_vm_resource)
-
-        vm_operation_res = vm.power_off()
+        self.undeploy_vm(vm_name)
+        vm_operation_res = self.vapp.delete_vms([vm_name])
         task_monitor = client.get_task_monitor()
 
-        return execute_task(task_monitor, vm_operation_res)
-    except VcdErrorResponseException:
-        # in case if VM is already powered off
-        pass
+        return self.execute_task(task_monitor, vm_operation_res)
 
+    def power_on_vm(self, vm_name):
+        try:
+            client = self.module.client
+            vm = self.get_vm(vm_name)
+            power_on_response = vm.power_on()
+            task_monitor = client.get_task_monitor()
 
-def modify_cpu(module, target_vapp):
-    client = module.client
-    target_vm_name = module.params.get('target_vm_name')
-    virtual_cpus = module.params.get('virtual_cpus')
-    cores_per_socket = module.params.get('cores_per_socket')
-    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-    vm = VM(client, resource=vapp_vm_resource)
+            return self.execute_task(task_monitor, power_on_response)
 
-    power_off(module, target_vapp)
-    modify_cpu_response = vm.modify_cpu(virtual_cpus, cores_per_socket)
-    task_monitor = client.get_task_monitor()
+        except VcdErrorResponseException:
+            # in case if VM is already powered on
+            pass
 
-    return execute_task(task_monitor, modify_cpu_response)
+    def power_off_vm(self, vm_name):
+        try:
+            client = self.module.client
+            vm = self.get_vm(vm_name)
+            vm_operation_res = vm.power_off()
+            task_monitor = client.get_task_monitor()
 
+            return self.execute_task(task_monitor, vm_operation_res)
 
-def modify_memory(module, target_vapp):
-    client = module.client
-    target_vm_name = module.params.get('target_vm_name')
-    memory = module.params.get('memory')
-    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-    vm = VM(client, resource=vapp_vm_resource)
+        except VcdErrorResponseException:
+            # in case if VM is already powered off
+            pass
 
-    power_off(module, target_vapp)
-    modify_memory_response = vm.modify_memory(memory)
-    task_monitor = client.get_task_monitor()
+    def reload_vm(self, vm_name):
+        vm = self.get_vm(vm_name)
 
-    return execute_task(task_monitor, modify_memory_response)
+        return vm.reload()
 
+    def modify_cpu_of_vm(self, vm_name):
+        params = self.module.params
+        client = self.module.client
+        vm = self.get_vm(vm_name)
+        virtual_cpus = params.get('virtual_cpus')
+        cores_per_socket = params.get('cores_per_socket')
 
-def reload_vm(module, target_vapp):
-    client = module.client
-    target_vm_name = module.params.get('target_vm_name')
-    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-    vm = VM(client, resource=vapp_vm_resource)
-
-    return vm.reload()
-
-
-def deploy(module, target_vapp):
-    try:
-        client = module.client
-        target_vm_name = module.params.get('target_vm_name')
-        vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-        vm = VM(client, resource=vapp_vm_resource)
-        vm_operation_res = vm.deploy()
+        self.power_off_vm(vm_name)
+        modify_cpu_response = vm.modify_cpu(virtual_cpus, cores_per_socket)
         task_monitor = client.get_task_monitor()
 
-        return execute_task(task_monitor, vm_operation_res)
-    except MissingLinkException:
-        # in case if VM is already deployed
-        pass
+        return self.execute_task(task_monitor, modify_cpu_response)
 
+    def modify_memory_of_vm(self, vm_name):
+        params = self.module.params
+        client = self.module.client
+        vm = self.get_vm(vm_name)
+        memory = params.get('memory')
 
-def undeploy(module, target_vapp):
-    try:
-        client = module.client
-        target_vm_name = module.params.get('target_vm_name')
-        vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-        vm = VM(client, resource=vapp_vm_resource)
-        vm_operation_res = vm.undeploy()
+        self.power_off_vm(vm_name)
+        modify_memory_response = vm.modify_memory(memory)
         task_monitor = client.get_task_monitor()
 
-        return execute_task(task_monitor, vm_operation_res)
-    except MissingLinkException:
-        # in case if VM is already undeployed
-        pass
+        return self.execute_task(task_monitor, modify_memory_response)
+
+    def deploy_vm(self, vm_name):
+        try:
+            client = self.module.client
+            vm = self.get_vm(vm_name)
+            vm_operation_res = vm.deploy()
+            task_monitor = client.get_task_monitor()
+
+            return self.execute_task(task_monitor, vm_operation_res)
+
+        except MissingLinkException:
+            # in case if VM is already deployed
+            pass
+
+    def undeploy_vm(self, vm_name):
+        try:
+            client = self.module.client
+            vm = self.get_vm(vm_name)
+            vm_operation_res = vm.undeploy()
+            task_monitor = client.get_task_monitor()
+
+            return self.execute_task(task_monitor, vm_operation_res)
+
+        except MissingLinkException:
+            # in case if VM is already undeployed
+            pass
 
 
-def manage_states(module, target_vapp, source_vapp_resource):
+def manage_states(module, vApp, source_vapp_resource):
     state = module.params.get('state')
     target_vm_name = module.params.get('target_vm_name')
     if state == "present":
-        add_vms(module, target_vapp, source_vapp_resource)
+        vApp.add_vms(source_vapp_resource)
         return 'Vapp VM {} has been created.'.format(target_vm_name)
 
     if state == "absent":
-        delete_vms(module, target_vapp)
+        vApp.delete_vms(target_vm_name)
         return 'Vapp VM {} has been deleted.'.format(target_vm_name)
 
 
-def manage_operations(module, target_vapp):
+def manage_operations(module, vApp):
     operation = module.params.get('operation')
     target_vm_name = module.params.get('target_vm_name')
+
     if operation == "poweron":
-        power_on(module, target_vapp)
+        vApp.power_on_vm(target_vm_name)
         return 'Vapp VM {} has been powered on.'.format(target_vm_name)
 
     if operation == "poweroff":
-        power_off(module, target_vapp)
+        vApp.power_off_vm(target_vm_name)
         return 'Vapp VM {} has been powered off.'.format(target_vm_name)
 
     if operation == "modifycpu":
-        modify_cpu(module, target_vapp)
+        vApp.modify_cpu_of_vm(target_vm_name)
         return 'Vapp VM {} has been updated.'.format(target_vm_name)
 
     if operation == "modifymemory":
-        modify_memory(module, target_vapp)
+        vApp.modify_memory_of_vm(target_vm_name)
         return 'Vapp VM {} has been updated.'.format(target_vm_name)
 
     if operation == "reloadvm":
-        reload_vm(module, target_vapp)
+        vApp.reload_vm(target_vm_name)
         return 'Vapp VM {} has been reloaded.'.format(target_vm_name)
 
     if operation == "deploy":
-        deploy(module, target_vapp)
+        vApp.deploy_vm(target_vm_name)
         return 'Vapp VM {} has been deployed.'.format(target_vm_name)
 
     if operation == "undeploy":
-        undeploy(module, target_vapp)
+        vApp.undeploy_vm(target_vm_name)
         return 'Vapp VM {} has been undeployed.'.format(target_vm_name)
 
 
@@ -462,23 +454,25 @@ def main():
         msg=dict(type='str')
     )
 
-    module = VcdAnsibleModule(argument_spec=argument_spec,
-                              supports_check_mode=True)
+    module = VcdAnsibleModule(
+        argument_spec=argument_spec, supports_check_mode=True)
+
     try:
-        source_vapp_resource, target_vapp_resource = get_vapp_resource(module)
-        target_vapp = VApp(module.client, resource=target_vapp_resource)
+        source_vapp_resource, target_vapp_resource = get_vapp_resources(module)
+        vApp = VappVM(module, target_vapp_resource)
 
         if module.params.get('state'):
-            response['msg'] = manage_states(
-                module, target_vapp, source_vapp_resource)
+            response['msg'] = manage_states(module, vApp, source_vapp_resource)
         elif module.params.get('operation'):
-            response['msg'] = manage_operations(module, target_vapp)
+            response['msg'] = manage_operations(module, vApp)
         else:
             raise Exception('One of from state/operation should be provided.')
+
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
 
+    response['changed'] = True
     module.exit_json(**response)
 
 
