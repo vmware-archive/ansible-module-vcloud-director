@@ -20,7 +20,7 @@ version_added: "2.4"
 description:
     - This module is to create, read, update, delete catalog in vCloud Director.
     - Task performed:
-        - Create catalog
+        - Create catalog 
         - Read Catalog
         - Update name, description and shared state of catalog
         - Delete catalog
@@ -79,10 +79,9 @@ options:
         description:
             - operation which should be performed over catalog.
             - various operations are: 
-                - updatedescription
-                - updatename
-                - sharecatalogstate
-                - readcatalog
+                - updatenameanddescription : update catalog_name and catalog_description
+                - sharecatalogstate : share or unshare catalog
+                - readcatalog : read catalog metadata e.g catalog name, description, shared state of catalog
             - One from state or operation has to be provided.
         required: false
 
@@ -111,7 +110,7 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 
 
 VCD_CATALOG_STATES = ['present', 'absent']
-VCD_CATALOG_OPERATIONS = ['updatedescription', "updatename", 'sharecatalogstate', 'readcatalog']
+VCD_CATALOG_OPERATIONS = ['updatenameanddescription', 'sharecatalogstate', 'readcatalog']
 
 def vcd_catalog_argument_spec():
     return dict(
@@ -148,6 +147,11 @@ def update_name_and_description(module):
 
     logged_in_org = client.get_org()
     org = Org(client, resource=logged_in_org)
+    
+    if not new_name:
+        #if new_name is None or empty, set new name as old name i.e name
+        new_name = name
+
     result = org.update_catalog(
                 old_catalog_name=name,
                 new_catalog_name=new_name,
@@ -193,9 +197,10 @@ def manage_operations(module):
     operation = module.params.get('operation')
     catalog_name = module.params.get('name')
 
-    if (operation == "updatedescription") or (operation == "updatename") :
+    if (operation == "updatenameanddescription"):
         update_name_and_description(module)
         return 'Catalog {} name or description has been updated.'.format(catalog_name)
+   
     if operation == "sharecatalogstate":
         share_catalog(module)
         shared = module.params.get('shared')
@@ -210,7 +215,7 @@ def main():
     
     response = dict(
         msg=dict(type='str'),
-        #changed=True,
+        changed=False,
     )
 
     module = VcdAnsibleModule(argument_spec=argument_spec,
@@ -218,8 +223,11 @@ def main():
     try:
         if module.params.get('state'):
             response['msg'] = manage_states(module)
+            response['changed'] = True
         elif module.params.get('operation'):
             response['msg'] = manage_operations(module)
+            if not (module.params.get('operation') == "readcatalog"):
+                response['changed'] = True
         else:
             raise Exception('One of from state/operation should be provided.')
     except Exception as error:

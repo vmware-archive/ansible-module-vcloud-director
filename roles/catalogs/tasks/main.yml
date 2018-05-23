@@ -37,14 +37,14 @@
 #       - "'Catalog {{ catalog_name }} name or description has been updated.' in output.msg" 
 
 
-#################################### Update-Name ##########################################################################
+#################################### Update-Name-And description ##########################################################################
 
 # - name: update catalog name and description
 #   vcd_catalog:
 #     name: "{{ catalog_name }}" 
 #     new_name: "{{ new_catalog_name }}" 
 #     description: "{{ description }}"
-#     operation: "updatename"
+#     operation: "updatenameanddescription"
 #   register: output
 # - assert:
 #     that:
