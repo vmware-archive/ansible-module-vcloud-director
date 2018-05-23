@@ -3,4 +3,8 @@
 
 ---
 # vars file for roles/catalogs
-catalog_name: test_catalog_100
+catalog_name: test_catalog_102
+description: test_catalog_description_102
+new_catalog_name: test_catalog_103
+
+shared: true

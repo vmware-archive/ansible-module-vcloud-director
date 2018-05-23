@@ -2,11 +2,87 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 ---
-# tasks file for roles/catalogs
-- name: create catalog
+#tasks file for roles/catalogs
+
+#################################### Create ##########################################################################
+# - name: create catalog
+#   vcd_catalog:
+#     name: "{{ catalog_name }}"
+#     description: "{{ description }}"
+#     state: "present"
+#   register: output
+
+# - assert:
+#     that:
+#       - "'Catalog {{ catalog_name }} has been created.' in output.msg"
+  
+# - name: dump create catalog output
+#   debug:
+#     msg: '{{ output }}'
+
+#################################### Read-Catalog ##########################################################################
+
+# - name: update catalog name and description
+#   vcd_catalog:
+#     name: "{{ catalog_name }}" 
+#     operation: "readcatalog"
+#   register: output
+
+# - name: Read catalog output
+#   debug:
+#     msg: '{{ output }}'
+
+# - assert:
+#     that:
+#       - "'Catalog {{ catalog_name }} name or description has been updated.' in output.msg" 
+
+
+#################################### Update-Name ##########################################################################
+
+# - name: update catalog name and description
+#   vcd_catalog:
+#     name: "{{ catalog_name }}" 
+#     new_name: "{{ new_catalog_name }}" 
+#     description: "{{ description }}"
+#     operation: "updatename"
+#   register: output
+# - assert:
+#     that:
+#       - "'Catalog {{ catalog_name }} name or description has been updated.' in output.msg"
+
+#################################### Update-Description ##########################################################################
+
+# - name: update catalog description
+#   vcd_catalog:
+#     name: "{{ catalog_name }}" 
+#     description: "{{ description }}"
+#     operation: "updatedescription"
+#   register: output
+# - assert:
+#     that:
+#       - "'Catalog {{ catalog_name }} name or description has been updated.' in output.msg"      
+
+
+#################################### Update-Publish-Catalog-Not-Working ##########################################################################
+
+# - name: update catalog name and description
+#   vcd_catalog:
+#     name: "{{ catalog_name }}" 
+#     shared: "{{ shared }}"
+#     operation: "sharecatalogstate"
+#   register: output
+# - assert:
+#     that:
+#       - "'Catalog {{ catalog_name }} name or description has been updated.' in output.msg"  
+
+
+#################################### Delete ##########################################################################
+- name: delete catalog
   vcd_catalog:
     name: "{{ catalog_name }}"
+    state: "absent"
   register: output
+
 - assert:
     that:
-      - "'Catalog {{ catalog_name }} has been created!' in output.msg"
+      - "'Catalog {{ catalog_name }} has been deleted' in output.msg"      
