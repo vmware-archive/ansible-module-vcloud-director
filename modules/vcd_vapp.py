@@ -131,11 +131,11 @@ from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.client import VcdErrorResponseException
+from pyvcloud.vcd.client import VcdErrorResponseException, MissingLinkException
 from ansible.module_utils.vcd_errors import VCDVappCreationError
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff']
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy']
 
 
 def vapp_argument_spec():
@@ -156,130 +156,182 @@ def vapp_argument_spec():
     )
 
 
-def execute_task(task_monitor, task):
-    task_state = task_monitor.wait_for_status(
-        task=task,
-        timeout=60,
-        poll_frequency=2,
-        fail_on_statuses=None,
-        expected_target_statuses=[
-            TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
-            TaskStatus.CANCELED
-        ],
-        callback=None)
+class Vapp(object):
+    def __init__(self, module):
+        self.module = module
 
-    task_status = task_state.get('status')
-    if task_status != TaskStatus.SUCCESS.value:
-        raise VCDVappCreationError(
-            etree.tostring(task_state, pretty_print=True))
+    def execute_task(self, task_monitor, task):
+        task_state = task_monitor.wait_for_status(
+            task=task,
+            timeout=60,
+            poll_frequency=2,
+            fail_on_statuses=None,
+            expected_target_statuses=[
+                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                TaskStatus.CANCELED
+            ],
+            callback=None)
 
-    return 1
+        task_status = task_state.get('status')
+        if task_status != TaskStatus.SUCCESS.value:
+            raise VCDVappCreationError(
+                etree.tostring(task_state, pretty_print=True))
+
+        return 1
+
+    def get_vdc_object(self, vdc_name):
+        client = self.module.client
+        logged_in_org = client.get_org()
+        org = Org(client, resource=logged_in_org)
+        vdc_resource = org.get_vdc(vdc_name)
+
+        return VDC(client, href=vdc_resource.get('href'))
+
+    def create(self):
+        client = self.module.client
+        params = self.module.params
+        vdc_name = params.get('vdc')
+        vapp_name = params.get('name')
+        catalog_name = params.get('catalog_name')
+        template_name = params.get('template_name')
+        network = params.get('network', None)
+        memory = params.get('memory', None)
+        storage_profile = params.get('storage_profile', None)
+        accept_all_eulas = params.get('accept_all_eulas', True)
+        power_on = params.get('power_on', True)
+        cpu = params.get('cpu', None)
+
+        vdc = self.get_vdc_object(vdc_name)
+        result = vdc.instantiate_vapp(
+            name=vapp_name,
+            catalog=catalog_name,
+            template=template_name,
+            network=network,
+            memory=memory,
+            cpu=cpu,
+            power_on=power_on,
+            storage_profile=storage_profile,
+            accept_all_eulas=accept_all_eulas)
+
+        task_monitor = client.get_task_monitor()
+
+        return self.execute_task(task_monitor, result.Tasks.Task[0])
+
+    def delete(self):
+        client = self.module.client
+        params = self.module.params
+        vdc_name = params.get('vdc')
+        vapp_name = params.get('name')
+
+        vdc = self.get_vdc_object(vdc_name)
+        result = vdc.delete_vapp(name=vapp_name, force=True)
+        task_monitor = client.get_task_monitor()
+
+        return self.execute_task(task_monitor, result)
+
+    def power_on(self):
+        try:
+            client = self.module.client
+            params = self.module.params
+            vdc_name = params.get('vdc')
+            vapp_name = params.get('name')
+
+            vdc = self.get_vdc_object(vdc_name)
+            vapp_resource = vdc.get_vapp(vapp_name)
+            vapp = VApp(client, name=vapp_name, resource=vapp_resource)
+            resp = vapp.power_on()
+            task_monitor = client.get_task_monitor()
+
+            return self.execute_task(task_monitor, resp)
+
+        except VcdErrorResponseException:
+            pass
+
+    def power_off(self):
+        try:
+            client = self.module.client
+            params = self.module.params
+            vdc_name = params.get('vdc')
+            vapp_name = params.get('name')
+
+            vdc = self.get_vdc_object(vdc_name)
+            vapp_resource = vdc.get_vapp(vapp_name)
+            vapp = VApp(client, name=vapp_name, resource=vapp_resource)
+            resp = vapp.power_off()
+            task_monitor = client.get_task_monitor()
+
+            return self.execute_task(task_monitor, resp)
+
+        except VcdErrorResponseException:
+            pass
+
+    def deploy(self):
+        try:
+            client = self.module.client
+            params = self.module.params
+            vdc_name = params.get('vdc')
+            vapp_name = params.get('name')
+
+            vdc = self.get_vdc_object(vdc_name)
+            vapp_resource = vdc.get_vapp(vapp_name)
+            vapp = VApp(client, name=vapp_name, resource=vapp_resource)
+            resp = vapp.deploy()
+            task_monitor = client.get_task_monitor()
+
+            return self.execute_task(task_monitor, resp)
+
+        except MissingLinkException:
+            pass
+
+    def undeploy(self):
+        try:
+            client = self.module.client
+            params = self.module.params
+            vdc_name = params.get('vdc')
+            vapp_name = params.get('name')
+
+            vdc = self.get_vdc_object(vdc_name)
+            vapp_resource = vdc.get_vapp(vapp_name)
+            vapp = VApp(client, name=vapp_name, resource=vapp_resource)
+            resp = vapp.undeploy()
+            task_monitor = client.get_task_monitor()
+
+            return self.execute_task(task_monitor, resp)
+
+        except MissingLinkException:
+            pass
 
 
-def create_vapp(module):
-    client = module.client
-    vdc = module.params.get('vdc')
-    vapp_name = module.params.get('name')
-    catalog_name = module.params.get('catalog_name')
-    template_name = module.params.get('template_name')
-    network = module.params.get('network', None)
-    memory = module.params.get('memory', None)
-    storage_profile = module.params.get('storage_profile', None)
-    accept_all_eulas = module.params.get('accept_all_eulas', True)
-    power_on = module.params.get('power_on', True)
-    cpu = module.params.get('cpu', None)
-
-    logged_in_org = client.get_org()
-    org = Org(client, resource=logged_in_org)
-    vdc_resource = org.get_vdc(vdc)
-    vdc = VDC(client, href=vdc_resource.get('href'))
-    result = vdc.instantiate_vapp(
-        name=vapp_name,
-        catalog=catalog_name,
-        template=template_name,
-        network=network,
-        memory=memory,
-        cpu=cpu,
-        power_on=power_on,
-        storage_profile=storage_profile,
-        accept_all_eulas=accept_all_eulas)
-
-    task_monitor = client.get_task_monitor()
-
-    return execute_task(task_monitor, result.Tasks.Task[0])
-
-
-def delete_vapp(module):
-    client = module.client
-    vdc = module.params.get('vdc')
-    vapp_name = module.params.get('name')
-
-    logged_in_org = client.get_org()
-    org = Org(client, resource=logged_in_org)
-    vdc_resource = org.get_vdc(vdc)
-    vdc = VDC(client, href=vdc_resource.get('href'))
-    result = vdc.delete_vapp(name=vapp_name, force=True)
-    task_monitor = client.get_task_monitor()
-
-    return execute_task(task_monitor, result)
-
-
-def power_on(module):
-    client = module.client
-    vdc = module.params.get('vdc')
-    vapp_name = module.params.get('name')
-
-    org_resource = client.get_org()
-    org = Org(client, resource=org_resource)
-    vdc_resource = org.get_vdc(vdc)
-    vdc = VDC(client, name=vdc, resource=vdc_resource)
-    vapp_resource = vdc.get_vapp(vapp_name)
-    vapp = VApp(client, name=vapp_name, resource=vapp_resource)
-    resp = vapp.power_on()
-    task_monitor = client.get_task_monitor()
-
-    return execute_task(task_monitor, resp)
-
-
-def power_off(module):
-    client = module.client
-    vdc = module.params.get('vdc')
-    vapp_name = module.params.get('name')
-
-    org_resource = client.get_org()
-    org = Org(client, resource=org_resource)
-    vdc_resource = org.get_vdc(vdc)
-    vdc = VDC(client, name=vdc, resource=vdc_resource)
-    vapp_resource = vdc.get_vapp(vapp_name)
-    vapp = VApp(client, name=vapp_name, resource=vapp_resource)
-    resp = vapp.undeploy()
-    task_monitor = client.get_task_monitor()
-
-    return execute_task(task_monitor, resp)
-
-
-def manage_states(module):
+def manage_states(module, vApp):
     state = module.params.get('state')
     vapp_name = module.params.get('name')
     if state == "present":
-        create_vapp(module)
+        vApp.create()
         return 'Vapp {} has been created.'.format(vapp_name)
 
     if state == "absent":
-        response = delete_vapp(module)
+        vApp.delete()
         return 'Vapp {} has been deleted.'.format(vapp_name)
 
 
-def manage_operations(module):
+def manage_operations(module, vApp):
     state = module.params.get('operation')
     vapp_name = module.params.get('name')
     if state == "poweron":
-        response = power_on(module)
+        vApp.power_on()
         return 'Vapp {} has been powered on.'.format(vapp_name)
 
     if state == "poweroff":
-        response = power_off(module)
+        vApp.power_off()
         return 'Vapp {} has been powered off.'.format(vapp_name)
+
+    if state == "deploy":
+        vApp.deploy()
+        return 'Vapp {} has been deployed.'.format(vapp_name)
+
+    if state == "undeploy":
+        vApp.undeploy()
+        return 'Vapp {} has been undeployed.'.format(vapp_name)
 
 
 def main():
@@ -291,16 +343,19 @@ def main():
     module = VcdAnsibleModule(argument_spec=argument_spec,
                               supports_check_mode=True)
     try:
+        vApp = Vapp(module)
         if module.params.get('state'):
-            response['msg'] = manage_states(module)
+            response['msg'] = manage_states(module, vApp)
         elif module.params.get('operation'):
-            response['msg'] = manage_operations(module)
+            response['msg'] = manage_operations(module, vApp)
         else:
             raise Exception('One of from state/operation should be provided.')
+
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
 
+    response['changed'] = True
     module.exit_json(**response)
 
 
