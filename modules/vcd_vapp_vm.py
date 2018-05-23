@@ -313,35 +313,35 @@ def delete_vms(module, target_vapp):
 
 
 def power_on(module, target_vapp):
-    # try:
-    client = module.client
-    target_vm_name = module.params.get('target_vm_name')
-    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-    vm = VM(client, resource=vapp_vm_resource)
+    try:
+        client = module.client
+        target_vm_name = module.params.get('target_vm_name')
+        vapp_vm_resource = target_vapp.get_vm(target_vm_name)
+        vm = VM(client, resource=vapp_vm_resource)
 
-    power_on_response = vm.power_on()
-    task_monitor = client.get_task_monitor()
+        power_on_response = vm.power_on()
+        task_monitor = client.get_task_monitor()
 
-    return execute_task(task_monitor, power_on_response)
-    # except VcdErrorResponseException:
-    #     # in case if VM is already powered on
-    #     pass
+        return execute_task(task_monitor, power_on_response)
+    except VcdErrorResponseException:
+        # in case if VM is already powered on
+        pass
 
 
 def power_off(module, target_vapp):
-    # try:
-    client = module.client
-    target_vm_name = module.params.get('target_vm_name')
-    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-    vm = VM(client, resource=vapp_vm_resource)
+    try:
+        client = module.client
+        target_vm_name = module.params.get('target_vm_name')
+        vapp_vm_resource = target_vapp.get_vm(target_vm_name)
+        vm = VM(client, resource=vapp_vm_resource)
 
-    vm_operation_res = vm.power_off()
-    task_monitor = client.get_task_monitor()
+        vm_operation_res = vm.power_off()
+        task_monitor = client.get_task_monitor()
 
-    return execute_task(task_monitor, vm_operation_res)
-    # except VcdErrorResponseException:
-    #     # in case if VM is already powered off
-    #     pass
+        return execute_task(task_monitor, vm_operation_res)
+    except VcdErrorResponseException:
+        # in case if VM is already powered off
+        pass
 
 
 def modify_cpu(module, target_vapp):
@@ -383,33 +383,33 @@ def reload_vm(module, target_vapp):
 
 
 def deploy(module, target_vapp):
-    # try:
-    client = module.client
-    target_vm_name = module.params.get('target_vm_name')
-    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-    vm = VM(client, resource=vapp_vm_resource)
-    vm_operation_res = vm.deploy()
-    task_monitor = client.get_task_monitor()
+    try:
+        client = module.client
+        target_vm_name = module.params.get('target_vm_name')
+        vapp_vm_resource = target_vapp.get_vm(target_vm_name)
+        vm = VM(client, resource=vapp_vm_resource)
+        vm_operation_res = vm.deploy()
+        task_monitor = client.get_task_monitor()
 
-    return execute_task(task_monitor, vm_operation_res)
-    # except MissingLinkException:
-    #     # in case if VM is already deployed
-    #     pass
+        return execute_task(task_monitor, vm_operation_res)
+    except MissingLinkException:
+        # in case if VM is already deployed
+        pass
 
 
 def undeploy(module, target_vapp):
-    # try:
-    client = module.client
-    target_vm_name = module.params.get('target_vm_name')
-    vapp_vm_resource = target_vapp.get_vm(target_vm_name)
-    vm = VM(client, resource=vapp_vm_resource)
-    vm_operation_res = vm.undeploy()
-    task_monitor = client.get_task_monitor()
+    try:
+        client = module.client
+        target_vm_name = module.params.get('target_vm_name')
+        vapp_vm_resource = target_vapp.get_vm(target_vm_name)
+        vm = VM(client, resource=vapp_vm_resource)
+        vm_operation_res = vm.undeploy()
+        task_monitor = client.get_task_monitor()
 
-    return execute_task(task_monitor, vm_operation_res)
-    # except MissingLinkException:
-    #     # in case if VM is already undeployed
-    #     pass
+        return execute_task(task_monitor, vm_operation_res)
+    except MissingLinkException:
+        # in case if VM is already undeployed
+        pass
 
 
 def manage_states(module, target_vapp, source_vapp_resource):

@@ -170,7 +170,8 @@ def execute_task(task_monitor, task):
 
     task_status = task_state.get('status')
     if task_status != TaskStatus.SUCCESS.value:
-        raise VCDVappCreationError(etree.tostring(task_state, pretty_print=True))
+        raise VCDVappCreationError(
+            etree.tostring(task_state, pretty_print=True))
 
     return 1
 
@@ -187,21 +188,21 @@ def create_vapp(module):
     accept_all_eulas = module.params.get('accept_all_eulas', True)
     power_on = module.params.get('power_on', True)
     cpu = module.params.get('cpu', None)
-    
+
     logged_in_org = client.get_org()
     org = Org(client, resource=logged_in_org)
     vdc_resource = org.get_vdc(vdc)
     vdc = VDC(client, href=vdc_resource.get('href'))
     result = vdc.instantiate_vapp(
-            name=vapp_name,
-            catalog=catalog_name,
-            template=template_name,
-            network=network,
-            memory=memory,
-            cpu=cpu,
-            power_on=power_on,
-            storage_profile=storage_profile,
-            accept_all_eulas=accept_all_eulas)
+        name=vapp_name,
+        catalog=catalog_name,
+        template=template_name,
+        network=network,
+        memory=memory,
+        cpu=cpu,
+        power_on=power_on,
+        storage_profile=storage_profile,
+        accept_all_eulas=accept_all_eulas)
 
     task_monitor = client.get_task_monitor()
 
@@ -212,7 +213,7 @@ def delete_vapp(module):
     client = module.client
     vdc = module.params.get('vdc')
     vapp_name = module.params.get('name')
-    
+
     logged_in_org = client.get_org()
     org = Org(client, resource=logged_in_org)
     vdc_resource = org.get_vdc(vdc)
@@ -227,7 +228,7 @@ def power_on(module):
     client = module.client
     vdc = module.params.get('vdc')
     vapp_name = module.params.get('name')
-    
+
     org_resource = client.get_org()
     org = Org(client, resource=org_resource)
     vdc_resource = org.get_vdc(vdc)
@@ -244,7 +245,7 @@ def power_off(module):
     client = module.client
     vdc = module.params.get('vdc')
     vapp_name = module.params.get('name')
-    
+
     org_resource = client.get_org()
     org = Org(client, resource=org_resource)
     vdc_resource = org.get_vdc(vdc)
