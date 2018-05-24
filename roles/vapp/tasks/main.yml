@@ -14,19 +14,6 @@
     that:
       - "'Vapp {{ vapp_name }} has been created.' in output.msg"
 
-- name: power off vapp
-  vcd_vapp:
-    name: "{{ vapp_name }}"
-    template_name: "centos7"
-    catalog_name: "test_catalog"
-    vdc: "Terraform_VDC"
-    operation: "poweroff"
-  register: output
-
-- assert:
-    that:
-      - "'Vapp {{ vapp_name }} has been powered off.' in output.msg"
-
 - name: power on vapp
   vcd_vapp:
     name: "{{ vapp_name }}"
@@ -39,6 +26,19 @@
 - assert:
     that:
       - "'Vapp {{ vapp_name }} has been powered on.' in output.msg"
+
+- name: power off vapp
+  vcd_vapp:
+    name: "{{ vapp_name }}"
+    template_name: "centos7"
+    catalog_name: "test_catalog"
+    vdc: "Terraform_VDC"
+    operation: "poweroff"
+  register: output
+
+- assert:
+    that:
+      - "'Vapp {{ vapp_name }} has been powered off.' in output.msg"
 
 - name: undeploy vapp
   vcd_vapp:
