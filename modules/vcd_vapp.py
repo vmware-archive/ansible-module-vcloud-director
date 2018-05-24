@@ -200,6 +200,7 @@ class Vapp(object):
         accept_all_eulas = params.get('accept_all_eulas', True)
         power_on = params.get('power_on', True)
         cpu = params.get('cpu', None)
+        response = dict()
 
         vdc = self.get_vdc_object(vdc_name)
         result = vdc.instantiate_vapp(
@@ -214,20 +215,27 @@ class Vapp(object):
             accept_all_eulas=accept_all_eulas)
 
         task_monitor = client.get_task_monitor()
+        self.execute_task(task_monitor, result.Tasks.Task[0])
+        response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
+        response['changed'] = True
 
-        return self.execute_task(task_monitor, result.Tasks.Task[0])
+        return response
 
     def delete(self):
         client = self.module.client
         params = self.module.params
         vdc_name = params.get('vdc')
         vapp_name = params.get('name')
+        response = dict()
 
         vdc = self.get_vdc_object(vdc_name)
         result = vdc.delete_vapp(name=vapp_name, force=True)
         task_monitor = client.get_task_monitor()
+        self.execute_task(task_monitor, result)
+        response['msg'] = 'Vapp {} has been deleted.'.format(vapp_name)
+        response['changed'] = True
 
-        return self.execute_task(task_monitor, result)
+        return response
 
     def power_on(self):
         try:
@@ -235,17 +243,22 @@ class Vapp(object):
             params = self.module.params
             vdc_name = params.get('vdc')
             vapp_name = params.get('name')
+            response = dict()
 
             vdc = self.get_vdc_object(vdc_name)
             vapp_resource = vdc.get_vapp(vapp_name)
             vapp = VApp(client, name=vapp_name, resource=vapp_resource)
             resp = vapp.power_on()
             task_monitor = client.get_task_monitor()
-
-            return self.execute_task(task_monitor, resp)
+            self.execute_task(task_monitor, resp)
 
         except VcdErrorResponseException:
             pass
+
+        response['msg'] = 'Vapp {} has been powered on.'.format(vapp_name)
+        response['changed'] = True
+
+        return response
 
     def power_off(self):
         try:
@@ -253,17 +266,22 @@ class Vapp(object):
             params = self.module.params
             vdc_name = params.get('vdc')
             vapp_name = params.get('name')
+            response = dict()
 
             vdc = self.get_vdc_object(vdc_name)
             vapp_resource = vdc.get_vapp(vapp_name)
             vapp = VApp(client, name=vapp_name, resource=vapp_resource)
             resp = vapp.power_off()
             task_monitor = client.get_task_monitor()
-
-            return self.execute_task(task_monitor, resp)
+            self.execute_task(task_monitor, resp)
 
         except VcdErrorResponseException:
             pass
+
+        response['msg'] = 'Vapp {} has been powered off.'.format(vapp_name)
+        response['changed'] = True
+
+        return response
 
     def deploy(self):
         try:
@@ -271,17 +289,22 @@ class Vapp(object):
             params = self.module.params
             vdc_name = params.get('vdc')
             vapp_name = params.get('name')
+            response = dict()
 
             vdc = self.get_vdc_object(vdc_name)
             vapp_resource = vdc.get_vapp(vapp_name)
             vapp = VApp(client, name=vapp_name, resource=vapp_resource)
             resp = vapp.deploy()
             task_monitor = client.get_task_monitor()
-
-            return self.execute_task(task_monitor, resp)
+            self.execute_task(task_monitor, resp)
 
         except MissingLinkException:
             pass
+
+        response['msg'] = 'Vapp {} has been deployed.'.format(vapp_name)
+        response['changed'] = True
+
+        return response
 
     def undeploy(self):
         try:
@@ -289,49 +312,48 @@ class Vapp(object):
             params = self.module.params
             vdc_name = params.get('vdc')
             vapp_name = params.get('name')
+            response = dict()
 
             vdc = self.get_vdc_object(vdc_name)
             vapp_resource = vdc.get_vapp(vapp_name)
             vapp = VApp(client, name=vapp_name, resource=vapp_resource)
             resp = vapp.undeploy()
             task_monitor = client.get_task_monitor()
-
-            return self.execute_task(task_monitor, resp)
+            self.execute_task(task_monitor, resp)
 
         except MissingLinkException:
             pass
 
+        response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
+        response['changed'] = True
 
-def manage_states(module, vApp):
-    state = module.params.get('state')
-    vapp_name = module.params.get('name')
+        return response
+
+
+def manage_vapp_states(vApp):
+    params = vApp.module.params
+    state = params.get('state')
     if state == "present":
-        vApp.create()
-        return 'Vapp {} has been created.'.format(vapp_name)
+        return vApp.create()
 
     if state == "absent":
-        vApp.delete()
-        return 'Vapp {} has been deleted.'.format(vapp_name)
+        return vApp.delete()
 
 
-def manage_operations(module, vApp):
-    state = module.params.get('operation')
-    vapp_name = module.params.get('name')
+def manage_vapp_operations(vApp):
+    params = vApp.module.params
+    state = params.get('operation')
     if state == "poweron":
-        vApp.power_on()
-        return 'Vapp {} has been powered on.'.format(vapp_name)
+        return vApp.power_on()
 
     if state == "poweroff":
-        vApp.power_off()
-        return 'Vapp {} has been powered off.'.format(vapp_name)
+        return vApp.power_off()
 
     if state == "deploy":
-        vApp.deploy()
-        return 'Vapp {} has been deployed.'.format(vapp_name)
+        return vApp.deploy()
 
     if state == "undeploy":
-        vApp.undeploy()
-        return 'Vapp {} has been undeployed.'.format(vapp_name)
+        return vApp.undeploy()
 
 
 def main():
@@ -345,9 +367,9 @@ def main():
     try:
         vApp = Vapp(module)
         if module.params.get('state'):
-            response['msg'] = manage_states(module, vApp)
+            response = manage_vapp_states(vApp)
         elif module.params.get('operation'):
-            response['msg'] = manage_operations(module, vApp)
+            response = manage_vapp_operations(vApp)
         else:
             raise Exception('One of from state/operation should be provided.')
 
@@ -355,7 +377,6 @@ def main():
         response['msg'] = error.__str__()
         module.fail_json(**response)
 
-    response['changed'] = True
     module.exit_json(**response)
 
 
