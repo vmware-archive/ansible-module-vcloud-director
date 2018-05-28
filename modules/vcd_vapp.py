@@ -44,19 +44,19 @@ options:
     name:
         description:
             - Vapp name
-        required: true
+        required: false
     template_name:
         description:
             - source catalog item name
-        required: true
+        required: false
     catalog_name:
         description:
             - source catalog name
-        required: true
+        required: false
     vdc:
         description:
             - Org Vdc where this VAPP gets created
-        required: true
+        required: false
     network:
         description:
             - org network for the vapp
@@ -124,14 +124,11 @@ result: success/failure message relates to vapp operation
 '''
 
 from lxml import etree
-from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import TaskStatus
-from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.client import VcdErrorResponseException, MissingLinkException
 from ansible.module_utils.vcd_errors import VCDVappCreationError
 
 VAPP_VM_STATES = ['present', 'absent']
@@ -140,10 +137,10 @@ VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy']
 
 def vapp_argument_spec():
     return dict(
-        name=dict(type='str', required=True),
-        template_name=dict(type='str', required=True),
-        catalog_name=dict(type='str', required=True),
-        vdc=dict(type='str', required=True),
+        name=dict(type='str', required=False),
+        template_name=dict(type='str', required=False),
+        catalog_name=dict(type='str', required=False),
+        vdc=dict(type='str', required=False),
         network=dict(type='str', required=False),
         ip_allocation_mode=dict(type='str', required=False),
         memory=dict(type='str', required=False),
