@@ -56,22 +56,22 @@
     that:
       - "'Catalog {{ catalog_name }} name or description has been updated.' in output.msg"     
 
-#################################### shared/unshare-catalog(Not-Working) ##########################################################################
+#################################### shared/unshare-catalog ##########################################################################
 
-# - name: share/unshare catalog
-#   vcd_catalog:
-#     name: "{{ new_catalog_name }}" 
-#     shared: "{{ shared }}"
-#     operation: "sharecatalogstate"
-#   register: output
+- name: share/unshare catalog
+  vcd_catalog:
+    name: "{{ new_catalog_name }}" 
+    shared: "{{ shared }}"
+    operation: "sharecatalogstate"
+  register: output
 
-# - name: share/unshare catalog output
-#   debug:
-#     msg: '{{ output }}'  
+- name: share/unshare catalog output
+  debug:
+    msg: '{{ output }}'  
 
-# - assert:
-#     that:
-#       - "'Catalog {{ new_catalog_name }} shared state has been updated to [shared={{ shared }}].' in output.msg"  
+- assert:
+    that:
+      - "'Catalog {{ new_catalog_name }} shared state has been updated to [shared={{ shared }}].' in output.msg"  
 
 
 #################################### Delete ##########################################################################
