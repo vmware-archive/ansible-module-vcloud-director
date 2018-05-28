@@ -165,7 +165,7 @@ USER_OPERATIONS = ['update']
 
 def user_argument_spec():
     return dict(
-        username=dict(type='str', required=False),
+        username=dict(type='str', required=True),
         userpassword=dict(type='str', required=False),
         role_name=dict(type='str', required=False),
         full_username=dict(type='str', required=False),
