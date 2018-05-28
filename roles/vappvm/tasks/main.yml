@@ -125,7 +125,7 @@
     target_vdc: "Terraform_VDC"
     virtual_cpus: 2
     cores_per_socket: 2
-    operation: "modifycpu"
+    operation: "updatecpu"
   register: output
 
 - assert:
@@ -141,7 +141,7 @@
     target_vdc: "Terraform_VDC"
     virtual_cpus: 2
     cores_per_socket: 2
-    operation: "modifycpu"
+    operation: "updatecpu"
   register: output
 
 - assert:
@@ -184,7 +184,7 @@
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     memory: 4096
-    operation: "modifymemory"
+    operation: "updatememory"
   register: output
 
 - assert:
@@ -199,7 +199,7 @@
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     memory: 4096
-    operation: "modifymemory"
+    operation: "updatememory"
   register: output
 
 - assert:
