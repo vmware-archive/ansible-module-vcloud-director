@@ -112,6 +112,7 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 VCD_CATALOG_STATES = ['present', 'absent']
 VCD_CATALOG_OPERATIONS = ['updatenameanddescription', 'sharecatalogstate', 'readcatalog']
 
+
 def vcd_catalog_argument_spec():
     return dict(
         name=dict(type='str', required=True),
@@ -120,94 +121,119 @@ def vcd_catalog_argument_spec():
         shared=dict(type='bool', required=False, default=False),
         state=dict(choices=VCD_CATALOG_STATES, required=False),
         operation=dict(choices=VCD_CATALOG_OPERATIONS, required=False)
-    )
-
-def create_catalog(module):
-    client = module.client
-    name = module.params.get('name')
-    description = module.params.get('description')
-
-    logged_in_org = client.get_org()
-    org = Org(client, resource=logged_in_org)
-    catalog = org.create_catalog(name=name, description=description)
-
-def delete_catalog(module):
-    client = module.client
-    name = module.params.get('name')
-
-    logged_in_org = client.get_org()
-    org = Org(client, resource=logged_in_org)
-    result = org.delete_catalog(name)
-
-def update_name_and_description(module):
-    client = module.client
-    name = module.params.get('name')
-    new_name = module.params.get('new_name')
-    description = module.params.get('description')
-
-    logged_in_org = client.get_org()
-    org = Org(client, resource=logged_in_org)
-    
-    if not new_name:
-        #if new_name is None or empty, set new name as old name i.e name
-        new_name = name
-
-    result = org.update_catalog(
-                old_catalog_name=name,
-                new_catalog_name=new_name,
-                description=description)
-
-def share_catalog(module):
-    client = module.client
-    name = module.params.get('name')
-    shared = module.params.get('shared')
-
-    logged_in_org = client.get_org()
-    org = Org(client, resource=logged_in_org)
-    result = org.share_catalog(name=name, share=shared)
+    )   
 
 
-def read_catalog(module):
-    client = module.client
-    name = module.params.get('name')
+class Catalog(object):
+    def __init__(self, module):
+        self.module = module
 
-    logged_in_org = client.get_org()
-    org = Org(client, resource=logged_in_org)
-    catalog = org.get_catalog(name)
+    def get_org_object(self):
+        client = self.module.client
+        logged_in_org = client.get_org()
+        org = Org(client, resource=logged_in_org)
+        return org        
 
-    result = dict()
-    result['name'] = str(catalog.get("name"))
-    result['description'] = str(catalog.Description)
-    result['shared'] = str(catalog.IsPublished)
-    
-    return result
+    def create(self):
+        name = self.module.params.get('name')
+        description = self. module.params.get('description')
 
-def manage_states(module):
-    state = module.params.get('state')
-    catalog_name = module.params.get('name')
+        response = dict()
+
+        org = self.get_org_object()
+        catalog = org.create_catalog(name=name, description=description)
+        response['msg'] = 'Catalog {} has been created.'.format(name)
+        response['changed'] = True
+
+        return response
+
+    def delete(self):
+        name = self.module.params.get('name')
+
+        response = dict()
+
+        org = self.get_org_object()
+        result = org.delete_catalog(name)
+        response['msg'] = 'Catalog {} has been deleted.'.format(name)
+        response['changed'] = True
+
+        return response
+
+        
+    def update_name_and_description(self):
+        name = self.module.params.get('name')
+        new_name = self.module.params.get('new_name')
+        description = self.module.params.get('description')
+
+        response = dict()
+
+        org = self.get_org_object()
+        
+        if not new_name:
+            #if new_name is None or empty, set new name as old name i.e name
+            new_name = name
+
+        result = org.update_catalog(
+                    old_catalog_name=name,
+                    new_catalog_name=new_name,
+                    description=description)
+        response['msg'] = 'Catalog {} name or description has been updated.'.format(name)
+        response['changed'] = True
+
+        return response                    
+
+
+    def share(self):
+        name = self.module.params.get('name')
+        shared = self.module.params.get('shared')
+
+        response = dict()
+
+        org = self.get_org_object()
+        result = org.share_catalog(name=name, share=shared)
+
+        response['msg'] = 'Catalog {} shared state has been updated to [shared={}].'.format(name, shared)
+        response['changed'] = True
+
+        return response
+
+
+    def read(self):
+        name = self.module.params.get('name')
+        response = dict()
+        
+        org = self.get_org_object()
+        catalog = org.get_catalog(name)
+
+        result = dict()
+        result['name'] = str(catalog.get("name"))
+        result['description'] = str(catalog.Description)
+        result['shared'] = str(catalog.IsPublished)
+        response['msg'] = result
+        response['changed'] = False
+
+        return response
+
+
+def manage_states(catalog):
+    state = catalog.module.params.get('state')
     
     if state == "present":
-        create_catalog(module)
-        return 'Catalog {} has been created.'.format(catalog_name)
+        return catalog.create()
     elif state == "absent":
-        delete_catalog(module)
-        return 'Catalog {} has been deleted.'.format(catalog_name)
+        return catalog.delete()
 
-def manage_operations(module):
-    operation = module.params.get('operation')
-    catalog_name = module.params.get('name')
+def manage_operations(catalog):
+    operation = catalog.module.params.get('operation')
 
     if (operation == "updatenameanddescription"):
-        update_name_and_description(module)
-        return 'Catalog {} name or description has been updated.'.format(catalog_name)
+        return catalog.update_name_and_description()
    
     if operation == "sharecatalogstate":
-        share_catalog(module)
-        shared = module.params.get('shared')
-        return 'Catalog {} shared state has been updated to [shared={}].'.format(catalog_name, shared)
-
+        return catalog.share()
+        
     if operation == "readcatalog":   
-        return read_catalog(module)     
+        return catalog.read()     
 
 
 def main():
@@ -221,13 +247,11 @@ def main():
     module = VcdAnsibleModule(argument_spec=argument_spec,
                               supports_check_mode=True)
     try:
+        catalog = Catalog(module)
         if module.params.get('state'):
-            response['msg'] = manage_states(module)
-            response['changed'] = True
+            response = manage_states(catalog)
         elif module.params.get('operation'):
-            response['msg'] = manage_operations(module)
-            if not (module.params.get('operation') == "readcatalog"):
-                response['changed'] = True
+            response = manage_operations(catalog)
         else:
             raise Exception('One of from state/operation should be provided.')
     except Exception as error:
