@@ -2,11 +2,89 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 ---
-# tasks file for roles/catalogs
+#tasks file for roles/catalogs
+
+#################################### Create ##########################################################################
 - name: create catalog
   vcd_catalog:
     name: "{{ catalog_name }}"
+    description: "{{ description }}"
+    state: "present"
   register: output
+
+- name: create catalog output
+  debug:
+    msg: '{{ output }}'
+
 - assert:
     that:
-      - "'Catalog {{ catalog_name }} has been created!' in output.msg"
+      - "'Catalog {{ catalog_name }} has been created.' in output.msg"
+
+#################################### Read-Catalog ##########################################################################
+
+- name: read catalog
+  vcd_catalog:
+    name: "{{ catalog_name }}" 
+    operation: "readcatalog"
+  register: output
+
+- name: Read catalog output
+  debug:
+    msg: '{{ output }}'
+
+- assert:
+    that:
+      - "'{{ catalog_name }}' in output.msg.name"
+      - "'{{ description }}' in output.msg.description" 
+
+
+#################################### Update-Name-And description ##########################################################################
+
+- name: update catalog name and description
+  vcd_catalog:
+    name: "{{ catalog_name }}" 
+    new_name: "{{ new_catalog_name }}" 
+    description: "{{ description }}"
+    operation: "updatenameanddescription"
+  register: output
+
+- name: Update Catalog name and description output
+  debug:
+    msg: '{{ output }}'
+
+- assert:
+    that:
+      - "'Catalog {{ catalog_name }} name or description has been updated.' in output.msg"     
+
+#################################### shared/unshare-catalog ##########################################################################
+
+- name: share/unshare catalog
+  vcd_catalog:
+    name: "{{ new_catalog_name }}" 
+    shared: "{{ shared }}"
+    operation: "sharecatalogstate"
+  register: output
+
+- name: share/unshare catalog output
+  debug:
+    msg: '{{ output }}'  
+
+- assert:
+    that:
+      - "'Catalog {{ new_catalog_name }} shared state has been updated to [shared={{ shared }}].' in output.msg"  
+
+
+#################################### Delete ##########################################################################
+- name: delete catalog
+  vcd_catalog:
+    name: "{{ new_catalog_name }}"
+    state: "absent"
+  register: output
+
+- name: delete catalog output
+  debug:
+    msg: '{{ output }}' 
+
+- assert:
+    that:
+      - "'Catalog {{ new_catalog_name }} has been deleted' in output.msg"      
