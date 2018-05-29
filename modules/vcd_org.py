@@ -107,7 +107,7 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from ansible.module_utils.vcd_errors import OrgDeletionError
 
 VCD_ORG_STATES = ['present', 'absent']
-VCD_ORG_OPERATIONS = ['poweron']
+VCD_ORG_OPERATIONS = ['read', 'enable', 'disable']
 
 def vapp_argument_spec():
     return dict(
@@ -120,9 +120,9 @@ def vapp_argument_spec():
         operation=dict(choices=VCD_ORG_OPERATIONS, required=False),
     )
 
-class VcdOrg(object):
+class VCDOrg(object):
     """
-        Org class is already defined in pvcloud, hence using class name 'VcdOrg'
+        Org class is already defined in pvcloud, hence using class name 'VCDOrg'
     """
     
     def __init__(self, module):
@@ -136,9 +136,10 @@ class VcdOrg(object):
         return system      
 
     def create(self):
-        name = self.module.get('name')
-        full_name = self.module.get('full_name')
-        is_enabled = self.module.get('is_enabled')
+        params = self.module.params
+        name = params.get('name')
+        full_name = params.get('full_name')
+        is_enabled = params.get('is_enabled')
 
         response = dict()
         
@@ -150,7 +151,8 @@ class VcdOrg(object):
         return response
 
     def read(self):
-        name = self.module.get('name')
+        params = self.module.params
+        name = params.get('name')
 
         response = dict()
 
@@ -161,8 +163,8 @@ class VcdOrg(object):
 
         org_details = dict()
         org_details['name'] = name    
-        org_details['org_full_name'] = org_admin_resource['FullName']
-        org_details['is_enabled'] = org_admin_resource['IsEnabled']
+        org_details['full_name'] = str(org_admin_resource['FullName'])
+        org_details['is_enabled'] = str(org_admin_resource['IsEnabled'])
 
         response['msg'] = org_details
         response['changed'] = False
@@ -171,7 +173,8 @@ class VcdOrg(object):
 
 
     def enable(self):
-        name = self.module.get('name')
+        params = self.module.params
+        name = params.get('name')
         is_enabled = True
 
         response = dict()
@@ -187,7 +190,8 @@ class VcdOrg(object):
         return response
 
     def disable(self):
-        name = self.module.get('name')
+        params = self.module.params
+        name = params.get('name')
         is_enabled = False
 
         response = dict()
@@ -224,9 +228,10 @@ class VcdOrg(object):
         return 1        
 
     def delete(self):
-        name = self.module.get('name')
-        force = self.module.get('force')
-        recursive = self.module.get('recursive')
+        params = self.module.params
+        name = params.get('name')
+        force = params.get('force')
+        recursive = params.get('recursive')
 
         response = dict()
 
@@ -273,7 +278,7 @@ def main():
     module = VcdAnsibleModule(argument_spec=argument_spec,
                               supports_check_mode=True)
     try:
-        org = VcdOrg(module)
+        org = VCDOrg(module)
         if module.params.get('state'):
             response = manage_org_states(org)
         elif module.params.get('operation'):

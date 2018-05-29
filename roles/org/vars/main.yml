@@ -1,2 +1,14 @@
 ---
 # vars file for roles/org
+
+org_name: "test_org_100"
+org_full_name: "test_org_full_name_100"
+
+#org enabled
+is_enabled: true
+
+#Force delete org
+force: true
+
+#Recursive delete org
+recursive: true
