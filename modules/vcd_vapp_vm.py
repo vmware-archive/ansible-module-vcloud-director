@@ -44,15 +44,15 @@ options:
     target_vm_name:
         description:
             - target VM name
-        required: true
+        required: false
     target_vapp:
         description:
             - target vApp name
-        required: true
+        required: false
     target_vdc:
         description:
             - target VDC
-        required: true
+        required: false
     source_vapp:
         description:
             - source vApp name
@@ -76,11 +76,11 @@ options:
     vmpassword:
         description:
             - set the administrator password for target machine
-        required: true
+        required: false
     vmpassword_auto:
         description:
             - "true"/"false", autogenerate administrator password
-        required: true
+        required: false
     vmpassword_reset:
         description:
             - "true" if the administrator password for this virtual machine must be reset after first use else "false"
@@ -167,22 +167,21 @@ from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.client import VcdErrorResponseException, MissingLinkException
 from ansible.module_utils.vcd_errors import VappVmCreateError
 
 
 VAPP_VM_STATES = ['present', 'absent']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff',
-                      'modifycpu', 'modifymemory', 'reloadvm',
+                      'updatecpu', 'updatememory', 'reloadvm',
                       'deploy', 'undeploy']
 
 
 def vapp_vm_argument_spec():
     return dict(
-        target_vm_name=dict(type='str', required=True),
-        target_vapp=dict(type='str', required=True),
-        target_vdc=dict(type='str', required=True),
-        source_vdc=dict(type='str', required=True),
+        target_vm_name=dict(type='str', required=False),
+        target_vapp=dict(type='str', required=False),
+        target_vdc=dict(type='str', required=False),
+        source_vdc=dict(type='str', required=False),
         source_vapp=dict(type='str', required=False),
         source_catalog_name=dict(type='str', required=False),
         source_template_name=dict(type='str', required=False),
@@ -353,7 +352,7 @@ class VappVM(object):
 
         return response
 
-    def modify_cpu_of_vm(self, vm_name):
+    def update_cpu_of_vm(self, vm_name):
         params = self.module.params
         vm = self.get_vm(vm_name)
         virtual_cpus = params.get('virtual_cpus')
@@ -361,22 +360,22 @@ class VappVM(object):
         response = dict()
 
         self.power_off_vm(vm_name)
-        modify_cpu_task = vm.modify_cpu(virtual_cpus, cores_per_socket)
-        self.execute_task(modify_cpu_task)
+        update_cpu_task = vm.modify_cpu(virtual_cpus, cores_per_socket)
+        self.execute_task(update_cpu_task)
         response['msg'] = 'Vapp VM {} has been updated.'.format(vm_name)
         response['changed'] = True
 
         return response
 
-    def modify_memory_of_vm(self, vm_name):
+    def update_memory_of_vm(self, vm_name):
         params = self.module.params
         vm = self.get_vm(vm_name)
         memory = params.get('memory')
         response = dict()
 
         self.power_off_vm(vm_name)
-        modify_memory_task = vm.modify_memory(memory)
-        self.execute_task(modify_memory_task)
+        update_memory_task = vm.modify_memory(memory)
+        self.execute_task(update_memory_task)
         response['msg'] = 'Vapp VM {} has been updated.'.format(vm_name)
         response['changed'] = True
 
@@ -427,11 +426,11 @@ def manage_vappvm_operations(vApp):
     if operation == "poweroff":
         return vApp.power_off_vm(target_vm_name)
 
-    if operation == "modifycpu":
-        return vApp.modify_cpu_of_vm(target_vm_name)
+    if operation == "updatecpu":
+        return vApp.update_cpu_of_vm(target_vm_name)
 
-    if operation == "modifymemory":
-        return vApp.modify_memory_of_vm(target_vm_name)
+    if operation == "updatememory":
+        return vApp.update_memory_of_vm(target_vm_name)
 
     if operation == "reloadvm":
         return vApp.reload_vm(target_vm_name)
