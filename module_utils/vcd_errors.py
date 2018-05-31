@@ -100,7 +100,3 @@ class VappVmPowerOffError(Exception):
 class VappUpdateError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
-
-class OrgDeletionError(Exception):
-    def __init__(self, msg):
-        Exception.__init__(self, msg)  

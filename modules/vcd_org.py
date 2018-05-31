@@ -100,16 +100,16 @@ result: success/failure message relates to org operation
 
 
 from lxml import etree
-from pyvcloud.vcd.system import System
 from pyvcloud.vcd.org import Org
+from pyvcloud.vcd.system import System
 from pyvcloud.vcd.client import TaskStatus
 from ansible.module_utils.vcd import VcdAnsibleModule
-from ansible.module_utils.vcd_errors import OrgDeletionError
 
 VCD_ORG_STATES = ['present', 'absent']
 VCD_ORG_OPERATIONS = ['read', 'enable', 'disable']
 
-def vapp_argument_spec():
+
+def org_argument_spec():
     return dict(
         name=dict(type='str', required=True),
         full_name=dict(type='str', required=False),
@@ -120,29 +120,25 @@ def vapp_argument_spec():
         operation=dict(choices=VCD_ORG_OPERATIONS, required=False),
     )
 
+
 class VCDOrg(object):
-    """
-        Org class is already defined in pvcloud, hence using class name 'VCDOrg'
-    """
-    
     def __init__(self, module):
-        self.module = module  
+        self.module = module
 
     def get_system_object(self):
         client = self.module.client
         sys_admin = client.get_admin()
         system = System(client, admin_resource=sys_admin)
 
-        return system      
+        return system
 
     def create(self):
         params = self.module.params
         name = params.get('name')
         full_name = params.get('full_name')
         is_enabled = params.get('is_enabled')
-
         response = dict()
-        
+
         system = self.get_system_object()
         system.create_org(name, full_name, is_enabled)
         response['msg'] = 'Org {} has been created.'.format(name)
@@ -153,37 +149,31 @@ class VCDOrg(object):
     def read(self):
         params = self.module.params
         name = params.get('name')
-
         response = dict()
-
+        org_details = dict()
         client = self.module.client
+
         resource = client.get_org_by_name(name)
         org = Org(client, resource=resource)
         org_admin_resource = org.client.get_resource(org.href_admin)
-
-        org_details = dict()
-        org_details['name'] = name    
+        org_details['name'] = name
         org_details['full_name'] = str(org_admin_resource['FullName'])
         org_details['is_enabled'] = str(org_admin_resource['IsEnabled'])
-
         response['msg'] = org_details
         response['changed'] = False
 
         return response
 
-
     def enable(self):
         params = self.module.params
         name = params.get('name')
         is_enabled = True
-
         response = dict()
 
         client = self.module.client
         resource = client.get_org_by_name(name)
         org = Org(client, resource=resource)
         org.update_org(is_enabled)
-
         response['msg'] = 'Org {} has been enabled.'.format(name)
         response['changed'] = True
 
@@ -193,18 +183,16 @@ class VCDOrg(object):
         params = self.module.params
         name = params.get('name')
         is_enabled = False
-
         response = dict()
 
         client = self.module.client
         resource = client.get_org_by_name(name)
         org = Org(client, resource=resource)
         org.update_org(is_enabled)
-
         response['msg'] = 'Org {} has been disabled.'.format(name)
         response['changed'] = True
 
-        return response       
+        return response
 
     def execute_task(self, task):
         client = self.module.client
@@ -222,30 +210,24 @@ class VCDOrg(object):
 
         task_status = task_state.get('status')
         if task_status != TaskStatus.SUCCESS.value:
-            raise Exception(
-                etree.tostring(task_state, pretty_print=True))
+            raise Exception(etree.tostring(task_state, pretty_print=True))
 
-        return 1        
+        return 1
 
     def delete(self):
         params = self.module.params
         name = params.get('name')
         force = params.get('force')
         recursive = params.get('recursive')
-
         response = dict()
 
-        try:
-            system = self.get_system_object()
-            delete_org_resp = system.delete_org(name, force, recursive)
+        system = self.get_system_object()
+        delete_org_task = system.delete_org(name, force, recursive)
+        self.execute_task(delete_org_task)
+        response['msg'] = 'Org {} has been deleted.'.format(name)
+        response['changed'] = True
 
-            self.execute_task(delete_org_resp)
-            response['msg'] = 'Org {} has been deleted.'.format(name)
-            response['changed'] = True
-
-            return response
-        except Exception as e:
-            raise OrgDeletionError(str(e))          
+        return response
 
 
 def manage_org_states(org):
@@ -257,6 +239,7 @@ def manage_org_states(org):
     if state == "absent":
         return org.delete()
 
+
 def manage_org_operations(org):
     params = org.module.params
     state = params.get('operation')
@@ -267,10 +250,11 @@ def manage_org_operations(org):
         return org.enable()
 
     if state == "disable":
-        return org.disable() 
+        return org.disable()
+
 
 def main():
-    argument_spec = vapp_argument_spec()
+    argument_spec = org_argument_spec()
     response = dict(
         msg=dict(type='str')
     )
@@ -294,9 +278,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()        
-
-
-
-
-               
+    main()
