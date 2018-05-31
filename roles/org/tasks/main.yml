@@ -7,6 +7,10 @@
 ############################################ Create Org ##############################################################
 - name: create org
   vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
     name: "{{ org_name }}"
     full_name: "{{ org_full_name }}"
     is_enabled : "{{ is_enabled }}"
@@ -25,6 +29,10 @@
 ############################################ Read Org ##############################################################
 - name: read org
   vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
     name: "{{ org_name }}"
     operation: "read"
   register: output
@@ -43,6 +51,10 @@
 ############################################ Disable Org ##############################################################
 - name: disable org
   vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
     name: "{{ org_name }}"
     operation: "disable"
   register: output
@@ -58,6 +70,10 @@
 ############################################ Enable Org ##############################################################
 - name: enable org
   vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
     name: "{{ org_name }}"
     operation: "enable"
   register: output
@@ -74,6 +90,10 @@
 ############################################ Delete Org ##############################################################
 - name: delete org
   vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
     name: "{{ org_name }}"
     force: "{{ force }}"
     recursive: "{{ recursive }}"
