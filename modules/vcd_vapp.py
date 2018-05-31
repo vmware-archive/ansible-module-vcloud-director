@@ -129,7 +129,6 @@ from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import TaskStatus
 from ansible.module_utils.vcd import VcdAnsibleModule
-from ansible.module_utils.vcd_errors import VCDVappCreationError
 
 VAPP_VM_STATES = ['present', 'absent']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy']
@@ -173,7 +172,7 @@ class Vapp(object):
 
         task_status = task_state.get('status')
         if task_status != TaskStatus.SUCCESS.value:
-            raise VCDVappCreationError(
+            raise Exception(
                 etree.tostring(task_state, pretty_print=True))
 
         return 1
