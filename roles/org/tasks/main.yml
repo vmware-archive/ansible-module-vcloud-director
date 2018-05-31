@@ -1,0 +1,109 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+---
+# tasks file for roles/org
+
+############################################ Create Org ##############################################################
+- name: create org
+  vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
+    name: "{{ org_name }}"
+    full_name: "{{ org_full_name }}"
+    is_enabled : "{{ is_enabled }}"
+    state: "present"
+  register: output
+
+- name: create org output
+  debug:
+    msg: '{{ output }}'  
+
+- assert:
+    that:
+      - "'Org {{ org_name }} has been created.' in output.msg"
+
+
+############################################ Read Org ##############################################################
+- name: read org
+  vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
+    name: "{{ org_name }}"
+    operation: "read"
+  register: output
+
+- name: read org output
+  debug:
+    msg: '{{ output }}' 
+
+- assert:
+    that:
+      - "'{{ org_name }}' in output.msg.name"
+      - "'{{ org_full_name }}' in output.msg.full_name"  
+      - "'{{ is_enabled }}' in output.msg.is_enabled" 
+
+
+############################################ Disable Org ##############################################################
+- name: disable org
+  vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
+    name: "{{ org_name }}"
+    operation: "disable"
+  register: output
+
+- name: disable org output
+  debug:
+    msg: '{{ output }}'
+
+- assert:
+    that:
+      - "'Org {{ org_name }} has been disabled.' in output.msg"    
+
+############################################ Enable Org ##############################################################
+- name: enable org
+  vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
+    name: "{{ org_name }}"
+    operation: "enable"
+  register: output
+
+- name: enable org output
+  debug:
+    msg: '{{ output }}'
+  
+- assert:
+    that:
+      - "'Org {{ org_name }} has been enabled.' in output.msg"              
+
+
+############################################ Delete Org ##############################################################
+- name: delete org
+  vcd_org:
+    user: administrator
+    password: VMware1!
+    host: 10.172.158.127
+    org: SYSTEM
+    name: "{{ org_name }}"
+    force: "{{ force }}"
+    recursive: "{{ recursive }}"
+    state: "absent"
+  register: output
+
+- name: delete org output
+  debug:
+    msg: '{{ output }}'
+
+- assert:
+    that:
+      - "'Org {{ org_name }} has been deleted.' in output.msg"      
