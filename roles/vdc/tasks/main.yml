@@ -1,0 +1,37 @@
+---
+# tasks file for roles/vdc
+- name: create vdc
+  no_log: False
+  vcd_org_vdc:
+    # user: administrator
+    # password: VMware1!
+    # host: 10.172.158.127
+    # org: System
+    # name: "{{ vdc_name }}"
+    provider_vdc_name: "PVDC1"
+    description: "test vdc"
+    allocation_model: "AllocationVApp"
+    cpu_units: "MHz"
+    cpu_allocated: "2"
+    cpu_limit: "1"
+    mem_units: "MB"
+    mem_allocated: "4096"
+    mem_limit: "1024"
+    nic_quota: "2"
+    network_quota: "0"
+    vm_quota: "0"
+    resource_guaranteed_memory: "None"
+    resource_guaranteed_cpu: "None"
+    vcpu_in_mhz: "None"
+    is_thin_provision: "None"
+    network_pool_name: "None"
+    uses_fast_provisioning: "None"
+    over_commit_allowed: "None"
+    vm_discovery_enabled: "None"
+    is_enabled: "true"
+    state: "present"
+  register: output
+
+- assert:
+    that:
+      - "'User {{ username }} has been created.' in output.msg"
