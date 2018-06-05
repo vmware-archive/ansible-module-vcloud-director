@@ -5,39 +5,39 @@
 # tasks file for roles/catalog_item
 
 ############################################ upload-media ##############################################################
-# - name: upload media
-#   vcd_catalog_item:
-#     catalog_name: "{{ catalog_name }}"
-#     item_name: "{{ item_name }}"
-#     file_name : "{{ file_name }}"
-#     operation: "uploadmedia"
-#   register: output
+- name: upload media
+  vcd_catalog_item:
+    catalog_name: "{{ catalog_name }}"
+    item_name: "{{ item_name }}"
+    file_name : "{{ file_name }}"
+    operation: "uploadmedia"
+  register: output
 
-# - name: upload media output
-#   debug:
-#     msg: '{{ output }}'  
+- name: upload media output
+  debug:
+    msg: '{{ output }}'  
 
-# - assert:
-#     that:
-#       - "'Catalog media item {{ item_name }} uploaded in catalog {{ catalog_name }}.' in output.msg"
+- assert:
+    that:
+      - "'Catalog media item {{ item_name }} uploaded in catalog {{ catalog_name }}.' in output.msg"
 
 
 ############################################ upload-ova ##############################################################
-# - name: upload ova
-#   vcd_catalog_item:
-#     catalog_name: "{{ catalog_name }}"
-#     item_name: "{{ item_name }}"
-#     file_name : "{{ file_name }}"
-#     operation: "uploadova"
-#   register: output
+- name: upload ova
+  vcd_catalog_item:
+    catalog_name: "{{ catalog_name }}"
+    item_name: "{{ item_name }}"
+    file_name : "{{ file_name }}"
+    operation: "uploadova"
+  register: output
 
-# - name: upload media output
-#   debug:
-#     msg: '{{ output }}'  
+- name: upload media output
+  debug:
+    msg: '{{ output }}'  
 
-# - assert:
-#     that:
-#       - "'Catalog ova item {{ item_name }} uploaded in catalog {{ catalog_name }}.' in output.msg"
+- assert:
+    that:
+      - "'Catalog ova item {{ item_name }} uploaded in catalog {{ catalog_name }}.' in output.msg"
 
 
 ############################################ ova-media-check-resolved ##############################################################
