@@ -1,0 +1,108 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+---
+# tasks file for roles/catalog_item
+
+############################################ upload-media ##############################################################
+# - name: upload media
+#   vcd_catalog_item:
+#     catalog_name: "{{ catalog_name }}"
+#     item_name: "{{ item_name }}"
+#     file_name : "{{ file_name }}"
+#     operation: "uploadmedia"
+#   register: output
+
+# - name: upload media output
+#   debug:
+#     msg: '{{ output }}'  
+
+# - assert:
+#     that:
+#       - "'Catalog media item {{ item_name }} uploaded in catalog {{ catalog_name }}.' in output.msg"
+
+
+############################################ upload-ova ##############################################################
+# - name: upload ova
+#   vcd_catalog_item:
+#     catalog_name: "{{ catalog_name }}"
+#     item_name: "{{ item_name }}"
+#     file_name : "{{ file_name }}"
+#     operation: "uploadova"
+#   register: output
+
+# - name: upload media output
+#   debug:
+#     msg: '{{ output }}'  
+
+# - assert:
+#     that:
+#       - "'Catalog ova item {{ item_name }} uploaded in catalog {{ catalog_name }}.' in output.msg"
+
+
+############################################ ova-media-check-resolved ##############################################################
+- name: ova-media check resolved
+  vcd_catalog_item:
+    catalog_name: "{{ catalog_name }}"
+    item_name: "{{ item_name }}"
+    operation: "ovacheckresolved"
+  register: output
+
+- name: ova-media check resolved output
+  debug:
+    msg: '{{ output }}'  
+
+- assert:
+    that:
+      - "'successfully uploaded/captured ova/media for catalog_name {{ catalog_name }}, item_name {{ item_name }}.' in output.msg"      
+
+############################################ check-item-present ##############################################################
+- name: check if catalog item present/absent
+  vcd_catalog_item:
+    catalog_name: "{{ catalog_name }}"
+    item_name: "{{ item_name }}"
+    operation: "checkitempresent"
+  register: output
+
+- name: upload media output
+  debug:
+    msg: '{{ output }}'  
+
+
+
+############################################ delete-catalog-item ##############################################################
+- name: delete catalog item
+  vcd_catalog_item:
+    catalog_name: "{{ catalog_name }}"
+    item_name: "{{ item_name }}"
+    operation: "deleteitem"
+  register: output
+
+- name: delete catalog item output
+  debug:
+    msg: '{{ output }}'  
+
+- assert:
+    that:
+      - "'Catalog item {{ item_name }} deleted from catalog {{ catalog_name }}.' in output.msg"
+
+
+############################################ capture-vapp ##############################################################
+- name: capture vapp
+  vcd_catalog_item:
+    catalog_name: "{{ catalog_name }}"
+    item_name: "{{ item_name }}"
+    vapp_name: "{{ vapp_name }}"
+    vdc_name: "{{ vdc_name }}"
+    description: "{{ description }}"
+    customize_on_instantiate: "{{ customize_on_instantiate }}"
+    operation: "capturevapp"
+  register: output
+
+- name: capture vapp output
+  debug:
+    msg: '{{ output }}'  
+
+- assert:
+    that:
+      - "'Vapp {{ vapp_name }} captured successfully for catalog_name {{ catalog_name }}, item_name {{ item_name }}.' in output.msg"
