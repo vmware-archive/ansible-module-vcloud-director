@@ -51,7 +51,7 @@ options:
         required: false
     size:
         description:
-            - Disk Size in MB
+            - Disk Size in Bytes
         required: false
     vdc:
         description:
@@ -171,11 +171,11 @@ class Disk(VcdAnsibleModule):
         response = dict()
 
         vdc_object = self.get_vdc_object(vdc)
-        add_disk_task = vdc_object.create_disk(name=disk_name,
+        create_disk_task = vdc_object.create_disk(name=disk_name,
                                             size=size,
                                             storage_profile_name=storage_profile,
                                             description=description)
-        self.execute_task(add_disk_task.Tasks.Task[0])
+        self.execute_task(create_disk_task.Tasks.Task[0])
         response['msg'] = 'Disk {} has been created.'.format(disk_name)
         response['changed'] = True
 
