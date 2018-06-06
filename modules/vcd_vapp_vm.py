@@ -164,14 +164,12 @@ from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
-from pyvcloud.vcd.client import TaskStatus
 from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
 
 
-VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff',
-                      'updatecpu', 'updatememory', 'reloadvm',
+VAPP_VM_STATES = ['present', 'absent', 'update']
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
                       'deploy', 'undeploy']
 
 
@@ -203,77 +201,85 @@ def vapp_vm_argument_spec():
     )
 
 
-def get_vapp_resources(module):
-    '''
-        If source_vapp and source_catalog both are
-        given then priority will be given to
-        source_catalog.
-    '''
-    client = module.client
-    source_catalog_name = module.params.get('source_catalog_name', None)
-    source_template_name = module.params.get('source_template_name', None)
-    target_vapp = module.params.get('target_vapp', None)
-    target_vdc = module.params.get('target_vdc', None)
-    source_vdc = module.params.get('source_vdc', None)
-    source_vapp = module.params.get('source_vapp', None)
-    org_resource = Org(client, resource=client.get_org())
+class VappVM(VcdAnsibleModule):
+    def __init__(self, **kwargs):
+        super(VappVM, self).__init__(**kwargs)
+        vapp_resource = self.get_target_resource()
+        self.vapp = VApp(self.client, resource=vapp_resource)
 
-    if source_vapp:
-        source_vdc_resource = VDC(
-            client, resource=org_resource.get_vdc(source_vdc))
-        target_vdc_resource = VDC(
-            client, resource=org_resource.get_vdc(target_vdc))
-        source_vapp_resource_href = source_vdc_resource.get_resource_href(
-            name=source_vapp, entity_type=EntityType.VAPP)
-        target_vapp_resource_href = target_vdc_resource.get_resource_href(
-            name=target_vapp, entity_type=EntityType.VAPP)
-        source_vapp_resource = client.get_resource(source_vapp_resource_href)
-        target_vapp_resource = client.get_resource(target_vapp_resource_href)
+    def manage_states(self):
+        state = self.params.get('state')
+        if state == "present":
+            return self.add_vm()
 
-    if source_catalog_name:
+        if state == "absent":
+            return self.delete_vm()
+
+        if state == "update":
+            return self.update_vm()
+
+    def manage_operations(self):
+        operation = self.params.get('operation')
+        if operation == "poweron":
+            return self.power_on_vm()
+
+        if operation == "poweroff":
+            return self.power_off_vm()
+
+        if operation == "reloadvm":
+            return self.reload_vm()
+
+        if operation == "deploy":
+            return self.deploy_vm()
+
+        if operation == "undeploy":
+            return self.undeploy_vm()
+
+    def get_source_resource(self):
+        source_catalog_name = self.params.get('source_catalog_name')
+        source_template_name = self.params.get('source_template_name')
+        source_vdc = self.params.get('source_vdc')
+        source_vapp = self.params.get('source_vapp')
+        org_resource = Org(self.client, resource=self.client.get_org())
+        source_vapp_resource = None
+
+        if source_vapp:
+            source_vdc_resource = VDC(
+                self.client, resource=org_resource.get_vdc(source_vdc))
+            source_vapp_resource_href = source_vdc_resource.get_resource_href(
+                name=source_vapp, entity_type=EntityType.VAPP)
+            source_vapp_resource = self.client.get_resource(
+                source_vapp_resource_href)
+
+        if source_catalog_name:
+            catalog_item = org_resource.get_catalog_item(
+                source_catalog_name, source_template_name)
+            source_vapp_resource = self.client.get_resource(
+                catalog_item.Entity.get('href'))
+
+        return source_vapp_resource
+
+    def get_target_resource(self):
+        target_vapp = self.params.get('target_vapp')
+        target_vdc = self.params.get('target_vdc')
+        org_resource = Org(self.client, resource=self.client.get_org())
+        target_vapp_resource = None
+
         target_vdc_resource = VDC(
-            client, resource=org_resource.get_vdc(target_vdc))
+            self.client, resource=org_resource.get_vdc(target_vdc))
         target_vapp_resource = target_vdc_resource.get_vapp(target_vapp)
-        catalog_item = org_resource.get_catalog_item(
-            source_catalog_name, source_template_name)
-        source_vapp_resource = client.get_resource(
-            catalog_item.Entity.get('href'))
 
-    return source_vapp_resource, target_vapp_resource
+        return target_vapp_resource
 
+    def get_vm(self):
+        vapp_vm_resource = self.vapp.get_vm(self.params.get('target_vm_name'))
 
-class VappVM(object):
-    def __init__(self, module, vapp_resource):
-        self.module = module
-        self.vapp = VApp(module.client, resource=vapp_resource)
+        return VM(self.client, resource=vapp_vm_resource)
 
-    def execute_task(self, task):
-        client = self.module.client
-        task_monitor = client.get_task_monitor()
-        task_state = task_monitor.wait_for_status(
-            task=task,
-            timeout=60,
-            poll_frequency=2,
-            fail_on_statuses=None,
-            expected_target_statuses=[
-                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
-                TaskStatus.CANCELED
-            ],
-            callback=None)
-
-        task_status = task_state.get('status')
-        if task_status != TaskStatus.SUCCESS.value:
-            raise Exception(etree.tostring(task_state, pretty_print=True))
-
-        return 1
-
-    def get_vm(self, vm_name):
-        vapp_vm_resource = self.vapp.get_vm(vm_name)
-
-        return VM(self.module.client, resource=vapp_vm_resource)
-
-    def add_vms(self, target_vm_name, source_vapp_resource):
-        params = self.module.params
+    def add_vm(self):
+        params = self.params
+        source_vapp_resource = self.get_source_resource()
+        target_vm_name = params.get('target_vm_name')
         source_vm_name = params.get('source_vm_name')
         hostname = params.get('hostname')
         vmpassword = params.get('vmpassword')
@@ -308,10 +314,11 @@ class VappVM(object):
 
         return response
 
-    def delete_vms(self, vm_name):
+    def delete_vm(self):
+        vm_name = self.params.get('target_vm_name')
         response = dict()
 
-        self.undeploy_vm(vm_name)
+        self.undeploy_vm()
         delete_vms_task = self.vapp.delete_vms([vm_name])
         self.execute_task(delete_vms_task)
         response['msg'] = 'Vapp VM {} has been deleted.'.format(vm_name)
@@ -319,10 +326,45 @@ class VappVM(object):
 
         return response
 
-    def power_on_vm(self, vm_name):
-        vm = self.get_vm(vm_name)
+    def update_vm(self):
+        # Pyvcloud TODO get power state of vm
+        vm_name = self.params.get('target_vm_name')
         response = dict()
 
+        if self.params.get("virtual_cpus"):
+            self.update_vm_cpu()
+            response['changed'] = True
+
+        if self.params.get("memory"):
+            self.update_vm_memory()
+            response['changed'] = True
+
+        response['msg'] = 'Vapp VM {} has been updated.'.format(vm_name)
+
+        return response
+
+    def update_vm_cpu(self):
+        virtual_cpus = self.params.get('virtual_cpus')
+        cores_per_socket = self.params.get('cores_per_socket')
+
+        vm = self.get_vm()
+        update_cpu_task = vm.modify_cpu(virtual_cpus, cores_per_socket)
+
+        return self.execute_task(update_cpu_task)
+
+    def update_vm_memory(self):
+        memory = self.params.get('memory')
+
+        vm = self.get_vm()
+        update_memory_task = vm.modify_memory(memory)
+
+        return self.execute_task(update_memory_task)
+
+    def power_on_vm(self):
+        vm_name = self.params.get('target_vm_name')
+        response = dict()
+
+        vm = self.get_vm()
         power_on_task = vm.power_on()
         self.execute_task(power_on_task)
         response['msg'] = 'Vapp VM {} has been powered on.'.format(vm_name)
@@ -330,10 +372,11 @@ class VappVM(object):
 
         return response
 
-    def power_off_vm(self, vm_name):
-        vm = self.get_vm(vm_name)
+    def power_off_vm(self,):
+        vm_name = self.params.get('target_vm_name')
         response = dict()
 
+        vm = self.get_vm()
         power_off_task = vm.power_off()
         self.execute_task(power_off_task)
         response['msg'] = 'Vapp VM {} has been powered off.'.format(vm_name)
@@ -341,49 +384,22 @@ class VappVM(object):
 
         return response
 
-    def reload_vm(self, vm_name):
-        vm = self.get_vm(vm_name)
+    def reload_vm(self):
+        vm_name = self.params.get('target_vm_name')
         response = dict()
 
+        vm = self.get_vm()
         vm.reload()
         response['msg'] = 'Vapp VM {} has been reloaded.'.format(vm_name)
         response['changed'] = True
 
         return response
 
-    def update_cpu_of_vm(self, vm_name):
-        params = self.module.params
-        vm = self.get_vm(vm_name)
-        virtual_cpus = params.get('virtual_cpus')
-        cores_per_socket = params.get('cores_per_socket')
+    def deploy_vm(self):
+        vm_name = self.params.get('target_vm_name')
         response = dict()
 
-        self.power_off_vm(vm_name)
-        update_cpu_task = vm.modify_cpu(virtual_cpus, cores_per_socket)
-        self.execute_task(update_cpu_task)
-        response['msg'] = 'Vapp VM {} has been updated.'.format(vm_name)
-        response['changed'] = True
-
-        return response
-
-    def update_memory_of_vm(self, vm_name):
-        params = self.module.params
-        vm = self.get_vm(vm_name)
-        memory = params.get('memory')
-        response = dict()
-
-        self.power_off_vm(vm_name)
-        update_memory_task = vm.modify_memory(memory)
-        self.execute_task(update_memory_task)
-        response['msg'] = 'Vapp VM {} has been updated.'.format(vm_name)
-        response['changed'] = True
-
-        return response
-
-    def deploy_vm(self, vm_name):
-        vm = self.get_vm(vm_name)
-        response = dict()
-
+        vm = self.get_vm()
         deploy_vm_task = vm.deploy()
         self.execute_task(deploy_vm_task)
         response['msg'] = 'Vapp VM {} has been deployed.'.format(vm_name)
@@ -391,10 +407,11 @@ class VappVM(object):
 
         return response
 
-    def undeploy_vm(self, vm_name):
-        vm = self.get_vm(vm_name)
+    def undeploy_vm(self):
+        vm_name = self.params.get('target_vm_name')
         response = dict()
 
+        vm = self.get_vm()
         undeploy_vm_task = vm.undeploy()
         self.execute_task(undeploy_vm_task)
         response['msg'] = 'Vapp VM {} has been undeployed.'.format(vm_name)
@@ -403,61 +420,19 @@ class VappVM(object):
         return response
 
 
-def manage_vappvm_states(vApp, source_vapp_resource):
-    params = vApp.module.params
-    state = params.get('state')
-    target_vm_name = params.get('target_vm_name')
-    if state == "present":
-        return vApp.add_vms(target_vm_name, source_vapp_resource)
-
-    if state == "absent":
-        return vApp.delete_vms(target_vm_name)
-
-
-def manage_vappvm_operations(vApp):
-    params = vApp.module.params
-    operation = params.get('operation')
-    target_vm_name = params.get('target_vm_name')
-
-    if operation == "poweron":
-        return vApp.power_on_vm(target_vm_name)
-
-    if operation == "poweroff":
-        return vApp.power_off_vm(target_vm_name)
-
-    if operation == "updatecpu":
-        return vApp.update_cpu_of_vm(target_vm_name)
-
-    if operation == "updatememory":
-        return vApp.update_memory_of_vm(target_vm_name)
-
-    if operation == "reloadvm":
-        return vApp.reload_vm(target_vm_name)
-
-    if operation == "deploy":
-        return vApp.deploy_vm(target_vm_name)
-
-    if operation == "undeploy":
-        return vApp.undeploy_vm(target_vm_name)
-
-
 def main():
     argument_spec = vapp_vm_argument_spec()
     response = dict(
         msg=dict(type='str')
     )
 
-    module = VcdAnsibleModule(argument_spec=argument_spec,
-                              supports_check_mode=True)
+    module = VappVM(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        source_vapp_resource, target_vapp_resource = get_vapp_resources(module)
-        vApp = VappVM(module, target_vapp_resource)
-
         if module.params.get('state'):
-            response = manage_vappvm_states(vApp, source_vapp_resource)
+            response = module.manage_states()
         elif module.params.get('operation'):
-            response = manage_vappvm_operations(vApp)
+            response = module.manage_operations()
         else:
             raise Exception('One of from state/operation should be provided.')
 
