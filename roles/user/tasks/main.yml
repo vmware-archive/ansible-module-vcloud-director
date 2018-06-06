@@ -33,7 +33,7 @@
   vcd_user:
     username: "{{ username }}"
     is_enabled: "true"
-    operation: "update"
+    state: "update"
   register: output
 
 - assert:

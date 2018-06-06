@@ -111,11 +111,7 @@ options:
         required: false
     state:
         description:
-            - state of the user ('present'/'absent')
-        required: false
-    operation:
-        description:
-            - operations performed for the user ('update')
+            - state of the user ('present'/'absent'/'update')
         required: false
 
 author:
@@ -124,7 +120,7 @@ author:
 
 EXAMPLES = '''
 - name: Test with a message
-  vcd_vapp_vm:
+  vcd_user:
     user: terraform
     password: abcd
     host: csa.sandbox.org
@@ -152,15 +148,14 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-result: success/failure message relates to vapp_vm operation
+result: success/failure message relates to user operations
 '''
 
 from pyvcloud.vcd.org import Org
 from ansible.module_utils.vcd import VcdAnsibleModule
 
 
-USER_STATES = ['present', 'absent']
-USER_OPERATIONS = ['update']
+USER_STATES = ['present', 'absent', 'update']
 
 
 def user_argument_spec():
@@ -183,24 +178,29 @@ def user_argument_spec():
         is_alert_enabled=dict(type='str', required=False),
         is_enabled=dict(type='str', required=False),
         state=dict(choices=USER_STATES, required=False),
-        operation=dict(choices=USER_OPERATIONS, required=False)
     )
 
 
-class User(object):
-    def __init__(self, module):
-        self.module = module
+class User(VcdAnsibleModule):
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        logged_in_org = self.client.get_org()
+        self.org = Org(self.client, resource=logged_in_org)
 
-    def get_org(self):
-        client = self.module.client
-        logged_in_org = client.get_org()
+    def manage_states(self):
+        state = self.params.get('state')
+        if state == "present":
+            return self.create()
 
-        return Org(client, resource=logged_in_org)
+        if state == "absent":
+            return self.delete()
+
+        if state == "update":
+            return self.update()
 
     def create(self):
-        params = self.module.params
-        org = self.get_org()
-        role = org.get_role_record(params.get('role_name'))
+        params = self.params
+        role = self.org.get_role_record(params.get('role_name'))
         role_href = role.get('href')
         username = params.get('username')
         userpassword = params.get('userpassword')
@@ -220,7 +220,7 @@ class User(object):
         is_enabled = params.get('is_enabled')
         response = dict()
 
-        org.create_user(
+        self.org.create_user(
             username, userpassword, role_href, full_username, description,
             email, telephone, im, alert_email, alert_email_prefix,
             stored_vm_quota, deployed_vm_quota, is_group_role,
@@ -232,47 +232,25 @@ class User(object):
         return response
 
     def delete(self):
-        params = self.module.params
-        org = self.get_org()
-        username = params.get('username')
+        username = self.params.get('username')
         response = dict()
 
-        org.delete_user(username)
+        self.org.delete_user(username)
         response['msg'] = 'User {} has been deleted.'.format(username)
         response['changed'] = True
 
         return response
 
     def update(self):
-        params = self.module.params
-        org = self.get_org()
-        username = params.get('username')
-        is_enabled = params.get('is_enabled')
+        username = self.params.get('username')
+        enabled = self.params.get('is_enabled')
         response = dict()
 
-        org.update_user(username, is_enabled)
+        self.org.update_user(username, enabled)
         response['msg'] = 'User {} has been updated.'.format(username)
         response['changed'] = True
 
         return response
-
-
-def manage_user_states(user):
-    params = user.module.params
-    state = params.get('state')
-    if state == "present":
-        return user.create()
-
-    if state == "absent":
-        return user.delete()
-
-
-def manage_user_operations(user):
-    params = user.module.params
-    operation = params.get('operation')
-
-    if operation == "update":
-        return user.update()
 
 
 def main():
@@ -280,25 +258,18 @@ def main():
     response = dict(
         msg=dict(type='str')
     )
-
-    module = VcdAnsibleModule(argument_spec=argument_spec,
-                              supports_check_mode=True)
+    module = User(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        user = User(module)
+        if not module.params.get('state'):
+            raise Exception('Please provide the state for the resource.')
 
-        if module.params.get('state'):
-            response = manage_user_states(user)
-        elif module.params.get('operation'):
-            response = manage_user_operations(user)
-        else:
-            raise Exception('One of from state/operation should be provided.')
+        response = module.manage_states()
+        module.exit_json(**response)
 
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
-
-    module.exit_json(**response)
 
 
 if __name__ == '__main__':
