@@ -155,13 +155,10 @@ def vcd_disk_argument_spec():
 class Disk(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(Disk, self).__init__(**kwargs)
-
-    def get_vdc_object(self, vdc):
         logged_in_org = self.client.get_org()
-        org = Org(self.client, resource=logged_in_org)
-        vdc = org.get_vdc(vdc)
-
-        return VDC(self.client, href=vdc.get('href'))
+        self.org = Org(self.client, resource=logged_in_org)
+        vdc = self.org.get_vdc(self.params.get('vdc'))
+        self.vdc = VDC(self.client, href=vdc.get('href'))
 
     def create(self):
         disk_name = self.params.get('disk_name')
@@ -171,17 +168,15 @@ class Disk(VcdAnsibleModule):
         bus_type = self.params.get('bus_type')
         bus_sub_type = self.params.get('bus_sub_type')
         iops = self.params.get('iops')
-        vdc = self.params.get('vdc')
         response = dict()
 
-        vdc_object = self.get_vdc_object(vdc)
-        create_disk_task = vdc_object.create_disk(name=disk_name,
-                                                  size=size,
-                                                  bus_type=bus_type,
-                                                  bus_sub_type=bus_sub_type,
-                                                  description=description,
-                                                  iops=iops,
-                                                  storage_profile_name=storage_profile)
+        create_disk_task = self.vdc.create_disk(name=disk_name,
+                                                size=size,
+                                                bus_type=bus_type,
+                                                bus_sub_type=bus_sub_type,
+                                                description=description,
+                                                iops=iops,
+                                                storage_profile_name=storage_profile)
         self.execute_task(create_disk_task.Tasks.Task[0])
         response['msg'] = 'Disk {} has been created.'.format(disk_name)
         response['changed'] = True
@@ -196,17 +191,15 @@ class Disk(VcdAnsibleModule):
         new_description = self.params.get('new_description')
         new_storage_profile = self.params.get('new_storage_profile')
         new_iops = self.params.get('new_iops')
-        vdc = self.params.get('vdc')
         response = dict()
 
-        vdc_object = self.get_vdc_object(vdc)
-        update_disk_task = vdc_object.update_disk(name=disk_name,
-                                                  disk_id=disk_id,
-                                                  new_name=new_disk_name,
-                                                  new_size=new_size,
-                                                  new_iops=new_iops,
-                                                  new_description=new_description,
-                                                  new_storage_profile_name=new_storage_profile)
+        update_disk_task = self.vdc.update_disk(name=disk_name,
+                                                disk_id=disk_id,
+                                                new_name=new_disk_name,
+                                                new_size=new_size,
+                                                new_iops=new_iops,
+                                                new_description=new_description,
+                                                new_storage_profile_name=new_storage_profile)
         self.execute_task(update_disk_task)
         response['msg'] = 'Disk {} has been updated.'.format(disk_name)
         response['changed'] = True
@@ -216,12 +209,10 @@ class Disk(VcdAnsibleModule):
     def delete(self):
         disk_name = self.params.get('disk_name')
         disk_id = self.params.get('disk_id')
-        vdc = self.params.get('vdc')
         response = dict()
 
-        vdc_object = self.get_vdc_object(vdc)
-        delete_disk_task = vdc_object.delete_disk(name=disk_name,
-                                                  disk_id=disk_id)
+        delete_disk_task = self.vdc.delete_disk(name=disk_name,
+                                                disk_id=disk_id)
         self.execute_task(delete_disk_task)
         response['msg'] = 'Disk {} has been deleted.'.format(disk_name)
         response['changed'] = True
