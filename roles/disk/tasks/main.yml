@@ -20,7 +20,7 @@
     new_disk_name: "{{ updated_disk_name }}"
     new_size: "200"
     vdc: "Terraform_VDC"
-    operation: "update"
+    state: "update"
   register: output
 
 - assert:

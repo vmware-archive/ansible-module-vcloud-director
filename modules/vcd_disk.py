@@ -69,6 +69,14 @@ options:
         description:
             - Iops for Disk
         required: false
+    bus_type:
+        description:
+            - bus type for Disk
+        required: false
+    bus_sub_type:
+        description:
+            - bus sub type for Disk
+        required: false
     new_disk_name:
         description:
             - New Disk Name
@@ -95,13 +103,7 @@ options:
         required: false
     state:
         description:
-            - state of disk ('present'/'absent').
-            - One from state or operation has to be provided.
-        required: false
-    operation:
-        description:
-            - operation ('update') which should be performed over disk.
-            - One from state or operation has to be provided.
+            - state of disk ('present'/'absent'/'update').
         required: false
 
 author:
@@ -127,8 +129,7 @@ from pyvcloud.vcd.vdc import VDC
 from ansible.module_utils.vcd import VcdAnsibleModule
 
 
-VCD_DISK_STATES = ['present', 'absent']
-VCD_DISK_OPERATIONS = ['update']
+VCD_DISK_STATES = ['present', 'update', 'absent']
 
 
 def vcd_disk_argument_spec():
@@ -139,6 +140,8 @@ def vcd_disk_argument_spec():
         description=dict(type='str', required=False),
         storage_profile=dict(type='str', required=False),
         iops=dict(type='str', required=False),
+        bus_type=dict(type='str', required=False),
+        bus_sub_type=dict(type='str', required=False),
         new_disk_name=dict(type='str', required=False),
         new_size=dict(type='str', required=False),
         new_description=dict(type='str', required=False),
@@ -146,7 +149,6 @@ def vcd_disk_argument_spec():
         new_iops=dict(type='str', required=False),
         disk_id=dict(type='str', required=False),
         state=dict(choices=VCD_DISK_STATES, required=False),
-        operation=dict(choices=VCD_DISK_OPERATIONS, required=False)
     )
 
 
@@ -163,18 +165,23 @@ class Disk(VcdAnsibleModule):
 
     def create(self):
         disk_name = self.params.get('disk_name')
-        vdc = self.params.get('vdc')
         size = self.params.get('size')
         description = self.params.get('description')
         storage_profile = self.params.get('storage_profile')
-        disk_id = self.params.get('disk_id')
+        bus_type = self.params.get('bus_type')
+        bus_sub_type = self.params.get('bus_sub_type')
+        iops = self.params.get('iops')
+        vdc = self.params.get('vdc')
         response = dict()
 
         vdc_object = self.get_vdc_object(vdc)
         create_disk_task = vdc_object.create_disk(name=disk_name,
-                                            size=size,
-                                            storage_profile_name=storage_profile,
-                                            description=description)
+                                                  size=size,
+                                                  bus_type=bus_type,
+                                                  bus_sub_type=bus_sub_type,
+                                                  description=description,
+                                                  iops=iops,
+                                                  storage_profile_name=storage_profile)
         self.execute_task(create_disk_task.Tasks.Task[0])
         response['msg'] = 'Disk {} has been created.'.format(disk_name)
         response['changed'] = True
@@ -183,23 +190,23 @@ class Disk(VcdAnsibleModule):
 
     def update(self):
         disk_name = self.params.get('disk_name')
-        vdc = self.params.get('vdc')
         disk_id = self.params.get('disk_id')
         new_disk_name = self.params.get('new_disk_name')
         new_size = self.params.get('new_size')
         new_description = self.params.get('new_description')
         new_storage_profile = self.params.get('new_storage_profile')
         new_iops = self.params.get('new_iops')
+        vdc = self.params.get('vdc')
         response = dict()
 
         vdc_object = self.get_vdc_object(vdc)
         update_disk_task = vdc_object.update_disk(name=disk_name,
-                                            disk_id=disk_id,
-                                            new_name=new_disk_name,
-                                            new_size=new_size,
-                                            new_storage_profile_name=new_storage_profile,
-                                            new_description=new_description,
-                                            new_iops=new_iops)
+                                                  disk_id=disk_id,
+                                                  new_name=new_disk_name,
+                                                  new_size=new_size,
+                                                  new_iops=new_iops,
+                                                  new_description=new_description,
+                                                  new_storage_profile_name=new_storage_profile)
         self.execute_task(update_disk_task)
         response['msg'] = 'Disk {} has been updated.'.format(disk_name)
         response['changed'] = True
@@ -213,13 +220,13 @@ class Disk(VcdAnsibleModule):
         response = dict()
 
         vdc_object = self.get_vdc_object(vdc)
-        delete_disk_task = vdc_object.delete_disk(disk_name, disk_id=disk_id)
+        delete_disk_task = vdc_object.delete_disk(name=disk_name,
+                                                  disk_id=disk_id)
         self.execute_task(delete_disk_task)
         response['msg'] = 'Disk {} has been deleted.'.format(disk_name)
         response['changed'] = True
 
         return response
-        
 
     def manage_states(self):
         state = self.params.get('state')
@@ -229,33 +236,27 @@ class Disk(VcdAnsibleModule):
         if state == 'absent':
             return self.delete()
 
-    def manage_operations(self):
-        operation = self.params.get('operation')
-        if operation == 'update':
+        if state == 'update':
             return self.update()
 
 
 def main():
     argument_spec = vcd_disk_argument_spec()
-
     response = dict(
         msg=dict(type='str'),
     )
-
     module = Disk(argument_spec=argument_spec, supports_check_mode=True)
+
     try:
-        if module.params.get('state'):
-            response = module.manage_states()
-        elif module.params.get('operation'):
-            response = module.manage_operations()
-        else:
-            raise Exception('One of from state/operation should be provided.')
+        if not module.params.get('state'):
+            raise Exception('Please provide the state for the resource.')
+
+        response = module.manage_states()
+        module.exit_json(**response)
+
     except Exception as error:
         response['msg'] = error.__str__()
-        response['changed'] = False
         module.fail_json(**response)
-
-    module.exit_json(**response)
 
 
 if __name__ == '__main__':
