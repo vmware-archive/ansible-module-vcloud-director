@@ -2,7 +2,7 @@
 # tasks file for roles/vapp
 - name: create vapp
   vcd_vapp:
-    name: "{{ vapp_name }}"
+    vapp_name: "{{ vapp_name }}"
     template_name: "centos7"
     catalog_name: "test_catalog"
     vdc: "Terraform_VDC"
@@ -16,7 +16,7 @@
 
 - name: power on vapp
   vcd_vapp:
-    name: "{{ vapp_name }}"
+    vapp_name: "{{ vapp_name }}"
     template_name: "centos7"
     catalog_name: "test_catalog"
     vdc: "Terraform_VDC"
@@ -29,7 +29,7 @@
 
 - name: power off vapp
   vcd_vapp:
-    name: "{{ vapp_name }}"
+    vapp_name: "{{ vapp_name }}"
     template_name: "centos7"
     catalog_name: "test_catalog"
     vdc: "Terraform_VDC"
@@ -42,7 +42,7 @@
 
 - name: undeploy vapp
   vcd_vapp:
-    name: "{{ vapp_name }}"
+    vapp_name: "{{ vapp_name }}"
     template_name: "centos7"
     catalog_name: "test_catalog"
     vdc: "Terraform_VDC"
@@ -55,7 +55,7 @@
 
 - name: deploy vapp
   vcd_vapp:
-    name: "{{ vapp_name }}"
+    vapp_name: "{{ vapp_name }}"
     template_name: "centos7"
     catalog_name: "test_catalog"
     vdc: "Terraform_VDC"
@@ -68,7 +68,7 @@
 
 - name: delete vapp
   vcd_vapp:
-    name: "{{ vapp_name }}"
+    vapp_name: "{{ vapp_name }}"
     template_name: "centos7"
     catalog_name: "test_catalog"
     vdc: "Terraform_VDC"
