@@ -9,7 +9,7 @@
   vcd_org:
     user: administrator
     password: VMware1!
-    host: 10.172.158.122
+    host: 10.172.158.127
     org: SYSTEM
     org_name: "{{ org_name }}"
     full_name: "{{ org_full_name }}"

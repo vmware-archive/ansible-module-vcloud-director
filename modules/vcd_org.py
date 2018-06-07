@@ -73,6 +73,7 @@ options:
         required: false
 author:
     - pcpandey@mail.com
+    - mtaneja@vmware.com
 '''
 
 EXAMPLES = '''
@@ -100,7 +101,7 @@ from pyvcloud.vcd.system import System
 from ansible.module_utils.vcd import VcdAnsibleModule
 
 VCD_ORG_STATES = ['present', 'absent', 'update']
-VCD_ORG_OPERATIONS = ['read', 'enable', 'disable']
+VCD_ORG_OPERATIONS = ['read']
 
 
 def org_argument_spec():
@@ -120,6 +121,22 @@ class VCDOrg(VcdAnsibleModule):
         super(VCDOrg, self).__init__(**kwargs)
         sys_admin = self.client.get_admin()
         self.system = System(self.client, admin_resource=sys_admin)
+
+    def manage_states(self):
+        state = self.params.get('state')
+        if state == "present":
+            return self.create()
+
+        if state == "absent":
+            return self.delete()
+
+        if state == "update":
+            return self.update()
+
+    def manage_operations(self):
+        operation = self.params.get('operation')
+        if operation == "read":
+            return self.read()
 
     def create(self):
         org_name = self.params.get('org_name')
@@ -175,30 +192,14 @@ class VCDOrg(VcdAnsibleModule):
 
         return response
 
-    def manage_states(self):
-        state = self.params.get('state')
-        if state == "present":
-            return self.create()
-
-        if state == "absent":
-            return self.delete()
-
-        if state == "update":
-            return self.update()
-
-    def manage_operations(self):
-        operation = self.params.get('operation')
-        if operation == "read":
-            return self.read()
-
 
 def main():
     argument_spec = org_argument_spec()
     response = dict(
         msg=dict(type='str')
     )
-
     module = VCDOrg(argument_spec=argument_spec, supports_check_mode=True)
+
     try:
         if module.params.get('state'):
             response = module.manage_states()
