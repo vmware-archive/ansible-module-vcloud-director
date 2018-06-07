@@ -123,6 +123,7 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.client import QueryResultFormat
 import time
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 VCD_CATALOG_ITEM_STATES = ['present', 'absent']
 VCD_CATALOG_ITEM_OPERATIONS = ['capturevapp', 'ovacheckresolved']
@@ -161,8 +162,10 @@ class CatalogItem(object):
         try:
             catalog = org.get_catalog_item(catalog_name, item_name)
             present = True
-        except Exception as e:
+        except EntityNotFoundException as e:
             pass
+        except Exception as e:
+            raise e
 
         return present
 
