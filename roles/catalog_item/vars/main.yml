@@ -1,0 +1,15 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+---
+# vars file for roles/catalog_item
+
+catalog_name: "test_catalog_100"
+item_name: "test_ova-media-resolved-112"
+file_name: "/home/parkash/workspace/vmware/Ansible/official/pyvcloud/system_tests/test_vapp_template.ova"
+
+# for capture vapp
+vapp_name: "vapp_100"
+vdc_name: "EXT"
+description: "capture_vapp_desc"
+customize_on_instantiate: false
