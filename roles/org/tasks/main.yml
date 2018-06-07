@@ -9,9 +9,9 @@
   vcd_org:
     user: administrator
     password: VMware1!
-    host: 10.172.158.127
+    host: 10.172.158.122
     org: SYSTEM
-    name: "{{ org_name }}"
+    org_name: "{{ org_name }}"
     full_name: "{{ org_full_name }}"
     is_enabled : "{{ is_enabled }}"
     state: "present"
@@ -33,7 +33,7 @@
     password: VMware1!
     host: 10.172.158.127
     org: SYSTEM
-    name: "{{ org_name }}"
+    org_name: "{{ org_name }}"
     operation: "read"
   register: output
 
@@ -55,8 +55,9 @@
     password: VMware1!
     host: 10.172.158.127
     org: SYSTEM
-    name: "{{ org_name }}"
-    operation: "disable"
+    org_name: "{{ org_name }}"
+    is_enabled: "false"
+    state: "update"
   register: output
 
 - name: disable org output
@@ -65,7 +66,7 @@
 
 - assert:
     that:
-      - "'Org {{ org_name }} has been disabled.' in output.msg"    
+      - "'Org {{ org_name }} has been updated.' in output.msg"    
 
 ############################################ Enable Org ##############################################################
 - name: enable org
@@ -74,8 +75,9 @@
     password: VMware1!
     host: 10.172.158.127
     org: SYSTEM
-    name: "{{ org_name }}"
-    operation: "enable"
+    org_name: "{{ org_name }}"
+    is_enabled: "true"
+    state: "update"
   register: output
 
 - name: enable org output
@@ -84,7 +86,7 @@
   
 - assert:
     that:
-      - "'Org {{ org_name }} has been enabled.' in output.msg"              
+      - "'Org {{ org_name }} has been updated.' in output.msg"              
 
 
 ############################################ Delete Org ##############################################################
@@ -94,7 +96,7 @@
     password: VMware1!
     host: 10.172.158.127
     org: SYSTEM
-    name: "{{ org_name }}"
+    org_name: "{{ org_name }}"
     force: "{{ force }}"
     recursive: "{{ recursive }}"
     state: "absent"

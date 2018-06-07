@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 client: vcd_org
-short_description: This module is to create org in vCloud Director
+short_description: This module is to manage organizations in vCloud Director
 version_added: "2.4"
 description:
-    - "This module is to to create org in vCloud Director"
+    - "This module is to manage organizations in vCloud Director"
 options:
     user:
         description:
@@ -41,7 +41,7 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
-    name:
+    org_name:
         description:
             - name of the org
         required: true
@@ -49,30 +49,25 @@ options:
         description:
             - full name of the org
         required: true
-
     force:
         description:
-            - force delete org 
+            - force delete org
         required: true
-
     recursive:
         description:
             - recursive delete org
-        required: true                
-    
+        required: true
     state:
         description:
             - state of org
-                - present 
-                - absent  
-            - One from state or operation has to be provided. 
+                - present
+                - absent
+                - update
+            - One from state or operation has to be provided.
         required: false
-
     operation:
         description:
-            - operation which should be performed over org 
-                - enable : enable org
-                - disable : disable org
+            - operation which should be performed over org
                 - read : read org metadata
             - One from state or operation has to be provided.
         required: false
@@ -88,7 +83,7 @@ EXAMPLES = '''
     host: csa.sandbox.org
     api_version: 30
     verify_ssl_certs: False
-    name = "vcdvapp"
+    org_name = "vcdvapp"
     full_name = "vcdlab"
     is_enabled = True
     state="present"
@@ -102,16 +97,15 @@ result: success/failure message relates to org operation
 from lxml import etree
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.system import System
-from pyvcloud.vcd.client import TaskStatus
 from ansible.module_utils.vcd import VcdAnsibleModule
 
-VCD_ORG_STATES = ['present', 'absent']
+VCD_ORG_STATES = ['present', 'absent', 'update']
 VCD_ORG_OPERATIONS = ['read', 'enable', 'disable']
 
 
 def org_argument_spec():
     return dict(
-        name=dict(type='str', required=True),
+        org_name=dict(type='str', required=True),
         full_name=dict(type='str', required=False),
         is_enabled=dict(type='bool', required=False),
         force=dict(type='bool', required=False),
@@ -121,42 +115,33 @@ def org_argument_spec():
     )
 
 
-class VCDOrg(object):
-    def __init__(self, module):
-        self.module = module
-
-    def get_system_object(self):
-        client = self.module.client
-        sys_admin = client.get_admin()
-        system = System(client, admin_resource=sys_admin)
-
-        return system
+class VCDOrg(VcdAnsibleModule):
+    def __init__(self, **kwargs):
+        super(VCDOrg, self).__init__(**kwargs)
+        sys_admin = self.client.get_admin()
+        self.system = System(self.client, admin_resource=sys_admin)
 
     def create(self):
-        params = self.module.params
-        name = params.get('name')
-        full_name = params.get('full_name')
-        is_enabled = params.get('is_enabled')
+        org_name = self.params.get('org_name')
+        full_name = self.params.get('full_name')
+        is_enabled = self.params.get('is_enabled')
         response = dict()
 
-        system = self.get_system_object()
-        system.create_org(name, full_name, is_enabled)
-        response['msg'] = 'Org {} has been created.'.format(name)
+        self.system.create_org(org_name, full_name, is_enabled)
+        response['msg'] = 'Org {} has been created.'.format(org_name)
         response['changed'] = True
 
         return response
 
     def read(self):
-        params = self.module.params
-        name = params.get('name')
+        org_name = self.params.get('org_name')
         response = dict()
         org_details = dict()
-        client = self.module.client
 
-        resource = client.get_org_by_name(name)
-        org = Org(client, resource=resource)
+        resource = self.client.get_org_by_name(org_name)
+        org = Org(self.client, resource=resource)
         org_admin_resource = org.client.get_resource(org.href_admin)
-        org_details['name'] = name
+        org_details['org_name'] = org_name
         org_details['full_name'] = str(org_admin_resource['FullName'])
         org_details['is_enabled'] = str(org_admin_resource['IsEnabled'])
         response['msg'] = org_details
@@ -164,93 +149,47 @@ class VCDOrg(object):
 
         return response
 
-    def enable(self):
-        params = self.module.params
-        name = params.get('name')
-        is_enabled = True
+    def update(self):
+        org_name = self.params.get('org_name')
+        is_enabled = self.params.get('is_enabled')
         response = dict()
 
-        client = self.module.client
-        resource = client.get_org_by_name(name)
-        org = Org(client, resource=resource)
+        resource = self.client.get_org_by_name(org_name)
+        org = Org(self.client, resource=resource)
         org.update_org(is_enabled)
-        response['msg'] = 'Org {} has been enabled.'.format(name)
+        response['msg'] = 'Org {} has been updated.'.format(org_name)
         response['changed'] = True
 
         return response
-
-    def disable(self):
-        params = self.module.params
-        name = params.get('name')
-        is_enabled = False
-        response = dict()
-
-        client = self.module.client
-        resource = client.get_org_by_name(name)
-        org = Org(client, resource=resource)
-        org.update_org(is_enabled)
-        response['msg'] = 'Org {} has been disabled.'.format(name)
-        response['changed'] = True
-
-        return response
-
-    def execute_task(self, task):
-        client = self.module.client
-        task_monitor = client.get_task_monitor()
-        task_state = task_monitor.wait_for_status(
-            task=task,
-            timeout=60,
-            poll_frequency=2,
-            fail_on_statuses=None,
-            expected_target_statuses=[
-                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
-                TaskStatus.CANCELED
-            ],
-            callback=None)
-
-        task_status = task_state.get('status')
-        if task_status != TaskStatus.SUCCESS.value:
-            raise Exception(etree.tostring(task_state, pretty_print=True))
-
-        return 1
 
     def delete(self):
-        params = self.module.params
-        name = params.get('name')
-        force = params.get('force')
-        recursive = params.get('recursive')
+        org_name = self.params.get('org_name')
+        force = self.params.get('force')
+        recursive = self.params.get('recursive')
         response = dict()
 
-        system = self.get_system_object()
-        delete_org_task = system.delete_org(name, force, recursive)
+        delete_org_task = self.system.delete_org(org_name, force, recursive)
         self.execute_task(delete_org_task)
-        response['msg'] = 'Org {} has been deleted.'.format(name)
+        response['msg'] = 'Org {} has been deleted.'.format(org_name)
         response['changed'] = True
 
         return response
 
+    def manage_states(self):
+        state = self.params.get('state')
+        if state == "present":
+            return self.create()
 
-def manage_org_states(org):
-    params = org.module.params
-    state = params.get('state')
-    if state == "present":
-        return org.create()
+        if state == "absent":
+            return self.delete()
 
-    if state == "absent":
-        return org.delete()
+        if state == "update":
+            return self.update()
 
-
-def manage_org_operations(org):
-    params = org.module.params
-    state = params.get('operation')
-    if state == "read":
-        return org.read()
-
-    if state == "enable":
-        return org.enable()
-
-    if state == "disable":
-        return org.disable()
+    def manage_operations(self):
+        operation = self.params.get('operation')
+        if operation == "read":
+            return self.read()
 
 
 def main():
@@ -259,14 +198,12 @@ def main():
         msg=dict(type='str')
     )
 
-    module = VcdAnsibleModule(argument_spec=argument_spec,
-                              supports_check_mode=True)
+    module = VCDOrg(argument_spec=argument_spec, supports_check_mode=True)
     try:
-        org = VCDOrg(module)
         if module.params.get('state'):
-            response = manage_org_states(org)
+            response = module.manage_states()
         elif module.params.get('operation'):
-            response = manage_org_operations(org)
+            response = module.manage_operations()
         else:
             raise Exception('One of from state/operation should be provided.')
 
