@@ -3,35 +3,50 @@
 - name: create vdc
   no_log: False
   vcd_org_vdc:
-    # user: administrator
-    # password: VMware1!
-    # host: 10.172.158.127
-    # org: System
-    # name: "{{ vdc_name }}"
+    user: "administrator"
+    password: "VMware1!"
+    host: "10.172.158.109"
+    org: "System"
+    vdc_name: "{{ vdc_name }}"
     provider_vdc_name: "PVDC1"
     description: "test vdc"
     allocation_model: "AllocationVApp"
-    cpu_units: "MHz"
-    cpu_allocated: "2"
-    cpu_limit: "1"
-    mem_units: "MB"
-    mem_allocated: "4096"
-    mem_limit: "1024"
-    nic_quota: "2"
-    network_quota: "0"
-    vm_quota: "0"
-    resource_guaranteed_memory: "None"
-    resource_guaranteed_cpu: "None"
-    vcpu_in_mhz: "None"
-    is_thin_provision: "None"
-    network_pool_name: "None"
-    uses_fast_provisioning: "None"
-    over_commit_allowed: "None"
-    vm_discovery_enabled: "None"
-    is_enabled: "true"
+    is_enabled: "false"
+    storage_profiles: "{ \"name\" : \"Performance\",\"enabled\"  : true, \"units\" : \"MB\", \"limit\" : 0, \"default\" : true }"
     state: "present"
   register: output
 
 - assert:
     that:
-      - "'User {{ username }} has been created.' in output.msg"
+      - "'VDC {{ vdc_name }} has been created.' in output.msg"
+
+- name: update vdc
+  no_log: False
+  vcd_org_vdc:
+    user: "administrator"
+    password: "VMware1!"
+    host: "10.172.158.109"
+    org: "System"
+    vdc_name: "{{ vdc_name }}"
+    is_enabled: "true"
+    state: "update"
+  register: output
+
+- assert:
+    that:
+      - "'VDC {{ vdc_name }} has been updated.' in output.msg"
+
+- name: delete vdc
+  no_log: False
+  vcd_org_vdc:
+    user: "administrator"
+    password: "VMware1!"
+    host: "10.172.158.109"
+    org: "System"
+    vdc_name: "{{ vdc_name }}"
+    state: "absent"
+  register: output
+
+- assert:
+    that:
+      - "'VDC {{ vdc_name }} has been deleted.' in output.msg"

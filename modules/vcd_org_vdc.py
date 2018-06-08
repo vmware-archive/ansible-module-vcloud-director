@@ -41,7 +41,7 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
-    name:
+    vdc_name:
         description:
             - The name of the new vdc
         required: false
@@ -143,12 +143,6 @@ options:
             - state of new virtual datacenter ('present'/'absent').
             - One from state or operation has to be provided.
         required: false
-    operation:
-        description:
-            - operations performed over new vdc ('update').
-            - One from state or operation has to be provided.
-        required: false
-
 author:
     - mtaneja@vmware.com
 '''
@@ -162,7 +156,7 @@ EXAMPLES = '''
     org: Terraform
     api_version: 30
     verify_ssl_certs: False
-    name = "VDC_NAME"
+    vdc_name = "VDC_NAME"
     provider_vdc_name = "PVDC_NAME"
     description = "DESCRIPTION"
     allocation_model = "AllocationVApp"
@@ -200,13 +194,12 @@ from pyvcloud.vcd.system import System
 from ansible.module_utils.vcd import VcdAnsibleModule
 
 
-ORG_VDC_STATES = ['present', 'absent']
-ORG_VDC_OPERATIONS = ['update']
+ORG_VDC_STATES = ['present', 'absent', 'update']
 
 
 def org_vdc_argument_spec():
     return dict(
-        name=dict(type='str', required=False),
+        vdc_name=dict(type='str', required=False),
         provider_vdc_name=dict(type='str', required=False),
         description=dict(type='str', required=False),
         allocation_model=dict(type='str', required=False),
@@ -230,26 +223,33 @@ def org_vdc_argument_spec():
         vm_discovery_enabled=dict(type='str', required=False),
         is_enabled=dict(type='str', required=False),
         state=dict(choices=ORG_VDC_STATES, required=False),
-        operation=dict(choices=ORG_VDC_OPERATIONS, required=False)
     )
 
 
 class Vdc(VcdAnsibleModule):
     def __init__(self, **kwargs):
-        super(Vdc, self).__init__(**   kwargs)
-
-    def get_org(self):
+        super(Vdc, self).__init__(**kwargs)
         logged_in_org = self.client.get_org()
+        self.org = Org(self.client, resource=logged_in_org)
 
-        return Org(self.client, resource=logged_in_org)
+    def manage_states(self):
+        state = self.params.get('state')
+        if state == 'present':
+            return self.create()
+
+        if state == 'absent':
+            return self.delete()
+
+        if state == 'update':
+            return self.update()
 
     def create(self):
-        name = self.params.get('name')
+        vdc_name = self.params.get('vdc_name')
         is_enabled = self.params.get('is_enabled')
         provider_vdc_name = self.params.get('provider_vdc_name')
         description = self.params.get('description')
         allocation_model = self.params.get('allocation_model')
-        # storage_profiles = self.params.get('storage_profiles')
+        storage_profiles = self.params.get('storage_profiles')
         cpu_units = self.params.get('cpu_units')
         cpu_allocated = self.params.get('cpu_allocated')
         cpu_limit = self.params.get('cpu_limit')
@@ -268,82 +268,72 @@ class Vdc(VcdAnsibleModule):
         over_commit_allowed = self.params.get('over_commit_allowed')
         vm_discovery_enabled = self.params.get('vm_discovery_enabled')
         # storage_profiles = json.loads(storage_profiles)
+        storage_profiles = [{
+            "name": "Performance",
+            "enabled": True,
+            "units": "MB",
+            "limit": 0,
+            "default": True}]
+
         response = dict()
 
-        if not network_pool_name.strip():
-            network_pool_name = None
-
-        org = self.get_org()
-        create_vdc_task = org.create_org_vdc(
-            vdc_name=name,
+        create_vdc_task = self.org.create_org_vdc(
+            vdc_name=vdc_name,
             provider_vdc_name=provider_vdc_name,
             description=description,
             allocation_model=allocation_model,
-            # storage_profiles=storage_profiles,
-            cpu_units=cpu_units,
-            cpu_allocated=cpu_allocated,
-            cpu_limit=cpu_limit,
-            mem_units=mem_units,
-            mem_allocated=mem_allocated,
-            mem_limit=mem_limit,
-            nic_quota=nic_quota,
-            network_quota=network_quota,
-            vm_quota=vm_quota,
-            resource_guaranteed_memory=resource_guaranteed_memory,
-            resource_guaranteed_cpu=resource_guaranteed_cpu,
-            vcpu_in_mhz=vcpu_in_mhz,
-            is_thin_provision=is_thin_provision,
-            network_pool_name=network_pool_name,
-            uses_fast_provisioning=uses_fast_provisioning,
-            over_commit_allowed=over_commit_allowed,
-            vm_discovery_enabled=vm_discovery_enabled,
+            storage_profiles=storage_profiles,
+            # cpu_units=cpu_units,
+            # cpu_allocated=cpu_allocated,
+            # cpu_limit=cpu_limit,
+            # mem_units=mem_units,
+            # mem_allocated=mem_allocated,
+            # mem_limit=mem_limit,
+            # nic_quota=nic_quota,
+            # network_quota=network_quota,
+            # vm_quota=vm_quota,
+            # resource_guaranteed_memory=resource_guaranteed_memory,
+            # resource_guaranteed_cpu=resource_guaranteed_cpu,
+            # vcpu_in_mhz=vcpu_in_mhz,
+            # is_thin_provision=is_thin_provision,
+            # network_pool_name=network_pool_name,
+            # uses_fast_provisioning=uses_fast_provisioning,
+            # over_commit_allowed=over_commit_allowed,
+            # vm_discovery_enabled=vm_discovery_enabled,
             is_enabled=is_enabled)
 
-        self.execute_task(create_vdc_task)
-        response['msg'] = 'VDC {} has been created.'.format(name)
+        self.execute_task(create_vdc_task.Tasks.Task[0])
+        response['msg'] = 'VDC {} has been created.'.format(vdc_name)
         response['changed'] = True
 
         return response
 
     def update(self):
-        org = self.get_org()
-        name = self.params.get('name')
+        vdc_name = self.params.get('vdc_name')
         is_enabled = self.params.get('is_enabled')
         response = dict()
 
-        vdc_resource = org.get_vdc(name)
-        vdc = VDC(self.client, name=name, resource=vdc_resource)
-        vdc.enable_vdc(is_enabled)
-        response['msg'] = 'VDC {} has been updated'.format(name)
+        vdc_resource = self.org.get_vdc(vdc_name)
+        vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
+        vdc.enable_vdc(enable=is_enabled)
+        response['msg'] = 'VDC {} has been updated.'.format(vdc_name)
         response['changed'] = True
 
         return response
 
     def delete(self):
-        org = self.get_org()
-        name = self.params.get('name')
+        vdc_name = self.params.get('vdc_name')
+        response = dict()
 
-        vdc_resource = org.get_vdc(name)
-        vdc = VDC(self.client, name=name, resource=vdc_resource)
+        vdc_resource = self.org.get_vdc(vdc_name)
+        vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
+        vdc.enable_vdc(enable=False)
         delete_vdc_task = vdc.delete_vdc()
         self.execute_task(delete_vdc_task)
-        response['msg'] = 'VDC {} has been deleted.'.format(name)
+        response['msg'] = 'VDC {} has been deleted.'.format(vdc_name)
         response['changed'] = True
 
         return response
-
-    def manage_states(self):
-        state = self.params.get('state')
-        if state == 'present':
-            self.create()
-
-        if state == 'absent':
-            self.delete()
-
-    def manage_operations(self):
-        operation = self.params.get('operation')
-        if operation == 'update':
-            self.update()
 
 
 def main():
@@ -351,21 +341,17 @@ def main():
     response = dict(
         msg=dict(type='str')
     )
-
     module = Vdc(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if module.params.get('state'):
-            module.manage_states()
-        elif module.params.get('operation'):
-            module.manage_operations()
-        else:
-            raise Exception('One of from state/operation should be provided.')
+        if not module.params.get('state'):
+            raise Exception('Please provide state for the resource.')
+        response = module.manage_states()
+        module.exit_json(**response)
+
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
-
-    module.exit_json(**response)
 
 
 if __name__ == '__main__':
