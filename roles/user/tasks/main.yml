@@ -26,7 +26,7 @@
 
 - assert:
     that:
-      - "'User {{ username }} has been created.' in output.msg"
+      - "'True' in output.msg"
 
 - name: update user
   no_log: False
@@ -38,7 +38,7 @@
 
 - assert:
     that:
-      - "'User {{ username }} has been updated.' in output.msg"
+      - "'True' in output.msg"
 
 - name: delete user
   no_log: False
@@ -49,4 +49,4 @@
 
 - assert:
     that:
-      - "'User {{ username }} has been deleted.' in output.msg"
+      - "'True' in output.msg"
