@@ -19,7 +19,7 @@
 
 - assert:
     that:
-      - "'Catalog item {{ media_item_name }} is uploaded in catalog {{ catalog_name }}.' in output.msg"
+      - "'True' in output.msg"
 
 ############################################ delete-media ##############################################################
 - name: delete media
@@ -35,7 +35,7 @@
 
 - assert:
     that:
-      - "'Catalog item {{ media_item_name }} is deleted from catalog {{ catalog_name }}.' in output.msg"
+      - "'True' in output.msg"
 
 
 ############################################ upload-ova ##############################################################
@@ -47,31 +47,13 @@
     state: "present"
   register: output
 
-- name: upload media output
+- name: upload ova output
   debug:
     msg: '{{ output }}'  
 
 - assert:
     that:
-     - "'Catalog item {{ ova_item_name }} is uploaded in catalog {{ catalog_name }}.' in output.msg"
-
-
-############################################ ova-media-check-resolved ##############################################################
-- name: ova-media check resolved
-  vcd_catalog_item:
-    catalog_name: "{{ catalog_name }}"
-    item_name: "{{ ova_item_name }}"
-    operation: "ovacheckresolved"
-  register: output
-
-- name: ova-media check resolved output
-  debug:
-    msg: '{{ output }}'  
-
-- assert:
-    that:
-      - "'successfully uploaded/captured ova/media for catalog_name {{ catalog_name }}, item_name {{ ova_item_name }}.' in output.msg"      
-
+     - "'True' in output.msg"
 
 ############################################ delete-ova ##############################################################
 - name: delete ova
@@ -87,7 +69,7 @@
 
 - assert:
     that:
-      - "'Catalog item {{ ova_item_name }} is deleted from catalog {{ catalog_name }}.' in output.msg"
+      - "'True' in output.msg"
 
 ############################################ capture-vapp ##############################################################
 - name: capture vapp
@@ -107,7 +89,7 @@
 
 - assert:
     that:
-      - "'Vapp {{ vapp_name }} captured successfully for catalog_name {{ catalog_name }}, item_name {{ capture_vapp_item_name }}.' in output.msg"
+      - "'True' in output.msg"
 
 ############################################ delete-capture-vapp ##############################################################
 - name: delete capture-vapp
@@ -123,4 +105,4 @@
 
 - assert:
     that:
-      - "'Catalog item {{ capture_vapp_item_name }} is deleted from catalog {{ catalog_name }}.' in output.msg"
+      - "'True' in output.msg"
