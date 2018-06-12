@@ -196,19 +196,25 @@ class Vapp(VcdAnsibleModule):
         cpu = params.get('cpu')
         response = dict()
 
-        create_vapp_task = self.vdc.instantiate_vapp(
-            name=vapp_name,
-            catalog=catalog_name,
-            template=template_name,
-            network=network,
-            memory=memory,
-            cpu=cpu,
-            power_on=power_on,
-            storage_profile=storage_profile,
-            accept_all_eulas=accept_all_eulas)
-        self.execute_task(create_vapp_task.Tasks.Task[0])
-        response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
-        response['changed'] = True
+        try:
+            self.vdc.get_vapp(vapp_name)
+        except Exception:
+            create_vapp_task = self.vdc.instantiate_vapp(
+                name=vapp_name,
+                catalog=catalog_name,
+                template=template_name,
+                network=network,
+                memory=memory,
+                cpu=cpu,
+                power_on=power_on,
+                storage_profile=storage_profile,
+                accept_all_eulas=accept_all_eulas)
+            self.execute_task(create_vapp_task.Tasks.Task[0])
+            response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
+            response['changed'] = True
+        else:
+            response['msg'] = "Vapp {} is already present.".format(vapp_name)
+            response['changed'] = False
 
         return response
 
@@ -216,10 +222,16 @@ class Vapp(VcdAnsibleModule):
         vapp_name = self.params.get('vapp_name')
         response = dict()
 
-        delete_vapp_task = self.vdc.delete_vapp(name=vapp_name, force=True)
-        self.execute_task(delete_vapp_task)
-        response['msg'] = 'Vapp {} has been deleted.'.format(vapp_name)
-        response['changed'] = True
+        try:
+            self.vdc.get_vapp(vapp_name)
+        except Exception:
+            response['msg'] = "Vapp {} is not present.".format(vapp_name)
+            response['changed'] = False
+        else:
+            delete_vapp_task = self.vdc.delete_vapp(name=vapp_name, force=True)
+            self.execute_task(delete_vapp_task)
+            response['msg'] = 'Vapp {} has been deleted.'.format(vapp_name)
+            response['changed'] = True
 
         return response
 

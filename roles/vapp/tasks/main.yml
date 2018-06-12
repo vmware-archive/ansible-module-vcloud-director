@@ -10,9 +10,9 @@
     state: "present"
   register: output
 
-- assert:
-    that:
-      - "'Vapp {{ vapp_name }} has been created.' in output.msg"
+- name: create vapp output
+  debug:
+    msg: '{{ output }}'
 
 - name: power on vapp
   vcd_vapp:
@@ -23,9 +23,9 @@
     operation: "poweron"
   register: output
 
-- assert:
-    that:
-      - "'Vapp {{ vapp_name }} has been powered on.' in output.msg"
+- name: power on vapp output
+  debug:
+    msg: '{{ output }}'
 
 - name: power off vapp
   vcd_vapp:
@@ -36,9 +36,9 @@
     operation: "poweroff"
   register: output
 
-- assert:
-    that:
-      - "'Vapp {{ vapp_name }} has been powered off.' in output.msg"
+- name: power off vapp output
+  debug:
+    msg: '{{ output }}'
 
 - name: undeploy vapp
   vcd_vapp:
@@ -49,9 +49,9 @@
     operation: "undeploy"
   register: output
 
-- assert:
-    that:
-      - "'Vapp {{ vapp_name }} has been undeployed.' in output.msg"
+- name: undeploy vapp output
+  debug:
+    msg: '{{ output }}'
 
 - name: deploy vapp
   vcd_vapp:
@@ -62,9 +62,9 @@
     operation: "deploy"
   register: output
 
-- assert:
-    that:
-      - "'Vapp {{ vapp_name }} has been deployed.' in output.msg"
+- name: deploy vapp output
+  debug:
+    msg: '{{ output }}'
 
 - name: delete vapp
   vcd_vapp:
@@ -75,6 +75,6 @@
     state: "absent"
   register: output
 
-- assert:
-    that:
-      - "'Vapp {{ vapp_name }} has been deleted.' in output.msg"
+- name: delete vapp output
+  debug:
+    msg: '{{ output }}'
