@@ -1,0 +1,22 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+---
+# vars file for roles/catalog_item
+
+catalog_name: "test_catalog_100"
+
+# for media
+media_item_name: "test_item_media_100"
+media_file_name: "/home/parkash/workspace/vmware/Ansible/official/media/test_vapp_template.zip"
+
+# for ova
+ova_item_name: "test_item_ova_100"
+ova_file_name: "/home/parkash/workspace/vmware/Ansible/official/media/test_vapp_template.ova"
+
+# for capture vapp
+capture_vapp_item_name: "test_item_capture_100"
+vapp_name: "VM1"
+vdc_name: "ACME_PAYG"
+description: "capture_vapp_desc"
+customize_on_instantiate: false
