@@ -160,8 +160,20 @@ class Disk(VcdAnsibleModule):
         vdc = self.org.get_vdc(self.params.get('vdc'))
         self.vdc = VDC(self.client, href=vdc.get('href'))
 
+    def manage_states(self):
+        state = self.params.get('state')
+        if state == 'present':
+            return self.create()
+
+        if state == 'absent':
+            return self.delete()
+
+        if state == 'update':
+            return self.update()
+
     def create(self):
         disk_name = self.params.get('disk_name')
+        disk_id = self.params.get('disk_id')
         size = self.params.get('size')
         description = self.params.get('description')
         storage_profile = self.params.get('storage_profile')
@@ -170,16 +182,22 @@ class Disk(VcdAnsibleModule):
         iops = self.params.get('iops')
         response = dict()
 
-        create_disk_task = self.vdc.create_disk(name=disk_name,
-                                                size=size,
-                                                bus_type=bus_type,
-                                                bus_sub_type=bus_sub_type,
-                                                description=description,
-                                                iops=iops,
-                                                storage_profile_name=storage_profile)
-        self.execute_task(create_disk_task.Tasks.Task[0])
-        response['msg'] = 'Disk {} has been created.'.format(disk_name)
-        response['changed'] = True
+        try:
+            self.vdc.get_disk(name=disk_name, disk_id=disk_id)
+        except Exception:
+            create_disk_task = self.vdc.create_disk(name=disk_name,
+                                                    size=size,
+                                                    bus_type=bus_type,
+                                                    bus_sub_type=bus_sub_type,
+                                                    description=description,
+                                                    iops=iops,
+                                                    storage_profile_name=storage_profile)
+            self.execute_task(create_disk_task.Tasks.Task[0])
+            response['msg'] = 'Disk {} has been created.'.format(disk_name)
+            response['changed'] = True
+        else:
+            response['msg'] = "Disk {} is already present.".format(disk_name)
+            response['changed'] = False
 
         return response
 
@@ -211,24 +229,19 @@ class Disk(VcdAnsibleModule):
         disk_id = self.params.get('disk_id')
         response = dict()
 
-        delete_disk_task = self.vdc.delete_disk(name=disk_name,
-                                                disk_id=disk_id)
-        self.execute_task(delete_disk_task)
-        response['msg'] = 'Disk {} has been deleted.'.format(disk_name)
-        response['changed'] = True
+        try:
+            self.vdc.get_disk(name=disk_name, disk_id=disk_id)
+        except Exception:
+            response['msg'] = "Disk {} is not present.".format(disk_name)
+            response['changed'] = False
+        else:
+            delete_disk_task = self.vdc.delete_disk(name=disk_name,
+                                                    disk_id=disk_id)
+            self.execute_task(delete_disk_task)
+            response['msg'] = 'Disk {} has been deleted.'.format(disk_name)
+            response['changed'] = True
 
         return response
-
-    def manage_states(self):
-        state = self.params.get('state')
-        if state == 'present':
-            return self.create()
-
-        if state == 'absent':
-            return self.delete()
-
-        if state == 'update':
-            return self.update()
 
 
 def main():

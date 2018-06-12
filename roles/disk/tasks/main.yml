@@ -10,9 +10,9 @@
     state: "present"
   register: output
 
-- assert:
-    that:
-      - "'Disk {{ disk_name }} has been created.' in output.msg"
+- name: create disk output
+  debug:
+    msg: '{{ output }}'
 
 - name: update disk
   vcd_disk:
@@ -23,9 +23,9 @@
     state: "update"
   register: output
 
-- assert:
-    that:
-      - "'Disk {{ disk_name }} has been updated.' in output.msg"
+- name: update disk output
+  debug:
+    msg: '{{ output }}'
 
 - name: delete disk
   vcd_disk:
@@ -35,6 +35,6 @@
     state: "absent"
   register: output
 
-- assert:
-    that:
-      - "'Disk {{ updated_disk_name }} has been deleted.' in output.msg"
+- name: delete disk output
+  debug:
+    msg: '{{ output }}'
