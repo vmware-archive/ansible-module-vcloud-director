@@ -61,8 +61,7 @@ class VcdAnsibleModule(AnsibleModule):
             raise VCDLoginError(error.format(user, org))
 
     def execute_task(self, task):
-        client = self.module.client
-        task_monitor = client.get_task_monitor()
+        task_monitor = self.client.get_task_monitor()
         task_state = task_monitor.wait_for_status(
             task=task,
             timeout=60,
@@ -79,3 +78,7 @@ class VcdAnsibleModule(AnsibleModule):
             raise Exception(etree.tostring(task_state, pretty_print=True))
 
         return 1
+<<<<<<< HEAD
+=======
+
+>>>>>>> vapp
