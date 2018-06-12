@@ -1,0 +1,4 @@
+---
+# vars file for roles/vdc
+
+vdc_name: "test_vdc"

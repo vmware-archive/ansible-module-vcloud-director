@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 import os
+from lxml import etree
 from pyvcloud.vcd.client import Client
+from pyvcloud.vcd.client import TaskStatus
 from ansible.module_utils.basic import AnsibleModule
 from pyvcloud.vcd.client import BasicLoginCredentials
 from ansible.module_utils.vcd_errors import VCDLoginError
@@ -57,3 +59,22 @@ class VcdAnsibleModule(AnsibleModule):
         except Exception as error:
             error = 'Login failed for user {} to org {}'
             raise VCDLoginError(error.format(user, org))
+
+    def execute_task(self, task):
+        task_monitor = self.client.get_task_monitor()
+        task_state = task_monitor.wait_for_status(
+            task=task,
+            timeout=60,
+            poll_frequency=2,
+            fail_on_statuses=None,
+            expected_target_statuses=[
+                TaskStatus.SUCCESS, TaskStatus.ABORTED, TaskStatus.ERROR,
+                TaskStatus.CANCELED
+            ],
+            callback=None)
+
+        task_status = task_state.get('status')
+        if task_status != TaskStatus.SUCCESS.value:
+            raise Exception(etree.tostring(task_state, pretty_print=True))
+
+        return 1
