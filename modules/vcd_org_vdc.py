@@ -276,6 +276,7 @@ class Vdc(VcdAnsibleModule):
             "default": True}]
 
         response = dict()
+        response['changed'] = False
 
         create_vdc_task = self.org.create_org_vdc(
             vdc_name=vdc_name,
@@ -312,6 +313,7 @@ class Vdc(VcdAnsibleModule):
         vdc_name = self.params.get('vdc_name')
         is_enabled = self.params.get('is_enabled')
         response = dict()
+        response['changed'] = False
 
         vdc_resource = self.org.get_vdc(vdc_name)
         vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
@@ -324,6 +326,7 @@ class Vdc(VcdAnsibleModule):
     def delete(self):
         vdc_name = self.params.get('vdc_name')
         response = dict()
+        response['changed'] = False
 
         vdc_resource = self.org.get_vdc(vdc_name)
         vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)

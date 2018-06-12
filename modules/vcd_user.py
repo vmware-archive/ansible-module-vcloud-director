@@ -153,6 +153,7 @@ result: success/failure message relates to user operations
 
 from pyvcloud.vcd.org import Org
 from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 USER_STATES = ['present', 'absent', 'update']
@@ -219,10 +220,11 @@ class User(VcdAnsibleModule):
         is_alert_enabled = params.get('is_alert_enabled')
         is_enabled = params.get('is_enabled')
         response = dict()
+        response['changed'] = False
 
         try:
             self.org.get_user(username)
-        except Exception:
+        except EntityNotFoundException:
             self.org.create_user(
                 username, userpassword, role_href, full_username, description,
                 email, telephone, im, alert_email, alert_email_prefix,
@@ -233,19 +235,18 @@ class User(VcdAnsibleModule):
             response['changed'] = True
         else:
             response['msg'] = "User {} is already present.".format(username)
-            response['changed'] = False
 
         return response
 
     def delete(self):
         username = self.params.get('username')
         response = dict()
+        response['changed'] = False
 
         try:
             self.org.get_user(username)
-        except Exception:
+        except EntityNotFoundException:
             response['msg'] = "User {} is not present.".format(username)
-            response['changed'] = False
         else:
             self.org.delete_user(username)
             response['msg'] = "User {} has been deleted.".format(username)
@@ -257,6 +258,7 @@ class User(VcdAnsibleModule):
         username = self.params.get('username')
         enabled = self.params.get('is_enabled')
         response = dict()
+        response['changed'] = False
 
         self.org.get_user(username)
         self.org.update_user(username, enabled)

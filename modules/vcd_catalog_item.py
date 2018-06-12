@@ -121,7 +121,7 @@ from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.client import Client
 from pyvcloud.vcd.client import QueryResultFormat
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.exceptions import EntityNotFoundException, BadRequestException
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 VCD_CATALOG_ITEM_STATES = ['present', 'absent']
@@ -231,23 +231,19 @@ class CatalogItem(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        try:
-            v = self.org.get_vdc(vdc_name)
-            vdc = VDC(client, href=v.get('href'))
-            vapp = vdc.get_vapp(vapp_name)
-            catalog = self.org.get_catalog(catalog_name)
-            self.org.capture_vapp(
-                catalog_resource=catalog,
-                vapp_href=vapp.get('href'),
-                catalog_item_name=item_name,
-                description=desc,
-                customize_on_instantiate=customize_on_instantiate)
-        except BadRequestException:
-            response['msg'] = "Catalog Item {} is already present.".format(item_name)
-        else:
-            self.ova_check_resolved()
-            response['msg'] = "Catalog Item {} has been captured".format(item_name)
-            response['changed'] = True
+        v = self.org.get_vdc(vdc_name)
+        vdc = VDC(client, href=v.get('href'))
+        vapp = vdc.get_vapp(vapp_name)
+        catalog = self.org.get_catalog(catalog_name)
+        self.org.capture_vapp(
+            catalog_resource=catalog,
+            vapp_href=vapp.get('href'),
+            catalog_item_name=item_name,
+            description=desc,
+            customize_on_instantiate=customize_on_instantiate)
+        self.ova_check_resolved()
+        response['msg'] = "Catalog Item {} has been captured".format(item_name)
+        response['changed'] = True
 
         return response
 
@@ -294,7 +290,8 @@ def main():
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('One of state/operation should be provided.')
+            raise Exception('One of the state/operation should be provided.')
+
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)

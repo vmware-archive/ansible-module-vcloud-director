@@ -127,6 +127,7 @@ result: success/failure message relates to disk operation/operations
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 VCD_DISK_STATES = ['present', 'update', 'absent']
@@ -181,10 +182,11 @@ class Disk(VcdAnsibleModule):
         bus_sub_type = self.params.get('bus_sub_type')
         iops = self.params.get('iops')
         response = dict()
+        response['changed'] = False
 
         try:
             self.vdc.get_disk(name=disk_name, disk_id=disk_id)
-        except Exception:
+        except EntityNotFoundException:
             create_disk_task = self.vdc.create_disk(name=disk_name,
                                                     size=size,
                                                     bus_type=bus_type,
@@ -197,7 +199,6 @@ class Disk(VcdAnsibleModule):
             response['changed'] = True
         else:
             response['msg'] = "Disk {} is already present.".format(disk_name)
-            response['changed'] = False
 
         return response
 
@@ -210,6 +211,7 @@ class Disk(VcdAnsibleModule):
         new_storage_profile = self.params.get('new_storage_profile')
         new_iops = self.params.get('new_iops')
         response = dict()
+        response['changed'] = False
 
         update_disk_task = self.vdc.update_disk(name=disk_name,
                                                 disk_id=disk_id,
@@ -228,12 +230,12 @@ class Disk(VcdAnsibleModule):
         disk_name = self.params.get('disk_name')
         disk_id = self.params.get('disk_id')
         response = dict()
+        response['changed'] = False
 
         try:
             self.vdc.get_disk(name=disk_name, disk_id=disk_id)
-        except Exception:
+        except EntityNotFoundException:
             response['msg'] = "Disk {} is not present.".format(disk_name)
-            response['changed'] = False
         else:
             delete_disk_task = self.vdc.delete_disk(name=disk_name,
                                                     disk_id=disk_id)

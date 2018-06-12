@@ -16,10 +16,6 @@
   debug:
     msg: '{{ output }}'
 
-- assert:
-    that:
-      - "'Catalog {{ catalog_name }} has been created.' in output.msg"
-
 #################################### Read-Catalog ##########################################################################
 
 - name: read catalog
@@ -31,11 +27,6 @@
 - name: Read catalog output
   debug:
     msg: '{{ output }}'
-
-- assert:
-    that:
-      - "'{{ catalog_name }}' in output.msg.name"
-      - "'{{ description }}' in output.msg.description" 
 
 
 #################################### Update-Name-And description ##########################################################################
@@ -52,10 +43,6 @@
   debug:
     msg: '{{ output }}'
 
-- assert:
-    that:
-      - "'Catalog {{ catalog_name }} has been updated.' in output.msg"     
-
 #################################### shared/unshare-catalog ##########################################################################
 
 - name: share/unshare catalog
@@ -69,11 +56,6 @@
   debug:
     msg: '{{ output }}'
 
-- assert:
-    that:
-      - "'Catalog {{ new_catalog_name }} shared state has been updated to [shared={{ shared }}].' in output.msg"  
-
-
 #################################### Delete ##########################################################################
 - name: delete catalog
   vcd_catalog:
@@ -84,7 +66,3 @@
 - name: delete catalog output
   debug:
     msg: '{{ output }}' 
-
-- assert:
-    that:
-      - "'Catalog {{ new_catalog_name }} has been deleted' in output.msg"      

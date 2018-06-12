@@ -130,6 +130,7 @@ from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 VAPP_VM_STATES = ['present', 'absent']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy']
@@ -195,10 +196,11 @@ class Vapp(VcdAnsibleModule):
         power_on = params.get('power_on', True)
         cpu = params.get('cpu')
         response = dict()
+        response['changed'] = False
 
         try:
             self.vdc.get_vapp(vapp_name)
-        except Exception:
+        except EntityNotFoundException:
             create_vapp_task = self.vdc.instantiate_vapp(
                 name=vapp_name,
                 catalog=catalog_name,
@@ -214,19 +216,18 @@ class Vapp(VcdAnsibleModule):
             response['changed'] = True
         else:
             response['msg'] = "Vapp {} is already present.".format(vapp_name)
-            response['changed'] = False
 
         return response
 
     def delete(self):
         vapp_name = self.params.get('vapp_name')
         response = dict()
+        response['changed'] = False
 
         try:
             self.vdc.get_vapp(vapp_name)
-        except Exception:
+        except EntityNotFoundException:
             response['msg'] = "Vapp {} is not present.".format(vapp_name)
-            response['changed'] = False
         else:
             delete_vapp_task = self.vdc.delete_vapp(name=vapp_name, force=True)
             self.execute_task(delete_vapp_task)
@@ -238,6 +239,7 @@ class Vapp(VcdAnsibleModule):
     def power_on(self):
         vapp_name = self.params.get('vapp_name')
         response = dict()
+        response['changed'] = False
 
         vapp_resource = self.vdc.get_vapp(vapp_name)
         vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
@@ -251,6 +253,7 @@ class Vapp(VcdAnsibleModule):
     def power_off(self):
         vapp_name = self.params.get('vapp_name')
         response = dict()
+        response['changed'] = False
 
         vapp_resource = self.vdc.get_vapp(vapp_name)
         vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
@@ -264,6 +267,7 @@ class Vapp(VcdAnsibleModule):
     def deploy(self):
         vapp_name = self.params.get('vapp_name')
         response = dict()
+        response['changed'] = False
 
         vapp_resource = self.vdc.get_vapp(vapp_name)
         vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
@@ -277,6 +281,7 @@ class Vapp(VcdAnsibleModule):
     def undeploy(self):
         vapp_name = self.params.get('vapp_name')
         response = dict()
+        response['changed'] = False
 
         vapp_resource = self.vdc.get_vapp(vapp_name)
         vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
@@ -293,18 +298,16 @@ def main():
     response = dict(
         msg=dict(type='str')
     )
-
     module = Vapp(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-
         if module.params.get('state'):
             response = module.manage_states()
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('One of from state/operation should be provided.')
-
+            raise Exception('One of the state/operation should be provided.')
+ 
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)

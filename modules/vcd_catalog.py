@@ -98,6 +98,7 @@ result: success/failure message relates to catalog operation/operations
 
 from pyvcloud.vcd.org import Org
 from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 VCD_CATALOG_STATES = ['present', 'absent', 'update']
@@ -144,20 +145,32 @@ class Catalog(VcdAnsibleModule):
         catalog_name = self.params.get('catalog_name')
         description = self.params.get('description')
         response = dict()
+        response['changed'] = False
 
-        self.org.create_catalog(name=catalog_name, description=description)
-        response['msg'] = 'Catalog {} has been created.'.format(catalog_name)
-        response['changed'] = True
+        try:
+            self.org.get_catalog(name=catalog_name)
+        except EntityNotFoundException:
+            self.org.create_catalog(name=catalog_name, description=description)
+            response['msg'] = 'Catalog {} has been created.'.format(catalog_name)
+            response['changed'] = True
+        else:
+            response['msg'] = 'Catalog {} is already present.'.format(catalog_name)
 
         return response
 
     def delete(self):
         catalog_name = self.params.get('catalog_name')
         response = dict()
+        response['changed'] = False
 
-        self.org.delete_catalog(catalog_name)
-        response['msg'] = 'Catalog {} has been deleted.'.format(catalog_name)
-        response['changed'] = True
+        try:
+            self.org.get_catalog(name=catalog_name)
+        except EntityNotFoundException:
+            response['msg'] = 'Catalog {} is not present.'.format(catalog_name)
+        else:
+            self.org.delete_catalog(catalog_name)
+            response['msg'] = 'Catalog {} has been deleted.'.format(catalog_name)
+            response['changed'] = True
 
         return response
 
@@ -166,6 +179,7 @@ class Catalog(VcdAnsibleModule):
         new_catalog_name = self.params.get('new_catalog_name')
         description = self.params.get('description')
         response = dict()
+        response['changed'] = False
 
         if not new_catalog_name:
             new_catalog_name = catalog_name
@@ -182,6 +196,7 @@ class Catalog(VcdAnsibleModule):
         catalog_name = self.params.get('catalog_name')
         shared = self.params.get('shared')
         response = dict()
+        response['changed'] = False
 
         self.org.share_catalog(name=catalog_name, share=shared)
         response['msg'] = 'Catalog {} shared state has been updated to [shared={}].'.format(catalog_name, shared)
@@ -193,6 +208,7 @@ class Catalog(VcdAnsibleModule):
         catalog_name = self.params.get('catalog_name')
         response = dict()
         result = dict()
+        response['changed'] = False
 
         catalog = self.org.get_catalog(catalog_name)
         result['name'] = str(catalog.get("name"))
@@ -217,7 +233,7 @@ def main():
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('One of from state/operation should be provided.')
+            raise Exception('One of the state/operation should be provided.')
 
     except Exception as error:
         response['msg'] = error.__str__()

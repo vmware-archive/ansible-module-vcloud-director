@@ -99,6 +99,7 @@ from lxml import etree
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.system import System
 from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException, BadRequestException
 
 VCD_ORG_STATES = ['present', 'absent', 'update']
 VCD_ORG_OPERATIONS = ['read']
@@ -149,12 +150,7 @@ class VCDOrg(VcdAnsibleModule):
             self.system.create_org(org_name, full_name, is_enabled)
             response['msg'] = 'Org {} has been created.'.format(org_name)
             response['changed'] = True
-
-        except Exception as error:
-            # Duplicate error comes with 400 status code
-            if error.status_code != 400:
-                raise Exception(error.__str__())
-
+        except BadRequestException:
             response['msg'] = 'Org {} is already present.'.format(org_name)
 
         return response
@@ -163,6 +159,7 @@ class VCDOrg(VcdAnsibleModule):
         org_name = self.params.get('org_name')
         response = dict()
         org_details = dict()
+        response['changed'] = False
 
         resource = self.client.get_org_by_name(org_name)
         org = Org(self.client, resource=resource)
@@ -171,7 +168,6 @@ class VCDOrg(VcdAnsibleModule):
         org_details['full_name'] = str(org_admin_resource['FullName'])
         org_details['is_enabled'] = str(org_admin_resource['IsEnabled'])
         response['msg'] = org_details
-        response['changed'] = False
 
         return response
 
@@ -179,6 +175,7 @@ class VCDOrg(VcdAnsibleModule):
         org_name = self.params.get('org_name')
         is_enabled = self.params.get('is_enabled')
         response = dict()
+        response['changed'] = False
 
         resource = self.client.get_org_by_name(org_name)
         org = Org(self.client, resource=resource)
@@ -200,7 +197,7 @@ class VCDOrg(VcdAnsibleModule):
             self.execute_task(delete_org_task)
             response['msg'] = "Org {} has been deleted.".format(org_name)
             response['changed'] = True
-        except Exception:
+        except EntityNotFoundException:
             response['msg'] = "Org {} is not present.".format(org_name)
 
         return response
