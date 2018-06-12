@@ -61,7 +61,8 @@ class VcdAnsibleModule(AnsibleModule):
             raise VCDLoginError(error.format(user, org))
 
     def execute_task(self, task):
-        task_monitor = self.client.get_task_monitor()
+        client = self.module.client
+        task_monitor = client.get_task_monitor()
         task_state = task_monitor.wait_for_status(
             task=task,
             timeout=60,
