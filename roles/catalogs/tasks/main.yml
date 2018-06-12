@@ -7,7 +7,7 @@
 #################################### Create ##########################################################################
 - name: create catalog
   vcd_catalog:
-    name: "{{ catalog_name }}"
+    catalog_name: "{{ catalog_name }}"
     description: "{{ description }}"
     state: "present"
   register: output
@@ -24,8 +24,8 @@
 
 - name: read catalog
   vcd_catalog:
-    name: "{{ catalog_name }}" 
-    operation: "readcatalog"
+    catalog_name: "{{ catalog_name }}" 
+    operation: "read"
   register: output
 
 - name: Read catalog output
@@ -42,10 +42,10 @@
 
 - name: update catalog name and description
   vcd_catalog:
-    name: "{{ catalog_name }}" 
-    new_name: "{{ new_catalog_name }}" 
+    catalog_name: "{{ catalog_name }}" 
+    new_catalog_name: "{{ new_catalog_name }}" 
     description: "{{ description }}"
-    operation: "updatenameanddescription"
+    state: "update"
   register: output
 
 - name: Update Catalog name and description output
@@ -54,20 +54,20 @@
 
 - assert:
     that:
-      - "'Catalog {{ catalog_name }} name or description has been updated.' in output.msg"     
+      - "'Catalog {{ catalog_name }} has been updated.' in output.msg"     
 
 #################################### shared/unshare-catalog ##########################################################################
 
 - name: share/unshare catalog
   vcd_catalog:
-    name: "{{ new_catalog_name }}" 
+    catalog_name: "{{ new_catalog_name }}" 
     shared: "{{ shared }}"
-    operation: "sharecatalogstate"
+    operation: "shared"
   register: output
 
 - name: share/unshare catalog output
   debug:
-    msg: '{{ output }}'  
+    msg: '{{ output }}'
 
 - assert:
     that:
@@ -77,7 +77,7 @@
 #################################### Delete ##########################################################################
 - name: delete catalog
   vcd_catalog:
-    name: "{{ new_catalog_name }}"
+    catalog_name: "{{ new_catalog_name }}"
     state: "absent"
   register: output
 
