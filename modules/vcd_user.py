@@ -223,17 +223,17 @@ class User(VcdAnsibleModule):
         try:
             self.org.get_user(username)
         except Exception:
-            response['msg'] = "True"
-            response['changed'] = False
-        else:
             self.org.create_user(
                 username, userpassword, role_href, full_username, description,
                 email, telephone, im, alert_email, alert_email_prefix,
                 stored_vm_quota, deployed_vm_quota, is_group_role,
                 is_default_cached, is_external, is_alert_enabled,
                 is_enabled)
-            response['msg'] = "True"
+            response['msg'] = "User {} has been created.".format(username)
             response['changed'] = True
+        else:
+            response['msg'] = "User {} is already present.".format(username)
+            response['changed'] = False
 
         return response
 
@@ -244,11 +244,11 @@ class User(VcdAnsibleModule):
         try:
             self.org.get_user(username)
         except Exception:
-            response['msg'] = "True"
+            response['msg'] = "User {} is not present.".format(username)
             response['changed'] = False
         else:
             self.org.delete_user(username)
-            response['msg'] = "True"
+            response['msg'] = "User {} has been deleted.".format(username)
             response['changed'] = True
 
         return response
@@ -258,15 +258,10 @@ class User(VcdAnsibleModule):
         enabled = self.params.get('is_enabled')
         response = dict()
 
-        try:
-            self.org.get_user(username)
-        except Exception:
-            response['msg'] = "True"
-            response['changed'] = False
-        else:
-            self.org.update_user(username, enabled)
-            response['msg'] = "True"
-            response['changed'] = True
+        self.org.get_user(username)
+        self.org.update_user(username, enabled)
+        response['msg'] = "User {} has been updated".format(username)
+        response['changed'] = True
 
         return response
 

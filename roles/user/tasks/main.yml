@@ -1,5 +1,5 @@
----
-# tasks file for roles/user
+# ---
+# # tasks file for roles/user
 
 - name: create user
   no_log: False
@@ -24,9 +24,9 @@
     state: "present"
   register: output
 
-- assert:
-    that:
-      - "'True' in output.msg"
+- name: create user output
+  debug:
+    msg: '{{ output }}'
 
 - name: update user
   no_log: False
@@ -36,9 +36,9 @@
     state: "update"
   register: output
 
-- assert:
-    that:
-      - "'True' in output.msg"
+- name: update user output
+  debug:
+    msg: '{{ output }}'
 
 - name: delete user
   no_log: False
@@ -47,6 +47,6 @@
     state: "absent"
   register: output
 
-- assert:
-    that:
-      - "'True' in output.msg"
+- name: delete user output
+  debug:
+    msg: '{{ output }}'
