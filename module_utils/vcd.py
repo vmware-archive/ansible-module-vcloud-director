@@ -78,7 +78,3 @@ class VcdAnsibleModule(AnsibleModule):
             raise Exception(etree.tostring(task_state, pretty_print=True))
 
         return 1
-<<<<<<< HEAD
-=======
-
->>>>>>> vapp
