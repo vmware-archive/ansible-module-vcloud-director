@@ -1,7 +1,7 @@
-# Copyright © 2018 VMware, Inc. All Rights Reserved.
-# SPDX-License-Identifier: BSD-2-Clause
+# # Copyright © 2018 VMware, Inc. All Rights Reserved.
+# # SPDX-License-Identifier: BSD-2-Clause
 
----
+# ---
 # tasks file for roles/org
 
 ############################################ Create Org ##############################################################
@@ -9,7 +9,7 @@
   vcd_org:
     user: administrator
     password: VMware1!
-    host: 10.172.158.127
+    host: 10.172.158.109
     org: SYSTEM
     org_name: "{{ org_name }}"
     full_name: "{{ org_full_name }}"
@@ -21,17 +21,12 @@
   debug:
     msg: '{{ output }}'  
 
-- assert:
-    that:
-      - "'Org {{ org_name }} has been created.' in output.msg"
-
-
 ############################################ Read Org ##############################################################
 - name: read org
   vcd_org:
     user: administrator
     password: VMware1!
-    host: 10.172.158.127
+    host: 10.172.158.109
     org: SYSTEM
     org_name: "{{ org_name }}"
     operation: "read"
@@ -39,21 +34,14 @@
 
 - name: read org output
   debug:
-    msg: '{{ output }}' 
-
-- assert:
-    that:
-      - "'{{ org_name }}' in output.msg.name"
-      - "'{{ org_full_name }}' in output.msg.full_name"  
-      - "'{{ is_enabled }}' in output.msg.is_enabled" 
-
+    msg: '{{ output }}'
 
 ############################################ Disable Org ##############################################################
 - name: disable org
   vcd_org:
     user: administrator
     password: VMware1!
-    host: 10.172.158.127
+    host: 10.172.158.109
     org: SYSTEM
     org_name: "{{ org_name }}"
     is_enabled: "false"
@@ -64,16 +52,12 @@
   debug:
     msg: '{{ output }}'
 
-- assert:
-    that:
-      - "'Org {{ org_name }} has been updated.' in output.msg"    
-
-############################################ Enable Org ##############################################################
+# ############################################ Enable Org ##############################################################
 - name: enable org
   vcd_org:
     user: administrator
     password: VMware1!
-    host: 10.172.158.127
+    host: 10.172.158.109
     org: SYSTEM
     org_name: "{{ org_name }}"
     is_enabled: "true"
@@ -83,18 +67,13 @@
 - name: enable org output
   debug:
     msg: '{{ output }}'
-  
-- assert:
-    that:
-      - "'Org {{ org_name }} has been updated.' in output.msg"              
-
 
 ############################################ Delete Org ##############################################################
 - name: delete org
   vcd_org:
     user: administrator
     password: VMware1!
-    host: 10.172.158.127
+    host: 10.172.158.109
     org: SYSTEM
     org_name: "{{ org_name }}"
     force: "{{ force }}"
@@ -105,7 +84,3 @@
 - name: delete org output
   debug:
     msg: '{{ output }}'
-
-- assert:
-    that:
-      - "'Org {{ org_name }} has been deleted.' in output.msg"      

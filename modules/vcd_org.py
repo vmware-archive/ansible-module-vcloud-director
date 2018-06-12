@@ -143,10 +143,19 @@ class VCDOrg(VcdAnsibleModule):
         full_name = self.params.get('full_name')
         is_enabled = self.params.get('is_enabled')
         response = dict()
+        response['changed'] = False
 
-        self.system.create_org(org_name, full_name, is_enabled)
-        response['msg'] = 'Org {} has been created.'.format(org_name)
-        response['changed'] = True
+        try:
+            self.system.create_org(org_name, full_name, is_enabled)
+            response['msg'] = 'Org {} has been created.'.format(org_name)
+            response['changed'] = True
+
+        except Exception as error:
+            # Duplicate error comes with 400 status code
+            if error.status_code != 400:
+                raise Exception(error.__str__())
+
+            response['msg'] = 'Org {} is already present.'.format(org_name)
 
         return response
 
@@ -174,7 +183,7 @@ class VCDOrg(VcdAnsibleModule):
         resource = self.client.get_org_by_name(org_name)
         org = Org(self.client, resource=resource)
         org.update_org(is_enabled)
-        response['msg'] = 'Org {} has been updated.'.format(org_name)
+        response['msg'] = "Org {} has been updated.".format(org_name)
         response['changed'] = True
 
         return response
@@ -184,11 +193,15 @@ class VCDOrg(VcdAnsibleModule):
         force = self.params.get('force')
         recursive = self.params.get('recursive')
         response = dict()
+        response['changed'] = False
 
-        delete_org_task = self.system.delete_org(org_name, force, recursive)
-        self.execute_task(delete_org_task)
-        response['msg'] = 'Org {} has been deleted.'.format(org_name)
-        response['changed'] = True
+        try:
+            delete_org_task = self.system.delete_org(org_name, force, recursive)
+            self.execute_task(delete_org_task)
+            response['msg'] = "Org {} has been deleted.".format(org_name)
+            response['changed'] = True
+        except Exception:
+            response['msg'] = "Org {} is not present.".format(org_name)
 
         return response
 
