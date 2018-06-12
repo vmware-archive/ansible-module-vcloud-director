@@ -12,7 +12,7 @@ media_file_name: "/home/parkash/workspace/vmware/Ansible/official/media/test_vap
 
 # for ova
 ova_item_name: "test_item_ova_100"
-ova_file_name: "/home/parkash/workspace/vmware/Ansible/official/media/test_vapp_template.ova"
+ova_file_name: "/Users/mtaneja/Downloads/Tiny Linux VM.ovf"
 
 # for capture vapp
 capture_vapp_item_name: "test_item_capture_100"

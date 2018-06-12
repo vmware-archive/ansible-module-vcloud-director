@@ -18,7 +18,7 @@ version_added: "2.4"
 description:
     - This module is to [upload, read, delete] ova/media, capture vapp in vCloud Director.
     - Task performed:
-        - Upload media 
+        - Upload media
         - Upload ova
         - Delete media
         - Delete ova
@@ -58,7 +58,7 @@ options:
         required: false
     file_name:
         description:
-            - name of the file 
+            - name of the file
         required: false
     vapp_name:
         description:
@@ -67,7 +67,7 @@ options:
     vdc_name:
         description:
             - name of the vdc
-        required: false  
+        required: false
     vdc_name:
         description:
             - name of the vdc
@@ -108,83 +108,97 @@ EXAMPLES = '''
     item_name: "{{ item_name }}"
     file_name : "{{ file_name }}"
     operation: "uploadmedia"
-  register: output   
+  register: output
 '''
 
 RETURN = '''
-result: success/failure message relates to catalog operation/operations
+result: success/failure message relates to catalog items operation/operations
 '''
 
+import time
+from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.client import Client
-from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.client import QueryResultFormat
-import time
-from pyvcloud.vcd.exceptions import EntityNotFoundException
+from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException, BadRequestException
+
 
 VCD_CATALOG_ITEM_STATES = ['present', 'absent']
 VCD_CATALOG_ITEM_OPERATIONS = ['capturevapp']
 
+
 def vcd_catalog_item_argument_spec():
     return dict(
         catalog_name=dict(type='str', required=True),
-        item_name=dict(type='str', required=False, default=''),
-        file_name=dict(type='str', required=False, default=''),
-        vapp_name=dict(type='str', required=False, default=''),
-        vdc_name=dict(type='str', required=False, default=''),
-        description=dict(type='str', required=False, default=''),
-        customize_on_instantiate=dict(type='str', required=False, default=''),
+        item_name=dict(type='str', required=False),
+        file_name=dict(type='str', required=False),
+        vapp_name=dict(type='str', required=False),
+        vdc_name=dict(type='str', required=False),
+        description=dict(type='str', required=False),
+        customize_on_instantiate=dict(type='str', required=False),
         state=dict(choices=VCD_CATALOG_ITEM_STATES, required=False),
         operation=dict(choices=VCD_CATALOG_ITEM_OPERATIONS, required=False)
     )
 
+
 class CatalogItem(VcdAnsibleModule):
-    
     def __init__(self, **kwargs):
         super(CatalogItem, self).__init__(**kwargs)
         logged_in_org = self.client.get_org()
         self.org = Org(self.client, resource=logged_in_org)
 
+    def manage_states(self):
+        state = self.params.get('state')
+        if state == "present":
+            return self.upload()
+
+        if state == "absent":
+            return self.delete()
+
+    def manage_operations(self):
+        operation = self.params.get('operation')
+        if operation == "capturevapp":
+            return self.capture_vapp()
+
     def is_present(self):
         params = self.params
         catalog_name = params.get('catalog_name')
         item_name = params.get('item_name')
-        present = False
 
         try:
-            catalog = self.org.get_catalog_item(catalog_name, item_name)
-            present = True
-        except EntityNotFoundException as e:
-            pass
-        except Exception as e:
-            raise e
+            self.org.get_catalog_item(catalog_name, item_name)
+        except EntityNotFoundException:
+            return False
 
-        return present
+        return True
 
     def upload(self):
         params = self.params
         catalog_name = params.get('catalog_name')
         item_name = params.get('item_name')
         file_name = params.get('file_name')
-        item_details = {
-            "catalog_name" : catalog_name,
-            "item_name" : item_name,
-            "file_name" : file_name
-        }
         response = dict()
+        response['changed'] = False
+        item_details = {
+            "catalog_name": catalog_name,
+            "item_name": item_name,
+            "file_name": file_name
+        }
 
         if self.is_present():
-            response['msg'] = "True"
-            response['changed'] = False
-        else:
-            if file_name.endswith(".ova"):
-                self.org.upload_ovf(**item_details) 
-                self.ova_check_resolved()
-            else:
-                self.org.upload_media(**item_details) 
-            response['msg'] = "True"
-            response['changed'] = True
+            response['msg'] = "Catalog Item {} is already present.".format(item_name)
+            return response
+
+        if file_name.endswith(".ova") or file_name.endswith(".ovf"):
+            self.org.upload_ovf(**item_details)
+            self.ova_check_resolved()
+
+        if not file_name.endswith(".ova"):
+            self.org.upload_media(**item_details)
+
+        response['msg'] = "Catalog item {} is uploaded.".format(item_name)
+        response['changed'] = True
 
         return response
 
@@ -193,14 +207,15 @@ class CatalogItem(VcdAnsibleModule):
         catalog_name = params.get('catalog_name')
         item_name = params.get('item_name')
         response = dict()
+        response['changed'] = False
 
-        if self.is_present():
-            self.org.delete_catalog_item(name=catalog_name, item_name=item_name)
-            response['msg'] = "True"
-            response['changed'] = True
-        else:
-            response['msg'] = "True"
-            response['changed'] = False
+        if not self.is_present():
+            response['msg'] = "Catalog Item {} is not present.".format(item_name)
+            return response
+
+        self.org.delete_catalog_item(name=catalog_name, item_name=item_name)
+        response['msg'] = "Catalog Item {} has been deleted.".format(item_name)
+        response['changed'] = True
 
         return response
 
@@ -214,45 +229,27 @@ class CatalogItem(VcdAnsibleModule):
         customize_on_instantiate = params.get('customize_on_instantiate')
         client = self.client
         response = dict()
+        response['changed'] = False
 
-        v = self.org.get_vdc(vdc_name)
-        vdc = VDC(client, href=v.get('href'))
-        vapp = vdc.get_vapp(vapp_name)   
-        catalog = self.org.get_catalog(catalog_name)
-        self.org.capture_vapp(
-            catalog_resource = catalog,
-            vapp_href = vapp.get('href'),
-            catalog_item_name = item_name,
-            description = desc,
-            customize_on_instantiate = customize_on_instantiate)
-        self.ova_check_resolved()
-        response['msg'] = "True"
-        response['changed'] = True    
+        try:
+            v = self.org.get_vdc(vdc_name)
+            vdc = VDC(client, href=v.get('href'))
+            vapp = vdc.get_vapp(vapp_name)
+            catalog = self.org.get_catalog(catalog_name)
+            self.org.capture_vapp(
+                catalog_resource=catalog,
+                vapp_href=vapp.get('href'),
+                catalog_item_name=item_name,
+                description=desc,
+                customize_on_instantiate=customize_on_instantiate)
+        except BadRequestException:
+            response['msg'] = "Catalog Item {} is already present.".format(item_name)
+        else:
+            self.ova_check_resolved()
+            response['msg'] = "Catalog Item {} has been captured".format(item_name)
+            response['changed'] = True
 
         return response
-
-    def check_resolved(self, source_ova_item, catalog_name, item_name):
-        client = self.client
-        item_id = source_ova_item.get('id')
-        # max_try = 20
-        # attempt = 0
-       
-        while True:
-            q = client.get_typed_query(
-                'catalogItem',
-                query_result_format = QueryResultFormat.ID_RECORDS,
-                qfilter = 'id==%s' % item_id
-                )
-            records = list(q.execute())
-            if records[0].get('status') == 'RESOLVED':
-                break
-            # elif attempt >= max_try:
-            #     err_msg = "catalog_item {} not resolved for catalog {}, exceeded max_try limit={}.".format(item_name, catalog_name, max_try)
-            #     raise Exception(err_msg)
-            else:
-                time.sleep(5)
-                #attempt = attempt + 1
-                #TODO might have to check when status goes to other state than resolved
 
     def ova_check_resolved(self):
         params = self.params
@@ -266,30 +263,31 @@ class CatalogItem(VcdAnsibleModule):
 
         return response
 
-    def manage_states(self):
-        state = self.params.get('state')
+    def check_resolved(self, source_ova_item, catalog_name, item_name):
+        client = self.client
+        item_id = source_ova_item.get('id')
 
-        if state == "present":
-            return self.upload()
-
-        if state == "absent":
-            return self.delete()
-
-    def manage_operations(self):
-        operation = self.params.get('operation')
-
-        if operation == "capturevapp":   
-            return self.capture_vapp()
+        while True:
+            q = client.get_typed_query(
+                'catalogItem',
+                query_result_format=QueryResultFormat.ID_RECORDS,
+                qfilter='id==%s' % item_id
+            )
+            records = list(q.execute())
+            if records[0].get('status') == 'RESOLVED':
+                break
+            else:
+                time.sleep(5)
+                # TODO might have to check when status goes to other state than resolved
 
 
 def main():
     argument_spec = vcd_catalog_item_argument_spec()
     response = dict(
         msg=dict(type='str'),
-        changed=False,
     )
     module = CatalogItem(argument_spec=argument_spec, supports_check_mode=True)
-    
+
     try:
         if module.params.get('state'):
             response = module.manage_states()
@@ -302,6 +300,7 @@ def main():
         module.fail_json(**response)
 
     module.exit_json(**response)
+
 
 if __name__ == '__main__':
     main()
