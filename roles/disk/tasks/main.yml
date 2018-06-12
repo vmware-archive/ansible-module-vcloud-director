@@ -1,0 +1,40 @@
+---
+# tasks file for roles/disk
+
+- name: create disk
+  vcd_disk:
+    disk_name: "{{ disk_name }}"
+    description: "Test Disk"
+    size: "100"
+    vdc: "Terraform_VDC"
+    state: "present"
+  register: output
+
+- name: create disk output
+  debug:
+    msg: '{{ output }}'
+
+- name: update disk
+  vcd_disk:
+    disk_name: "{{ disk_name }}"
+    new_disk_name: "{{ updated_disk_name }}"
+    new_size: "200"
+    vdc: "Terraform_VDC"
+    state: "update"
+  register: output
+
+- name: update disk output
+  debug:
+    msg: '{{ output }}'
+
+- name: delete disk
+  vcd_disk:
+    disk_name: "{{ updated_disk_name }}"
+    description: "Test Disk"
+    vdc: "Terraform_VDC"
+    state: "absent"
+  register: output
+
+- name: delete disk output
+  debug:
+    msg: '{{ output }}'

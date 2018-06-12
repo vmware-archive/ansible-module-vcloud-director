@@ -1,0 +1,5 @@
+---
+# vars file for roles/disk
+
+disk_name: "test_disk"
+updated_disk_name: "test_disk_2"
