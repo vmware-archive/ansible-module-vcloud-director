@@ -194,9 +194,13 @@ class CatalogItem(VcdAnsibleModule):
         item_name = params.get('item_name')
         response = dict()
 
-        self.org.delete_catalog_item(name=catalog_name, item_name=item_name)
-        response['msg'] = "True"
-        response['changed'] = True
+        if self.is_present():
+            self.org.delete_catalog_item(name=catalog_name, item_name=item_name)
+            response['msg'] = "True"
+            response['changed'] = True
+        else:
+            response['msg'] = "True"
+            response['changed'] = False
 
         return response
 
