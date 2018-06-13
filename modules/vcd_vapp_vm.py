@@ -159,6 +159,7 @@ RETURN = '''
 result: success/failure message relates to vapp_vm operation
 '''
 
+import json
 from lxml import etree
 from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.org import Org
@@ -166,6 +167,7 @@ from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 
 VAPP_VM_STATES = ['present', 'absent', 'update']
@@ -289,47 +291,61 @@ class VappVM(VcdAnsibleModule):
         all_eulas_accepted = params.get('all_eulas_accepted', True)
         power_on = params.get('power_on', True)
         ip_allocation_mode = params.get('ip_allocation_mode')
-        # cust_script = module.params.get('cust_script')
-        # storage_profile = module.params.get('storage_profile')
+        # cust_script = params.get('cust_script')
+        # storage_profile = params.get('storage_profile')
         response = dict()
+        response['changed'] = False
 
-        specs = [{
-            'source_vm_name': source_vm_name,
-            'vapp': source_vapp_resource,
-            'target_vm_name': target_vm_name,
-            'hostname': hostname,
-            'password': vmpassword,
-            'password_auto': vmpassword_auto,
-            'password_reset': vmpassword_reset,
-            'ip_allocation_mode': ip_allocation_mode,
-            'network': network,
-            # 'cust_script': cust_script,
-            # 'storage_profile': storage_profile
-        }]
-        add_vms_task = self.vapp.add_vms(specs, power_on=power_on,
-                                         all_eulas_accepted=all_eulas_accepted)
-        self.execute_task(add_vms_task)
-        response['msg'] = 'Vapp VM {} has been created.'.format(target_vm_name)
-        response['changed'] = True
+        try:
+            self.get_vm()
+        except EntityNotFoundException:
+            specs = [{
+                'source_vm_name': source_vm_name,
+                'vapp': source_vapp_resource,
+                'target_vm_name': target_vm_name,
+                'hostname': hostname,
+                'password': vmpassword,
+                'password_auto': vmpassword_auto,
+                'password_reset': vmpassword_reset,
+                'ip_allocation_mode': ip_allocation_mode,
+                'network': network,
+                # 'cust_script': cust_script,
+                # 'storage_profile': json.loads(storage_profile)
+            }]
+            add_vms_task = self.vapp.add_vms(specs, power_on=power_on,
+                                             all_eulas_accepted=all_eulas_accepted)
+            self.execute_task(add_vms_task)
+            response['msg'] = 'Vapp VM {} has been created.'.format(
+                target_vm_name)
+            response['changed'] = True
+        else:
+            response['msg'] = 'Vapp VM {} is already present.'.format(
+                target_vm_name)
 
         return response
 
     def delete_vm(self):
         vm_name = self.params.get('target_vm_name')
         response = dict()
+        response['changed'] = False
 
-        self.undeploy_vm()
-        delete_vms_task = self.vapp.delete_vms([vm_name])
-        self.execute_task(delete_vms_task)
-        response['msg'] = 'Vapp VM {} has been deleted.'.format(vm_name)
-        response['changed'] = True
+        try:
+            self.get_vm()
+        except EntityNotFoundException:
+            response['msg'] = 'Vapp VM {} is not present.'.format(vm_name)
+        else:
+            self.undeploy_vm()
+            delete_vms_task = self.vapp.delete_vms([vm_name])
+            self.execute_task(delete_vms_task)
+            response['msg'] = 'Vapp VM {} has been deleted.'.format(vm_name)
+            response['changed'] = True
 
         return response
 
     def update_vm(self):
-        # Pyvcloud TODO get power state of vm
         vm_name = self.params.get('target_vm_name')
         response = dict()
+        response['changed'] = False
 
         if self.params.get("virtual_cpus"):
             self.update_vm_cpu()
@@ -363,30 +379,42 @@ class VappVM(VcdAnsibleModule):
     def power_on_vm(self):
         vm_name = self.params.get('target_vm_name')
         response = dict()
+        response['changed'] = False
 
-        vm = self.get_vm()
-        power_on_task = vm.power_on()
-        self.execute_task(power_on_task)
-        response['msg'] = 'Vapp VM {} has been powered on.'.format(vm_name)
-        response['changed'] = True
+        try:
+            vm = self.get_vm()
+            power_on_task = vm.power_on()
+            self.execute_task(power_on_task)
+            response['msg'] = 'Vapp VM {} has been powered on.'.format(vm_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['msg'] = 'Vapp VM {} is already powered on.'.format(
+                vm_name)
 
         return response
 
     def power_off_vm(self,):
         vm_name = self.params.get('target_vm_name')
         response = dict()
+        response['changed'] = False
 
-        vm = self.get_vm()
-        power_off_task = vm.power_off()
-        self.execute_task(power_off_task)
-        response['msg'] = 'Vapp VM {} has been powered off.'.format(vm_name)
-        response['changed'] = True
+        try:
+            vm = self.get_vm()
+            power_off_task = vm.power_off()
+            self.execute_task(power_off_task)
+            response['msg'] = 'Vapp VM {} has been powered off.'.format(
+                vm_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['msg'] = 'Vapp VM {} is already powered off.'.format(
+                vm_name)
 
         return response
 
     def reload_vm(self):
         vm_name = self.params.get('target_vm_name')
         response = dict()
+        response['changed'] = False
 
         vm = self.get_vm()
         vm.reload()
@@ -398,24 +426,33 @@ class VappVM(VcdAnsibleModule):
     def deploy_vm(self):
         vm_name = self.params.get('target_vm_name')
         response = dict()
+        response['changed'] = False
 
-        vm = self.get_vm()
-        deploy_vm_task = vm.deploy()
-        self.execute_task(deploy_vm_task)
-        response['msg'] = 'Vapp VM {} has been deployed.'.format(vm_name)
-        response['changed'] = True
+        try:
+            vm = self.get_vm()
+            deploy_vm_task = vm.deploy()
+            self.execute_task(deploy_vm_task)
+            response['msg'] = 'Vapp VM {} has been deployed.'.format(vm_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['msg'] = 'Vapp VM {} is already deployed.'.format(vm_name)
 
         return response
 
     def undeploy_vm(self):
         vm_name = self.params.get('target_vm_name')
         response = dict()
+        response['changed'] = False
 
-        vm = self.get_vm()
-        undeploy_vm_task = vm.undeploy()
-        self.execute_task(undeploy_vm_task)
-        response['msg'] = 'Vapp VM {} has been undeployed.'.format(vm_name)
-        response['changed'] = True
+        try:
+            vm = self.get_vm()
+            undeploy_vm_task = vm.undeploy()
+            self.execute_task(undeploy_vm_task)
+            response['msg'] = 'Vapp VM {} has been undeployed.'.format(vm_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['msg'] = 'Vapp VM {} is already undeployed.'.format(
+                vm_name)
 
         return response
 
@@ -425,20 +462,19 @@ def main():
     response = dict(
         msg=dict(type='str')
     )
-
     module = VappVM(argument_spec=argument_spec, supports_check_mode=True)
 
-    try:
-        if module.params.get('state'):
-            response = module.manage_states()
-        elif module.params.get('operation'):
-            response = module.manage_operations()
-        else:
-            raise Exception('One of from state/operation should be provided.')
+    # try:
+    if module.params.get('state'):
+        response = module.manage_states()
+    elif module.params.get('operation'):
+        response = module.manage_operations()
+    else:
+        raise Exception('One of the state/operation should be provided.')
 
-    except Exception as error:
-        response['msg'] = error.__str__()
-        module.fail_json(**response)
+    # except Exception as error:
+    #     response['msg'] = error.__str__()
+    #     module.fail_json(**response)
 
     module.exit_json(**response)
 

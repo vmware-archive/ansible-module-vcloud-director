@@ -130,7 +130,7 @@ from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.exceptions import EntityNotFoundException
+from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 VAPP_VM_STATES = ['present', 'absent']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy']
@@ -241,12 +241,15 @@ class Vapp(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        vapp_resource = self.vdc.get_vapp(vapp_name)
-        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-        power_on_vapp_task = vapp.power_on()
-        self.execute_task(power_on_vapp_task)
-        response['msg'] = 'Vapp {} has been powered on.'.format(vapp_name)
-        response['changed'] = True
+        try:
+            vapp_resource = self.vdc.get_vapp(vapp_name)
+            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+            power_on_vapp_task = vapp.power_on()
+            self.execute_task(power_on_vapp_task)
+            response['msg'] = 'Vapp {} has been powered on.'.format(vapp_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['msg'] = 'Vapp {} is already powered on.'.format(vapp_name)
 
         return response
 
@@ -255,12 +258,15 @@ class Vapp(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        vapp_resource = self.vdc.get_vapp(vapp_name)
-        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-        power_off_vapp_task = vapp.power_off()
-        self.execute_task(power_off_vapp_task)
-        response['msg'] = 'Vapp {} has been powered off.'.format(vapp_name)
-        response['changed'] = True
+        try:
+            vapp_resource = self.vdc.get_vapp(vapp_name)
+            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+            power_off_vapp_task = vapp.power_off()
+            self.execute_task(power_off_vapp_task)
+            response['msg'] = 'Vapp {} has been powered off.'.format(vapp_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['msg'] = 'Vapp {} is already powered off.'.format(vapp_name)
 
         return response
 
@@ -269,12 +275,15 @@ class Vapp(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        vapp_resource = self.vdc.get_vapp(vapp_name)
-        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-        deploy_vapp_task = vapp.deploy()
-        self.execute_task(deploy_vapp_task)
-        response['msg'] = 'Vapp {} has been deployed.'.format(vapp_name)
-        response['changed'] = True
+        try:
+            vapp_resource = self.vdc.get_vapp(vapp_name)
+            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+            deploy_vapp_task = vapp.deploy()
+            self.execute_task(deploy_vapp_task)
+            response['msg'] = 'Vapp {} has been deployed.'.format(vapp_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['msg'] = 'Vapp {} is already deployed.'.format(vapp_name)
 
         return response
 
@@ -283,12 +292,15 @@ class Vapp(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        vapp_resource = self.vdc.get_vapp(vapp_name)
-        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-        undeploy_vapp_task = vapp.undeploy()
-        self.execute_task(undeploy_vapp_task)
-        response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
-        response['changed'] = True
+        try:
+            vapp_resource = self.vdc.get_vapp(vapp_name)
+            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+            undeploy_vapp_task = vapp.undeploy()
+            self.execute_task(undeploy_vapp_task)
+            response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['msg'] = 'Vapp {} is already undeployed.'.format(vapp_name)
 
         return response
 
@@ -307,7 +319,7 @@ def main():
             response = module.manage_operations()
         else:
             raise Exception('One of the state/operation should be provided.')
- 
+
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)

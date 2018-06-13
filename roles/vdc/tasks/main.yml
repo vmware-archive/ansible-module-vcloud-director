@@ -16,9 +16,9 @@
     state: "present"
   register: output
 
-- assert:
-    that:
-      - "'VDC {{ vdc_name }} has been created.' in output.msg"
+- name: create vdc output
+  debug:
+    msg: '{{ output }}'
 
 - name: update vdc
   no_log: False
@@ -32,9 +32,9 @@
     state: "update"
   register: output
 
-- assert:
-    that:
-      - "'VDC {{ vdc_name }} has been updated.' in output.msg"
+- name: update vdc output
+  debug:
+    msg: '{{ output }}'
 
 - name: delete vdc
   no_log: False
@@ -47,6 +47,6 @@
     state: "absent"
   register: output
 
-- assert:
-    that:
-      - "'VDC {{ vdc_name }} has been deleted.' in output.msg"
+- name: delete vdc output
+  debug:
+    msg: '{{ output }}'

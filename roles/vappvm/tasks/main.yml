@@ -1,13 +1,8 @@
 # Copyright © 2018 VMware, Inc. All Rights Reserved.
 # SPDX-License-Identifier: BSD-2-Clause
 
----
+# ---
 # tasks file for roles/vappvm
-- name: fetch vapps
-  no_log: False
-  vcd_fetch_vapp:
-    vdc: Terraform_VDC
-  register: output
 
 - name: create vapp vm "{{ vapp_vm_1 }}" from catalog
   no_log: False
@@ -27,13 +22,13 @@
     state: "present"
     power_on: "false"
     all_eulas_accepted: "true"
-    # storage_profile: "Standard"
+    storage_profile: "{ \"name\" : \"Performance\",\"enabled\"  : true, \"units\" : \"MB\", \"limit\" : 0, \"default\" : true }"
     network: "web2Network"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been created.' in output.msg"
+- name: create vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: create vapp vm "{{ vapp_vm_2 }}" from vapp
   no_log: False
@@ -56,9 +51,9 @@
     network: "web2Network"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been created.' in output.msg"
+- name: create vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: power on "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
@@ -70,9 +65,9 @@
     operation: "poweron"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been powered on.' in output.msg"
+- name: power on vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: power on "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
@@ -84,9 +79,9 @@
     operation: "poweron"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been powered on.' in output.msg"
+- name: power on vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: power off "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
@@ -98,9 +93,9 @@
     operation: "poweroff"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been powered off.' in output.msg"
+- name: power off vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: power off "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
@@ -112,9 +107,9 @@
     operation: "poweroff"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been powered off.' in output.msg"
+- name: power off vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: modify "{{ vapp_vm_1 }}" cpu vapp vm
   vcd_vapp_vm:
@@ -128,9 +123,9 @@
     state: "update"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been updated.' in output.msg"
+- name: update vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: modify "{{ vapp_vm_2 }}" cpu vapp vm
   vcd_vapp_vm:
@@ -144,9 +139,9 @@
     state: "update"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been updated.' in output.msg"
+- name: update vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: modify "{{ vapp_vm_1 }}" memory vapp vm
   vcd_vapp_vm:
@@ -159,9 +154,9 @@
     state: "update"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been updated.' in output.msg"
+- name: update vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: modify "{{ vapp_vm_2 }}" memory vapp vm
   vcd_vapp_vm:
@@ -174,9 +169,9 @@
     state: "update"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been updated.' in output.msg"
+- name: update vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: reload "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
@@ -188,9 +183,9 @@
     operation: "reloadvm"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been reloaded.' in output.msg"
+- name: reload vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: reload "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
@@ -202,9 +197,9 @@
     operation: "reloadvm"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been reloaded.' in output.msg"
+- name: reload vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: undeploy "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
@@ -216,9 +211,9 @@
     operation: "undeploy"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been undeployed.' in output.msg"
+- name: undeploy vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: undeploy "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
@@ -230,9 +225,9 @@
     operation: "undeploy"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been undeployed.' in output.msg"
+- name: undeploy vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: deploy "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
@@ -244,9 +239,9 @@
     operation: "deploy"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been deployed.' in output.msg"
+- name: deploy vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: deploy "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
@@ -258,9 +253,9 @@
     operation: "deploy"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been deployed.' in output.msg"
+- name: deploy vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: delete "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
@@ -272,9 +267,9 @@
     state: "absent"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_1 }} has been deleted.' in output.msg"
+- name: delete vapp output
+  debug:
+    msg: "{{ output }}"
 
 - name: delete "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
@@ -286,6 +281,6 @@
     state: "absent"
   register: output
 
-- assert:
-    that:
-      - "'Vapp VM {{ vapp_vm_2 }} has been deleted.' in output.msg"
+- name: delete vapp output
+  debug:
+    msg: "{{ output }}"

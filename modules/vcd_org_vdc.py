@@ -192,6 +192,7 @@ from pyvcloud.vcd.vdc import VDC
 from lxml import objectify, etree
 from pyvcloud.vcd.system import System
 from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 ORG_VDC_STATES = ['present', 'absent', 'update']
@@ -245,67 +246,67 @@ class Vdc(VcdAnsibleModule):
 
     def create(self):
         vdc_name = self.params.get('vdc_name')
-        is_enabled = self.params.get('is_enabled')
+        is_enabled = self.params.get('is_enabled', True)
         provider_vdc_name = self.params.get('provider_vdc_name')
-        description = self.params.get('description')
-        allocation_model = self.params.get('allocation_model')
-        storage_profiles = self.params.get('storage_profiles')
-        cpu_units = self.params.get('cpu_units')
-        cpu_allocated = self.params.get('cpu_allocated')
-        cpu_limit = self.params.get('cpu_limit')
-        mem_units = self.params.get('mem_units')
-        mem_allocated = self.params.get('mem_allocated')
-        mem_limit = self.params.get('mem_limit')
-        nic_quota = self.params.get('nic_quota')
-        network_quota = self.params.get('network_quota')
-        vm_quota = self.params.get('vm_quota')
-        resource_guaranteed_memory = self.params.get('resource_guaranteed_memory')
-        resource_guaranteed_cpu = self.params.get('resource_guaranteed_cpu')
-        vcpu_in_mhz = self.params.get('vcpu_in_mhz')
-        is_thin_provision = self.params.get('is_thin_provision')
-        network_pool_name = self.params.get('network_pool_name')
-        uses_fast_provisioning = self.params.get('uses_fast_provisioning')
-        over_commit_allowed = self.params.get('over_commit_allowed')
-        vm_discovery_enabled = self.params.get('vm_discovery_enabled')
-        # storage_profiles = json.loads(storage_profiles)
-        storage_profiles = [{
-            "name": "Performance",
-            "enabled": True,
-            "units": "MB",
-            "limit": 0,
-            "default": True}]
-
+        description = self.params.get('description', '')
+        allocation_model = self.params.get(
+            'allocation_model', 'AllocationVApp')
+        storage_profiles = self.params.get('storage_profiles', [])
+        # cpu_units = self.params.get('cpu_units', 'MHz')
+        # cpu_allocated = self.params.get('cpu_allocated', 0)
+        # cpu_limit = self.params.get('cpu_limit', 0)
+        # mem_units = self.params.get('mem_units', 'MB')
+        # mem_allocated = self.params.get('mem_allocated', 0)
+        # mem_limit = self.params.get('mem_limit', 0)
+        # nic_quota = self.params.get('nic_quota', 0)
+        # network_quota = self.params.get('network_quota', 0)
+        # vm_quota = self.params.get('vm_quota', 0)
+        # resource_guaranteed_memory = self.params.get('resource_guaranteed_memory', None)
+        # resource_guaranteed_cpu = self.params.get('resource_guaranteed_cpu', None)
+        # vcpu_in_mhz = self.params.get('vcpu_in_mhz', None)
+        # is_thin_provision = self.params.get('is_thin_provision', None)
+        # network_pool_name = self.params.get('network_pool_name', None)
+        # uses_fast_provisioning = self.params.get('uses_fast_provisioning', None)
+        # over_commit_allowed = self.params.get('over_commit_allowed', None)
+        # vm_discovery_enabled = self.params.get('vm_discovery_enabled', None)
+        storage_profiles = storage_profiles if type(
+            storage_profiles) is list else [storage_profiles]
         response = dict()
         response['changed'] = False
 
-        create_vdc_task = self.org.create_org_vdc(
-            vdc_name=vdc_name,
-            provider_vdc_name=provider_vdc_name,
-            description=description,
-            allocation_model=allocation_model,
-            storage_profiles=storage_profiles,
-            # cpu_units=cpu_units,
-            # cpu_allocated=cpu_allocated,
-            # cpu_limit=cpu_limit,
-            # mem_units=mem_units,
-            # mem_allocated=mem_allocated,
-            # mem_limit=mem_limit,
-            # nic_quota=nic_quota,
-            # network_quota=network_quota,
-            # vm_quota=vm_quota,
-            # resource_guaranteed_memory=resource_guaranteed_memory,
-            # resource_guaranteed_cpu=resource_guaranteed_cpu,
-            # vcpu_in_mhz=vcpu_in_mhz,
-            # is_thin_provision=is_thin_provision,
-            # network_pool_name=network_pool_name,
-            # uses_fast_provisioning=uses_fast_provisioning,
-            # over_commit_allowed=over_commit_allowed,
-            # vm_discovery_enabled=vm_discovery_enabled,
-            is_enabled=is_enabled)
+        try:
+            self.org.get_vdc(vdc_name)
+        except EntityNotFoundException:
+            create_vdc_task = self.org.create_org_vdc(
+                vdc_name=vdc_name,
+                provider_vdc_name=provider_vdc_name,
+                description=description,
+                allocation_model=allocation_model,
+                storage_profiles=storage_profiles,
+                # cpu_units=cpu_units,
+                # cpu_allocated=cpu_allocated,
+                # cpu_limit=cpu_limit,
+                # mem_units=mem_units,
+                # mem_allocated=mem_allocated,
+                # mem_limit=mem_limit,
+                # nic_quota=nic_quota,
+                # network_quota=network_quota,
+                # vm_quota=vm_quota,
+                # resource_guaranteed_memory=resource_guaranteed_memory,
+                # resource_guaranteed_cpu=resource_guaranteed_cpu,
+                # vcpu_in_mhz=vcpu_in_mhz,
+                # is_thin_provision=is_thin_provision,
+                # network_pool_name=network_pool_name,
+                # uses_fast_provisioning=uses_fast_provisioning,
+                # over_commit_allowed=over_commit_allowed,
+                # vm_discovery_enabled=vm_discovery_enabled,
+                is_enabled=is_enabled)
 
-        self.execute_task(create_vdc_task.Tasks.Task[0])
-        response['msg'] = 'VDC {} has been created.'.format(vdc_name)
-        response['changed'] = True
+            self.execute_task(create_vdc_task.Tasks.Task[0])
+            response['msg'] = 'VDC {} has been created.'.format(vdc_name)
+            response['changed'] = True
+        else:
+            response['msg'] = 'VDC {} is already present.'.format(vdc_name)
 
         return response
 
@@ -328,13 +329,17 @@ class Vdc(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        vdc_resource = self.org.get_vdc(vdc_name)
-        vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
-        vdc.enable_vdc(enable=False)
-        delete_vdc_task = vdc.delete_vdc()
-        self.execute_task(delete_vdc_task)
-        response['msg'] = 'VDC {} has been deleted.'.format(vdc_name)
-        response['changed'] = True
+        try:
+            vdc_resource = self.org.get_vdc(vdc_name)
+        except EntityNotFoundException:
+            response['msg'] = 'VDC {} is not present.'.format(vdc_name)
+        else:
+            vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
+            vdc.enable_vdc(enable=False)
+            delete_vdc_task = vdc.delete_vdc()
+            self.execute_task(delete_vdc_task)
+            response['msg'] = 'VDC {} has been deleted.'.format(vdc_name)
+            response['changed'] = True
 
         return response
 
@@ -349,6 +354,7 @@ def main():
     try:
         if not module.params.get('state'):
             raise Exception('Please provide state for the resource.')
+
         response = module.manage_states()
         module.exit_json(**response)
 

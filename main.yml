@@ -4,7 +4,7 @@
 ---
 
 - name: vCloudDirectorAnsible
-  hosts: 10.172.158.140
+  hosts: localhost
   environment:
     env_user: terraformadmin
     env_password: klj3lkj4lkf22ZX
@@ -13,7 +13,11 @@
     env_api_version: 30.0
     env_verify_ssl_certs: false
   roles:
-    - catalogs
-    - user
-    - vapp
-    - vappvm
+      - catalogs
+      - user
+      - vapp
+      - vappvm
+      - vdc
+      - disk
+      - org
+      - catalog_item
