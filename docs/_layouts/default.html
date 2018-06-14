@@ -1,0 +1,89 @@
+<!--/*****************************************************************
+* terraform-provider-vcloud-director
+* Copyright (c) 2017 VMware, Inc. All Rights Reserved.
+* SPDX-License-Identifier: BSD-2-Clause
+******************************************************************/ -->
+<!doctype html>
+<html>
+
+<head>
+    <title>Ansible Modules for vCloud Director</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" />
+    <style type="text/css">
+        pre code {
+            background-color: black;
+            color: white;
+            display: block;
+            padding: 0px;
+        }
+
+        .page-header {
+            color: #fff;
+            text-align: center;
+            background-color: #159957;
+            background-image: linear-gradient(120deg, #155799, #159957);
+            padding: 5rem 6rem;
+        }
+
+        h2, h3, h5 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: normal;
+            color: #159957;
+        }
+
+        a {
+            list-style: none
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid mt-2 p-4">
+        <div class="page-header mb-3">
+            <h1 class="text-center">Ansible Modules for vCloud Director</h1>
+        </div>
+        <hr />
+        <div class="content p-2">
+            <div class="row">
+                <div class="use-cases col-3">
+                    <h2 class="text-center">Use Cases</h2>
+                    <hr />
+                    <div class="list-group">
+                        <a href="#" class="settings list-group-item list-group-item-action active">Settings</a>
+                        <a href="#catalog-usage" class="catalogs list-group-item list-group-item-action">Catalogs</a>
+                        <a href="#" class="catalog-item list-group-item list-group-item-action">Catalog Item</a>
+                        <a href="#" class="vapp list-group-item list-group-item-action">Vapp</a>
+                        <a href="#" class="vapp-vm list-group-item list-group-item-action">Vapp_VM</a>
+                        <a href="#" class="independent-disk list-group-item list-group-item-action">INDEPENDENT_DISK</a>
+                        <a href="#" class="org list-group-item list-group-item-action">ORG</a>
+                        <a href="#" class="org-vdc list-group-item list-group-item-action">ORG_VDC</a>
+                        <a href="#user-usage" class="user list-group-item list-group-item-action">User</a>
+                    </div>
+                </div>
+                <div class="col-9">
+                    {{ content }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        $("document").ready(function() {
+            var links = ['.settings', '.catalogs', '.catalog-item',
+                         '.vapp', '.vapp-vm', '.independent-disk', '.org', '.org-vdc', '.user'];
+            $.each(links, function(index, value) {
+                $(value).click(function(e) {
+                    e.preventDefault()
+                    $('html, body').animate({
+                        scrollTop: $($.attr(this, 'href')).offset().top
+                    }, 1200);
+                    return false;
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
