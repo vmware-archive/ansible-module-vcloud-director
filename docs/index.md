@@ -3,47 +3,95 @@
 layout: default
 ---
 <!-- Setting Use Case -->
+<div class="environment-settings col-12" id="environment-settings">
+<h2>Environment Settings</h2>
+<hr />
+<ol>
+<li>
+<h3>Login</h3>
+</li>
+<pre>
+<code>
+ - name: vCloudDirectorAnsible
+   hosts: XXXXXXXXXXXX
+   environment:
+	env_user: XXXXXXXXXXXX
+	env_password: XXXXXXXXXXXX
+	env_host: XXXXXXXXXXXX
+	env_org: XXXXXXXXXXXX
+	env_api_version: XXXXXXXXXXXX
+	env_verify_ssl_certs: XXXXXXXXXXXX
+
+</code>
+</pre>
+<p>
+VCD Ansible Modules prefer following two ways to set login variables for vCloud Director instance. 
+</p>
+<ol>
+<li>
+<b>Environment Variables - </b>
+The end user can set login variables in the environment as shown above. Once they are set, modules will use these variables for all the subsequent resource operations automatically.
+</li>
+<li>
+<b>Local Variables - </b>
+The end user can set login variables for specific module(s) as local variables. This approach gives more freedom to the end user to execute specific module(s) on specific vCloud Director instance(s).
+</li>
+</ol>
+<br />
+<p>
+By default, the priority will be given to <b>Local Variables</b> than <b>Environment Variables.</b>
+</p>
+<li>
+<h3>Response</h3>
+<p>VCD Ansible Modules provide a unanimous response. The response shall contain following properties,</p>
+<ul>
+<li>msg - the success/failure string corresponding to the resource</li>
+<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
+</li>
+</ul>
+</li>
+</ol>
+</div>
 <!--				  -->
 
 <!-- Catalogs Use Case -->
 <div class="catalog-usage col-12" id="catalog-usage">
- <h2>Catalog Example Usage</h2>
- <hr />
- <ol>
- <li>
- <h3>Catalog States</h3>
- <ul>
- <li>
- <h5>Create Catalog</h5>
- </li>
- <pre>
- <code>
+<h2>Catalog Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Catalog States</h3>
+<ul>
+<li>
+<h5>Create Catalog</h5>
+</li>
+<pre>
+<code>
  - name: create catalog
    vcd_catalog:
 	catalog_name: "test_catalog"
 	description: "test_description"
 	state: "present"
- </code>
- </pre>
- <h5>Arguments Reference</h5>
- <p>The following arguments are supported,</p>
+
+</code>
+</pre>
+ <h5>Argument Reference</h5>
  <ul>
- <li>catalog_name - (Required) Name of the catalog</li>
- <li>description - (Required) Description Text for the catalog</li>
- <li>state == "present" (Required) to create catalog</li>
- </ul>
- <h5>Response data</h5>
- <p>The response should contain following properties,</p>
- <ul>
- <li>msg - the success/failure string respective to the resource</li>
- <li>changed - "true" if resource has been modified at the infrastrucutre else "false"
- </li>
- </ul>
- <li>
- <h5>Update Catalog</h5>
- </li>
- <pre>
- <code>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
+<li>catalog_name - (Required) Name of the catalog</li>
+<li>description - (Required) Description Text for the catalog</li>
+<li>state == "present" (Required) to create catalog</li>
+</ul>
+<li>
+<h5>Update Catalog</h5>
+</li>
+<pre>
+<code>
  - name: update catalog name and description
    vcd_catalog:
 	catalog_name: "test_catalog" 
@@ -52,20 +100,18 @@ layout: default
 	state: "update"
  </code>
  </pre>
- <h5>Arguments Reference</h5>
- <p>The following arguments are supported,</p>
+ <h5>Argument Reference</h5>
  <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
  <li>catalog_name - (Required) Old name of the catalog</li>
  <li>new_catalog_name - (Required) New name of the catalog</li>
  <li>description - (Required) New description text for the catalog</li>
  <li>state == "update" (Required) to update catalog</li>
- </ul>
- <h5>Response data</h5>
- <p>The response should contain following properties,</p>
- <ul>
- <li>msg - the success/failure string respective to the resource</li>
- <li>changed - "true" if resource has been modified at the infrastrucutre else "false"
- </li>
  </ul>
  <li>
  <h5>Delete Catalog</h5>
@@ -78,18 +124,16 @@ layout: default
 	state: "absent"
  </code>
  </pre>
- <h5>Arguments Reference</h5>
- <p>The following arguments are supported,</p>
+ <h5>Argument Reference</h5>
  <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
  <li>catalog_name - (Required) Name of the catalog</li>
  <li>state == "absent" (Required) to delete catalog</li>
- </ul>
- <h5>Response data</h5>
- <p>The response should contain following properties,</p>
- <ul>
- <li>msg - the success/failure string respective to the resource</li>
- <li>changed - "true" if resource has been modified at the infrastrucutre else "false"
- </li>
  </ul>
  </ul>
 </li>
@@ -107,19 +151,17 @@ layout: default
 	operation: "shared"
  </code>
  </pre>
- <h5>Arguments Reference</h5>
- <p>The following arguments are supported,</p>
+ <h5>Argument Reference</h5>
  <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
  <li>catalog_name - (Required) Name of the catalog</li>
  <li>shared - (Optional) "true"/"false" to share/unshare the catalog. The default value is "true" for the argument</li>
  <li>state == "operation" (Required) to share/unshare catalog</li>
-</ul>
-<h5>Response data</h5>
-<p>The response should contain following properties,</p>
-<ul>
-<li>msg - the success/failure string respective to the resource</li>
-<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
-</li>
 </ul>
 </li>
 </ul>
@@ -138,6 +180,109 @@ layout: default
 <!--				  -->
 
 <!-- Independent Disk Use Case -->
+<div class="disk-usage col-12" id="disk-usage">
+<h2>Disk Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Disk States</h3>
+</li>
+<ul>
+<li>
+<h5>Create Disk</h5>
+</li>
+<pre>
+<code>
+ - name: create disk
+   vcd_disk:
+	disk_name: "test_disk"
+	description: "Test Disk"
+	size: "100"
+	vdc: "Test_VDC"
+	state: "present"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
+<li>disk_name - (Required) name of the new disk</li>
+<li>description - (Optional) description of the new disk</li>
+<li>size - (Required) size of the disk in bytes</li>
+<li>vdc - (Required) name of the virutal data center</li>
+<li>bus_type - (Optional) bus type of the disk</li>
+<li>bus_sub_type - (Optional) bus subtype of the disk</li>
+<li>storage_profile_name - (Optional) name of an existing storage profile to be used by the new disk</li>
+<li>iops - (Optional) iops requirement of the disk</li>
+<li>state == "present" (Required) to create org</li>
+</ul>
+<li>
+<h5>Update Disk</h5>
+</li>
+<pre>
+<code>
+ - name: update disk
+   vcd_disk:
+	disk_name: "test_disk"
+	new_disk_name: "test_disk_1"
+	new_size: "200"
+	vdc: "Test_VDC"
+	state: "update"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
+<li>disk_name - (Required) name of the existing disk</li>
+<li>vdc - (Required) name of the virtual data center</li>
+<li>disk_id - (Optional) id of the existing disk</li>
+<li>new_disk_name - (Optional) new name of the disk</li>
+<li>new_size - (Optional) new size of the disk</li>
+<li>new_description - (Optional) new description of the disk</li>
+<li>new_storage_profile_name - (Optional) new storage profile that the disk will be moved to</li>
+<li>new_iops - (Optional) new iops requirement of the disk</li>
+<li>state == "update" (Required) to update org</li>
+</ul>
+<li>
+<h5>Delete Disk</h5>
+</li>
+<pre>
+<code>
+ - name: delete disk
+   vcd_disk:
+	disk_name: "test_disk"
+	vdc: "Test_VDC"
+	state: "absent"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
+<li>disk_name - (Required) name of the disk to delete</li>
+<li>disk_id - (Optional) id of the disk to delete</li>
+<li>vdc - (Required) name of the virtual datacenter</li>
+<li>state == "absent" (Required) to create org</li>
+</ul>
+</ul>
+</ol>
+</div>
 <!--				  -->
 
 <!-- Org Use Case -->
@@ -162,20 +307,18 @@ layout: default
 	state: "present"
  </code>
 </pre>
-<h5>Arguments Reference</h5>
-<p>The following arguments are supported,</p>
+<h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
 <li>org_name - (Required) name of the organization</li>
 <li>full_name - (Required) full name of the organization</li>
-<li>is_enabled - (Optional) enable organization if True, default value will be False</li>
+<li>is_enabled - (Optional) enable organization if True. The default value is False</li>
 <li>state == "present" (Required) to create org</li>
-</ul>
-<h5>Response data</h5>
-<p>The response should contain following properties,</p>
-<ul>
-<li>msg - the success/failure string respective to the resource</li>
-<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
-</li>
 </ul>
 <li>
 <h5>Update Org</h5>
@@ -190,19 +333,17 @@ layout: default
 
 </code>
 </pre>
-<h5>Arguments Reference</h5>
-<p>The following arguments are supported,</p>
+<h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
 <li>org_name - (Required) name of the organization</li>
-<li>is_enabled - (Optional) enable organization if True, default value will be None</li>
+<li>is_enabled - (Optional) enable organization if True. The default value is None</li>
 <li>state == "update" (Required) to update org</li>
-</ul>
-<h5>Response data</h5>
-<p>The response should contain following properties,</p>
-<ul>
-<li>msg - the success/failure string respective to the resource</li>
-<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
-</li>
 </ul>
 <li>
 <h5>Delete Org</h5>
@@ -218,22 +359,20 @@ layout: default
 
 </code>
 </pre>
-<h5>Arguments Reference</h5>
-<p>The following arguments are supported,</p>
+<h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
 <li>org_name - (Required) name of the organization</li>
 <li>force - (Optional) force=True along with recursive=True to remove
 an organization and any objects it contains, regardless of their state</li>
 <li>recursive - (Optional) recursive=True to remove an organization
 and any objects it contains that are in a state that normally allows removal</li>
 <li>state == "absent" (Required) to delete org</li>
-</ul>
-<h5>Response data</h5>
-<p>The response should contain following properties,</p>
-<ul>
-<li>msg - the success/failure string respective to the resource</li>
-<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
-</li>
 </ul>
 </ul>
 <li>
@@ -252,18 +391,16 @@ and any objects it contains that are in a state that normally allows removal</li
 
 </code>
 </pre>
-<h5>Arguments Reference</h5>
-<p>The following arguments are supported,</p>
+<h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
 <li>org_name - (Required) name of the organization</li>
 <li>operation == "read" (Required) to read organization</li>
-</ul>
-<h5>Response data</h5>
-<p>The response should contain following properties,</p>
-<ul>
-<li>msg - the success/failure string respective to the resource</li>
-<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
-</li>
 </ul>
 </ul>
 </ol>
@@ -309,9 +446,14 @@ and any objects it contains that are in a state that normally allows removal</li
 	state: "present"
  </code>
  </pre>
- <h5>Arguments Reference</h5>
- <p>The following arguments are supported,</p>
+ <h5>Argument Reference</h5>
  <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
  <li>username - (Required) The username of the user</li>
  <li>userpassword - (Required) The password of the user (must be at least 6
  characters long)</li>
@@ -332,16 +474,9 @@ and any objects it contains that are in a state that normally allows removal</li
  <li>alert_email - (Required) The alert email address</li>
  <li>state == "present" (Required) to create user</li>
 </ul>
-<h5>Response data</h5>
-<p>The response should contain following properties,</p>
-<ul>
-<li>msg - the success/failure string respective to the resource</li>
-<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
+<li>
+<h5>Update User</h5>
 </li>
-</ul>
- <li>
- <h5>Update User</h5>
- </li>
 <pre>
  <code>
  - name: update user
@@ -351,19 +486,17 @@ and any objects it contains that are in a state that normally allows removal</li
 	state: "update"
  </code>
 </pre>
-<h5>Arguments Reference</h5>
- <p>The following arguments are supported,</p>
+<h5>Argument Reference</h5>
  <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
  <li>username - (Required) username of the user</li>
  <li>is_enabled - (Required) "true"/"false" enable/disable the user</li>
  <li>state == "update" (Required) to update user</li>
-</ul>
-<h5>Response data</h5>
-<p>The response should contain following properties,</p>
-<ul>
-<li>msg - the success/failure string respective to the resource</li>
-<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
-</li>
 </ul>
 <li>
 <h5>Delete User</h5>
@@ -376,17 +509,15 @@ and any objects it contains that are in a state that normally allows removal</li
 	state: "absent"
  </code>
 </pre>
-<h5>Arguments Reference</h5>
- <p>The following arguments are supported,</p>
+<h5>Argument Reference</h5>
  <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - "true" to enforce to verify ssl certificate for each requests else "false"</li>
  <li>username - (Required) username of the user</li>
  <li>state == "absent" (Required) to update user</li>
-</ul>
-<h5>Response data</h5>
-<p>The response should contain following properties,</p>
-<ul>
-<li>msg - the success/failure string respective to the resource</li>
-<li>changed - "true" if resource has been modified at the infrastrucutre else "false"
-</li>
 </ul>
 <!--				  -->
