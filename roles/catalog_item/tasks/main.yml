@@ -10,6 +10,7 @@
     catalog_name: "{{ catalog_name }}"
     item_name: "{{ media_item_name }}"
     file_name : "{{ media_file_name }}"
+    chunk_size: "{{ chunk_size }}"
     state: "present"
   register: output
 
@@ -36,6 +37,7 @@
     catalog_name: "{{ catalog_name }}"
     item_name: "{{ ova_item_name }}"
     file_name : "{{ ova_file_name }}"
+    chunk_size: "{{ chunk_size }}"
     state: "present"
   register: output
 
@@ -68,6 +70,7 @@
     vdc_name: "{{ vdc_name }}"
     description: "{{ description }}"
     customize_on_instantiate: "{{ customize_on_instantiate }}"
+    overwrite: "{{ overwrite }}"
     operation: "capturevapp"
   register: output
 
