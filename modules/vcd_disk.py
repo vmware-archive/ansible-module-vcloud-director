@@ -11,14 +11,11 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-client: catalog
-
-short_description: Disk Module to manage disk operations through vCloud Director
-
+module: vcd_disk
+short_description: Ansible disk module to manage (create/update/delete) disks in vCloud Director
 version_added: "2.4"
-
 description:
-    - Disk Module to manage disk operations through vCloud Director
+    - Ansible catalog module to manage (create/update/delete) disks in vCloud Director
 
 options:
     user:
@@ -48,7 +45,7 @@ options:
     disk_name:
         description:
             - Disk Name
-        required: false
+        required: true
     size:
         description:
             - Disk Size in Bytes
@@ -56,7 +53,7 @@ options:
     vdc:
         description:
             - ORG VDC where disk needs to be created
-        required: false
+        required: true
     description:
         description:
             - Disk Description
@@ -121,7 +118,8 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-result: success/failure message relates to disk operation/operations
+msg: success/failure message corresponding to disk state/operation
+changed: true if resource has been changed else false
 '''
 
 from pyvcloud.vcd.org import Org
@@ -135,9 +133,9 @@ VCD_DISK_STATES = ['present', 'update', 'absent']
 
 def vcd_disk_argument_spec():
     return dict(
-        disk_name=dict(type='str', required=False),
+        disk_name=dict(type='str', required=True),
         size=dict(type='str', required=False),
-        vdc=dict(type='str', required=False),
+        vdc=dict(type='str', required=True),
         description=dict(type='str', required=False),
         storage_profile=dict(type='str', required=False),
         iops=dict(type='str', required=False),

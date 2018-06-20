@@ -11,11 +11,12 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-client: vcd_org
-short_description: This module is to manage organizations in vCloud Director
+module: vcd_org
+short_description: Ansible org module to manage (create/update/delete) orgs in vCloud Director
 version_added: "2.4"
 description:
-    - "This module is to manage organizations in vCloud Director"
+    - Ansible org module to manage (create/update/delete) orgs in vCloud Director
+
 options:
     user:
         description:
@@ -48,15 +49,19 @@ options:
     full_name:
         description:
             - full name of the org
-        required: true
+        required: false
+    is_enabled:
+        description:
+            - enable organization if True. The default value is False
+        required: false
     force:
         description:
             - force delete org
-        required: true
+        required: false
     recursive:
         description:
             - recursive delete org
-        required: true
+        required: false
     state:
         description:
             - state of org
@@ -91,7 +96,8 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-result: success/failure message relates to org operation
+msg: success/failure message corresponding to org state/operation
+changed: true if resource has been changed else false
 '''
 
 

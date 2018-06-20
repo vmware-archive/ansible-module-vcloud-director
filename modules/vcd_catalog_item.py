@@ -254,7 +254,7 @@ class CatalogItem(VcdAnsibleModule):
             catalog_item_name=item_name,
             description=desc,
             customize_on_instantiate=customize_on_instantiate,
-            overwrite = overwrite)
+            overwrite=overwrite)
         self.ova_check_resolved()
         response['msg'] = "Catalog Item {} has been captured".format(item_name)
         response['changed'] = True

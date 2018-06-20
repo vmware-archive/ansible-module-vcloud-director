@@ -11,11 +11,12 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-client: vcd_user
-short_description: This module helps to manage users on vCloud Director.
+module: vcd_user
+short_description: Ansible user module to manage (create/update/delete) users in vCloud Director
 version_added: "2.4"
 description:
-    - "This module helps to manage users on vCloud Director."
+    - Ansible user module to manage (create/update/delete) users in vCloud Director
+
 options:
     user:
         description:

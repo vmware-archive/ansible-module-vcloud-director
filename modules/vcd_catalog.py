@@ -11,12 +11,9 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-client: catalog
-
-short_description: Catalog module for managing catalogs in vCloud Director
-
+module: vcd_catalog
+short_description: Ansible catalog module to manage (create/update/delete) catalogs in vCloud Director
 version_added: "2.4"
-
 description:
     - This module is to create, read, update, delete catalog in vCloud Director.
     - Task performed:
@@ -93,7 +90,8 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-result: success/failure message relates to catalog operation/operations
+msg: success/failure message corresponding to catalog state/operation
+changed: true if resource has been changed else false
 '''
 
 from pyvcloud.vcd.org import Org
