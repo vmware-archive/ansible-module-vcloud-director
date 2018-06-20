@@ -619,3 +619,134 @@ and any objects it contains that are in a state that normally allows removal</li
 </li>
 </ol>
 </div>
+
+<!-- Org Vdc Usecase -->
+<div class="org-vdc-usage col-12" id="org-vdc-usage">
+<h2>VDC Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>VDC States</h3>
+<ul>
+<li>
+<h5>Create VDC</h5>
+</li>
+<pre>
+<code>
+ - name: create vdc
+   vcd_org_vdc:
+     vdc_name: "test_vdc"
+     provider_vdc_name: "test_provider_vdc"
+     description: "test vdc description"
+     allocation_model: "AllocationVApp"
+     is_enabled: "false"
+     storage_profiles: "{ \"name\" : \"Performance\",\"enabled\"  : true, \"units\" : \"MB\", \"limit\" : 0,  \"default\"  : true }"
+     cpu_units : "MHz"
+     cpu_allocated : 0
+     cpu_limit : 0
+     mem_units : 'MB' 
+     mem_allocated : 0
+     mem_limit : 0 
+     nic_quota : 0 
+     network_quota : 0  
+     vm_quota : 0
+     resource_guaranteed_memory : 1.0 
+     resource_guaranteed_cpu : 1.0
+     vcpu_in_mhz : 1024
+     is_thin_provision : true
+     network_pool_name : "test_network_pool"
+     uses_fast_provisioning : false
+     over_commit_allowed : false
+     vm_discovery_enabled : true
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+<li>vdc_name - (Required) name of the new org vdc</li>
+<li>provider_vdc_name - (Required) The name of an existing provider vdc</li>
+<li>description - (Optional) description of the new org vdc</li>
+<li>allocation_model - (Optional) allocation model used by this vdc. Accepted values are 'AllocationVApp', 'AllocationPool' or 'ReservationPool'</li>
+<li>cpu_units - (Optional) unit for compute capacity allocated to this vdc. Accepted values are 'MHz' or 'GHz'</li>
+<li>cpu_allocated - (Optional) capacity that is committed to be available</li>
+<li>cpu_limit - (Optional) capacity limit relative to the value specified for allocation</li>
+<li>mem_units - (Optional) unit for memory capacity allocated to this vdc. Acceptable values are 'MB' or 'GB'</li>
+<li>mem_allocated - (Optional) memory capacity that is committed to be available</li>
+<li>mem_limit - (Optional) memory capacity limit relative to the value specified for allocation</li>
+<li>nic_quota - (Optional) maximum number of virtual NICs allowed in this vdc. Defaults to 0, which specifies an unlimited number</li>
+<li>network_quota - (Optional) maximum number of network objects that can be deployed in this vdc. Defaults to 0, which means no networks can be deployed</li>
+<li>vm_quota - (Optional) maximum number of VMs that can be created in this vdc. Defaults to 0, which specifies an unlimited number</li>
+<li>storage_profiles - (Required) list of provider vdc storage profiles to add to this vdc. Each item is a dictionary that should include the following elements:</li>
+	    <ul>
+            <li>name - name of the PVDC storage profile</li>
+            <li>enabled - True if the storage profile is enabled for this vdc</li>
+            <li>units - Units used to define limit. One of MB or GB</li>
+            <li>limit - Max number of units allocated for this storage profile</li>
+            <li>default - True if this is default storage profile for this vdc</li>
+	    </ul>
+<li>resource_guaranteed_memory - (Optional) percentage of allocated CPU
+            resources guaranteed to vApps deployed in this vdc. Value defaults
+            to 1.0 if the element is empty</li>
+<li>resource_guaranteed_cpu - (Optional) percentage of allocated memory
+            resources guaranteed to vApps deployed in this vdc. Value defaults
+            to 1.0 if the element is empty</li>
+<li>vcpu_in_mhz - (Optional) specifies the clock frequency, in MegaHertz,
+            for any virtual CPU that is allocated to a VM</li>
+<li>is_thin_provision - (Optional) True to request thin provisioning</li>
+<li>network_pool_name - (Optional) name to a network pool in the provider
+            vdc that this org vdc should use</li>
+<li>uses_fast_provisioning - (Optional) True to request fast provisioning</li>
+<li>over_commit_allowed - (Optional) False to disallow creation of the VDC
+            if the AllocationModel is AllocationPool or ReservationPool and the
+            ComputeCapacity specified is greater than what the backing provider
+            VDC can supply. Defaults to True, if empty or missing</li>
+<li>vm_discovery_enabled - (Optional) True, if discovery of vCenter VMs
+            is enabled for resource pools backing this vdc</li>
+<li>is_enabled - (Optional) True, if this vdc is enabled for use by the
+            organization users</li>
+ <li>state == "present" (Required) to create org vdc</li>
+ </ul>
+ 
+ <li>
+ <h5>Update VDC</h5>
+ </li>
+ <pre>
+ <code>
+  - name: update vdc
+    vcd_org_vdc:
+      vdc_name: "test_vdc"
+      is_enabled: "true"
+      state: "update"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <p>The following arguments are supported,</p>
+ <ul>
+ <li>vdc_name - (Required) Name of the vdc</li>
+ <li>is_enabled - (Required) To enable/disable the vdc</li>
+ <li>state == "update" (Required) to update vdc</li>
+ </ul>
+
+ <li>
+ <h5>Delete VDC</h5>
+ </li>
+ <pre>
+ <code>
+ - name: delete Vdc
+   vcd_org_vdc:
+     vdc_name: "test_vdc"
+     state: "absent"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <p>The following arguments are supported,</p>
+ <ul>
+ <li>vdc_name - (Required) Name of the vdc</li>
+ <li>state == "absent" (Required) to delete vdc</li>
+ </ul>
+ 
+</ul>
+</li>
+</ol>
+</div>
