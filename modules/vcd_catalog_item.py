@@ -60,6 +60,10 @@ options:
         description:
             - name of the file
         required: false
+    chunk_size:
+        description:
+            - Size of chunks in which the file will be uploaded to the catalog
+        required: false
     vapp_name:
         description:
             - name of the vapp
@@ -79,6 +83,10 @@ options:
     customize_on_instantiate:
         description:
             - if you want to customise vapp on instantiation
+        required: false
+    overwrite:
+        description:
+            - Flag indicating if the item in the catalog has to be overwritten if it already exists. If it doesn't exist, this flag is not used
         required: false
     state:
         description:
@@ -133,10 +141,12 @@ def vcd_catalog_item_argument_spec():
         catalog_name=dict(type='str', required=True),
         item_name=dict(type='str', required=False),
         file_name=dict(type='str', required=False),
+        chunk_size=dict(type='int', required=False),
         vapp_name=dict(type='str', required=False),
         vdc_name=dict(type='str', required=False),
         description=dict(type='str', required=False),
-        customize_on_instantiate=dict(type='str', required=False),
+        customize_on_instantiate=dict(type='bool', required=False),
+        overwrite=dict(type='bool', required=False),
         state=dict(choices=VCD_CATALOG_ITEM_STATES, required=False),
         operation=dict(choices=VCD_CATALOG_ITEM_OPERATIONS, required=False)
     )
@@ -178,12 +188,14 @@ class CatalogItem(VcdAnsibleModule):
         catalog_name = params.get('catalog_name')
         item_name = params.get('item_name')
         file_name = params.get('file_name')
+        chunk_size = params.get('chunk_size')
         response = dict()
         response['changed'] = False
         item_details = {
             "catalog_name": catalog_name,
             "item_name": item_name,
-            "file_name": file_name
+            "file_name": file_name,
+            "chunk_size": chunk_size
         }
 
         if self.is_present():
@@ -227,6 +239,7 @@ class CatalogItem(VcdAnsibleModule):
         item_name = params.get('item_name')
         desc = params.get('description')
         customize_on_instantiate = params.get('customize_on_instantiate')
+        overwrite = params.get('overwrite')
         client = self.client
         response = dict()
         response['changed'] = False
@@ -240,7 +253,8 @@ class CatalogItem(VcdAnsibleModule):
             vapp_href=vapp.get('href'),
             catalog_item_name=item_name,
             description=desc,
-            customize_on_instantiate=customize_on_instantiate)
+            customize_on_instantiate=customize_on_instantiate,
+            overwrite = overwrite)
         self.ova_check_resolved()
         response['msg'] = "Catalog Item {} has been captured".format(item_name)
         response['changed'] = True

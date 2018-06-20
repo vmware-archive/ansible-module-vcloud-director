@@ -5,6 +5,7 @@
 # vars file for roles/catalog_item
 
 catalog_name: "test_catalog_100"
+chunk_size: 1048576
 
 # for media
 media_item_name: "test_item_media_100"
@@ -20,3 +21,4 @@ vapp_name: "VM1"
 vdc_name: "ACME_PAYG"
 description: "capture_vapp_desc"
 customize_on_instantiate: false
+overwrite: false
