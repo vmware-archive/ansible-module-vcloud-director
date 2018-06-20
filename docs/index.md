@@ -520,4 +520,102 @@ and any objects it contains that are in a state that normally allows removal</li
  <li>username - (Required) username of the user</li>
  <li>state == "absent" (Required) to update user</li>
 </ul>
-<!--				  -->
+</ul>
+</ol>
+</div>
+
+<!-- Catalog-item Use Case -->
+<div class="catalog-item-usage col-12" id="catalog-item-usage">
+<h2>Catalog Item Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Catalog Item States</h3>
+<ul>
+
+<li>
+<h5>Upload Catalog Item Media/Ova</h5>
+</li>
+<pre> 
+<code>
+ - name: upload media
+   vcd_catalog_item:
+     catalog_name: "test_catalog"
+     item_name: "test_item_media"
+     file_name: "test_item_media.zip"
+     chunk_size: 1048576
+     state: "present"
+</code>
+</pre> 
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+<li>catalog_name - (Required) Name of the catalog</li>
+<li>item_name - (Required) Name of the catalog item</li>
+<li>file_name - (Required) Path of the catalog item media/ova file</li>
+<li>chunk_size - (Optional) Size of chunks in which the file will be uploaded to the catalog</li>
+<li>state == "present" (Required) to upload catalog media item</li> 
+</ul>
+
+<li>
+<h5>Delete Catalog Item Media/Ova</h5>
+</li>
+<pre>
+<code>
+ - name: delete media
+   vcd_catalog_item:
+     catalog_name: "test_catalog"
+     item_name: "test_item"
+     state: "absent"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+<li>catalog_name - (Required) Name of the catalog</li>
+<li>item_name - (Required) Name of the catalog item media/ova</li>
+<li>state == "absent" (Required) to delete catalog media item</li> 
+</ul>
+
+</ul>
+</li>
+
+
+<li>
+<h3>Catalog Item Operations</h3>
+<ul>
+
+<li>
+<h5>Capture Vapp</h5>
+<pre>
+<code>
+  - name: capture vapp
+    vcd_catalog_item:
+      catalog_name: "test_catalog"
+      item_name: "test_item"
+      vapp_name: "test_vapp"
+      vdc_name: "test_vdc"
+      description: "test_description"
+      customize_on_instantiate: false
+      overwrite: false
+      operation: "capturevapp"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+<li>catalog_name - (Required) Name of the catalog</li>
+<li>item_name - (Required) name of the target catalog item</li>
+<li>vapp_name - (Required) Name of the vApp to capture</li>
+<li>vdc_name - (Required) Name of the vdc</li>
+<li>description - (Optional) Description of the catalog item </li>
+<li>customize_on_instantiate - (Optional) Flag indicating if the vApp to be instantiated from this vApp template can be customized</li>
+<li>overwrite - (Optional) Flag indicating if the item in the catalog has to be overwritten if it already exists. If it doesn't exist, this flag is not used</li>
+<li>operation == "capturevapp" (Required) to capture vApp as a template into a catalog</li> 
+</ul>
+</li>
+
+</ul>
+</li>
+</ol>
+</div>
