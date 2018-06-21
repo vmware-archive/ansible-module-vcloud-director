@@ -812,10 +812,16 @@ and any objects it contains that are in a state that normally allows removal</li
      disk_size: 10240000
      password: "test_password"
      cust_script: "test_script"
-     vm_name: "test_vm",
-     hostname: "test_host",
-     ip_address: "1.1.1.1",
-     storage_profile: "test_storage_profile"
+     vm_name: "test_vm"
+     hostname: "test_host"
+     ip_address: "1.1.1.1"
+     storage_profile: "{ 
+            \"name\" : \"Performance\",
+            \"enabled\"  : true, 
+            \"units\" : \"MB\", 
+            \"limit\" : 0, 
+            \"default\" : true 
+     }"
      network_adapter_type: "VMXNET"
      state: "present"
 </code>
@@ -1099,7 +1105,7 @@ and any objects it contains that are in a state that normally allows removal</li
  - name: modify cpu vapp vm
    vcd_vapp_vm:
     source_vapp: "web2"
-    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vm_name: "test_vm"
     target_vapp: "web2"
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
