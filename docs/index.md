@@ -779,3 +779,186 @@ and any objects it contains that are in a state that normally allows removal</li
 </ul>
 </ol>
 </div>
+
+
+<!-- Vapp Usecase -->
+<div class="vapp-usage col-12" id="vapp-usage">
+<h2>Vapp Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp States</h3>
+<ul>
+<li>
+<h5>Create Vapp</h5>
+</li>
+<pre>
+<code>
+ - name: create vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     template_name: "test_template"
+     catalog_name: "test_catalog"
+     vdc: "test_vdc"
+     description: "test_description"
+     network: "test_network"
+     fence_mode: "bridged"
+     ip_allocation_mode: 'dhcp'
+     deploy: true
+     power_on: true
+     accept_all_eulas: false
+     memory: 1024000
+     cpu: 1000
+     disk_size: 10240000
+     password: "test_password"
+     cust_script: "test_script"
+     vm_name: "test_vm",
+     hostname: "test_host",
+     ip_address: "1.1.1.1",
+     storage_profile: "test_storage_profile"
+     network_adapter_type: "VMXNET"
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+<li>vapp_name - (Required) name of the new vApp</li> 
+<li>vdc - (Required) name of the vdc</li> 
+<li>catalog_name - (Required) name of the catalog</li> 
+<li>template_name - (Required) name of the vApp template</li> 
+<li>description - (Optional) description of the new vApp</li> 
+<li>networkn - (Optional) name of a vdc network. When provided, connects the vm to the network</li> 
+<li>fence_moden - (Optional) fence mode. Possible values are pyvcloud.vcd.client.FenceMode.BRIDGED.value and pyvcloud.vcd.client.FenceMode.NAT_ROUTED.value</li> 
+<li>ip_allocation_moden - (Optional) ip allocation mode. Acceptable values are `pool`, `dhcp` and `manual`</li> 
+<li>deployn - (Optional) if True deploy the vApp after instantiation</li> 
+<li>power_onn - (Optional) if True, power on the vApp after instantiation</li> 
+<li>accept_all_eulasn - (Optional) True, confirms acceptance of all EULAs in a vApp template</li> 
+<li>memory - (Optional) </li> 
+<li>cpu - (Optional) </li> 
+<li>disk_size - (Optional) </li> 
+<li>password - (Optional) </li> 
+<li>cust_script - (Optional) </li> 
+<li>vm_namen - (Optional) when provided, sets the name of the vm</li> 
+<li>ip_addressn - (Optional) when provided, sets the ip_address of the vm</li> 
+<li>hostnamen - (Optional) when provided, sets the hostname of the guest OS</li> 
+<li>storage_profile - (Optional) name of the storage profile</li> 
+<li>network_adapter_typen - (Optional) One of the values in pyvcloud.vcd.client.NetworkAdapterType</li> 
+<li>state == "present" (Required) to create vapp</li>
+</ul>
+
+ <li>
+ <h5>Delete Vapp</h5>
+ </li>
+ <pre>
+ <code>
+  - name: delete vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     force: true
+     state: "absent"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <p>The following arguments are supported,</p>
+ <ul>
+ <li>vapp_name - (Required) name of the vApp to be deleted</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+ <li>force - (Optional) default false. If True, will instruct vcd to force delete the vapp</li>
+ <li>state == "absent" (Required) to delete vapp</li>
+ </ul>
+ 
+</ul>
+</li>
+
+
+<li>
+<h3>Vapp Operations</h3>
+<ul>
+
+<li>
+<h5>Power on vapp</h5>
+<pre>
+<code>
+ - name: power on vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     operation: "poweron"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>vapp_name - (Required) name of the vApp to be powered on</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+<li>operation == "poweron" (Required) to power on vapp</li> 
+</ul>
+</li>
+
+<li>
+<h5>Power off vapp</h5>
+<pre>
+<code>
+ - name: power off vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     operation: "poweroff"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>vapp_name - (Required) name of the vApp to be powered off</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+<li>operation == "poweroff" (Required) to power off vapp</li> 
+</ul>
+</li>
+
+<li>
+<h5>Undeploy vapp</h5>
+<pre>
+<code>
+ - name: undeploy vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     operation: "undeploy"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>vapp_name - (Required) name of the vApp to be undeploy</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+<li>operation == "undeploy" (Required) to undeploy vapp</li> 
+</ul>
+</li>
+
+<li>
+<h5>Deploy vapp</h5>
+<pre>
+<code>
+ - name: deploy vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     operation: "deploy"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>vapp_name - (Required) name of the vApp to be deploy</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+<li>operation == "deploy" (Required) to deploy vapp</li> 
+</ul>
+</li>
+
+</ul>
+</li>
+
+</ol>
+</div>
