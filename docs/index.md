@@ -779,3 +779,548 @@ and any objects it contains that are in a state that normally allows removal</li
 </ul>
 </ol>
 </div>
+
+
+<!-- Vapp Usecase -->
+<div class="vapp-usage col-12" id="vapp-usage">
+<h2>Vapp Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp States</h3>
+<ul>
+<li>
+<h5>Create Vapp</h5>
+</li>
+<pre>
+<code>
+ - name: create vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     template_name: "test_template"
+     catalog_name: "test_catalog"
+     vdc: "test_vdc"
+     description: "test_description"
+     network: "test_network"
+     fence_mode: "bridged"
+     ip_allocation_mode: 'dhcp'
+     deploy: true
+     power_on: true
+     accept_all_eulas: false
+     memory: 1024000
+     cpu: 1000
+     disk_size: 10240000
+     password: "test_password"
+     cust_script: "test_script"
+     vm_name: "test_vm"
+     hostname: "test_host"
+     ip_address: "1.1.1.1"
+     storage_profile: "{ 
+            \"name\" : \"Performance\",
+            \"enabled\"  : true, 
+            \"units\" : \"MB\", 
+            \"limit\" : 0, 
+            \"default\" : true 
+     }"
+     network_adapter_type: "VMXNET"
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+<li>vapp_name - (Required) name of the new vApp</li> 
+<li>vdc - (Required) name of the vdc</li> 
+<li>catalog_name - (Required) name of the catalog</li> 
+<li>template_name - (Required) name of the vApp template</li> 
+<li>description - (Optional) description of the new vApp</li> 
+<li>network - (Optional) name of a vdc network. When provided, connects the vm to the network</li> 
+<li>fence_mode - (Optional) fence mode. Possible values are pyvcloud.vcd.client.FenceMode.BRIDGED.value and pyvcloud.vcd.client.FenceMode.NAT_ROUTED.value</li> 
+<li>ip_allocation_mode - (Optional) ip allocation mode. Acceptable values are 'pool', 'dhcp' and 'manual'</li> 
+<li>deploy - (Optional) if True deploy the vApp after instantiation</li> 
+<li>power_on - (Optional) if True, power on the vApp after instantiation</li> 
+<li>accept_all_eulas - (Optional) True, confirms acceptance of all EULAs in a vApp template</li> 
+<li>memory - (Optional) max memory that can allocated</li> 
+<li>cpu - (Optional) max cpu that can be allocated</li> 
+<li>disk_size - size of the disk(Optional) </li> 
+<li>password - (Optional) the administrator password of vm</li> 
+<li>cust_script - (Optional) script to run on guest customization</li> 
+<li>vm_name - (Optional) when provided, sets the name of the vm</li> 
+<li>ip_address - (Optional) when provided, sets the ip_address of the vm</li> 
+<li>hostname - (Optional) when provided, sets the hostname of the guest OS</li> 
+<li>storage_profile - (Optional) name of the storage profile</li> 
+<li>network_adapter_type - (Optional) One of the values in pyvcloud.vcd.client.NetworkAdapterType</li> 
+<li>state == "present" (Required) to create vapp</li>
+</ul>
+
+ <li>
+ <h5>Delete Vapp</h5>
+ </li>
+ <pre>
+ <code>
+  - name: delete vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     force: true
+     state: "absent"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <p>The following arguments are supported,</p>
+ <ul>
+ <li>vapp_name - (Required) name of the vApp to be deleted</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+ <li>force - (Optional) default false. If True, will instruct vcd to force delete the vapp</li>
+ <li>state == "absent" (Required) to delete vapp</li>
+ </ul>
+ 
+</ul>
+</li>
+
+
+<li>
+<h3>Vapp Operations</h3>
+<ul>
+
+<li>
+<h5>Power on vapp</h5>
+<pre>
+<code>
+ - name: power on vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     operation: "poweron"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>vapp_name - (Required) name of the vApp to be powered on</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+<li>operation == "poweron" (Required) to power on vapp</li> 
+</ul>
+</li>
+
+<li>
+<h5>Power off vapp</h5>
+<pre>
+<code>
+ - name: power off vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     operation: "poweroff"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>vapp_name - (Required) name of the vApp to be powered off</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+<li>operation == "poweroff" (Required) to power off vapp</li> 
+</ul>
+</li>
+
+<li>
+<h5>Undeploy vapp</h5>
+<pre>
+<code>
+ - name: undeploy vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     operation: "undeploy"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>vapp_name - (Required) name of the vApp to be undeploy</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+<li>operation == "undeploy" (Required) to undeploy vapp</li> 
+</ul>
+</li>
+
+<li>
+<h5>Deploy vapp</h5>
+<pre>
+<code>
+ - name: deploy vapp
+   vcd_vapp:
+     vapp_name: "test_vapp"
+     vdc: "test_vdc"
+     operation: "deploy"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>vapp_name - (Required) name of the vApp to be deploy</li> 
+ <li>vdc - (Required) name of the vdc</li> 
+<li>operation == "deploy" (Required) to deploy vapp</li> 
+</ul>
+</li>
+
+</ul>
+</li>
+
+</ol>
+</div>
+
+
+
+
+
+<!-- Vapp VM Usecase -->
+<div class="vapp-vam-usage col-12" id="vapp-vm-usage">
+<h2>Vapp VM Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp VM States</h3>
+<ul>
+
+<li>
+<h5>Create Vapp VM from Catalog</h5>
+</li>
+<pre>
+<code>
+ - name: create vapp vm from catalog
+   vcd_vapp_vm:
+     target_vm_name: "test_vapp_vm"
+     target_vapp: "web2"
+     source_vdc: "test_vdc"
+     target_vdc: "test_vdc"
+     source_catalog_name: "test_catalog"
+     source_template_name: "centos7"
+     source_vm_name: "CentOS7"
+     hostname: "vcdcell"
+     vmpassword: "rootpass" 
+     vmpassword_auto: "false"
+     vmpassword_reset: "false"
+     ip_allocation_mode: "DHCP"
+     power_on: "false"
+     all_eulas_accepted: "true"
+     storage_profile: "{ 
+            \"name\": \"Performance\",
+            \"enabled\": true, 
+            \"units\": \"MB\", 
+            \"limit\": 0, 
+            \"default\": true 
+     }"
+     network: "web2Network"
+     cust_script: "test_script"
+     deploy: false
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+<li>target_vm_name - (Optional) target vm name</li> 
+<li>target_vapp - (Required) name of the target vapp</li> 
+<li>source_vdc - (Required) name of the source vdc</li> 
+<li>target_vdc - (Required) name of the target vdc</li> 
+<li>source_catalog_name - (Required) name of the sorce catalog</li> 
+<li>source_template_name - (Required) name of the source template</li> 
+<li>source_vm_name - (Required) source vm name</li> 
+<li>hostname - (Optional) target guest hostname</li> 
+<li>vmpassword - (Optional) the administrator password of the vm</li> 
+<li>vmpassword_auto - (Optional) if true, auto generate administrator password</li> 
+<li>vmpassword_reset - (Optional) true, if the administrator password for this vm must be reset after first use</li> 
+<li>ip_allocation_mode - (Optional) Name of the ip ip allocation mode</li> 
+<li>power_on - (Optional) True if the vApp should be powered-on at instantiation</li> 
+<li>all_eulas_accepted - (Optional) true confirms acceptance of all EULAs in the vApp</li> 
+<li>storage_profile - (Optional) the name of the storage profile to be used for this vm</li>
+<li>network - (Optional) name of the vApp network to connect. If omitted, the vm won't be connected to any network</li>
+<li>cust_script - (Optional) script to run on guest customization</li> 
+<li>deploy - (Optional) True, if the vApp should be deployed at instantiation</li>
+<li>state == "present" (Required) to create vapp vm</li>
+</ul>
+
+
+<li>
+<h5>Create Vapp VM from Vapp</h5>
+</li>
+<pre>
+<code>
+ - name: create vapp vm from vapp
+   vcd_vapp_vm:
+     target_vm_name: "test_vapp_vm"
+     target_vapp: "web2"
+     source_vdc: "test_vdc"
+     target_vdc: "test_vdc"
+     source_vapp: "web"
+     source_vm_name: "CentOS7"
+     hostname: "vcdcell"
+     vmpassword: "rootpass" 
+     vmpassword_auto: "false"
+     vmpassword_reset: "false"
+     ip_allocation_mode: "DHCP"
+     power_on: "false"
+     all_eulas_accepted: "true"
+     storage_profile: "{ 
+            \"name\" : \"Performance\",
+            \"enabled\"  : true, 
+            \"units\" : \"MB\", 
+            \"limit\" : 0, 
+            \"default\" : true 
+     }"
+     network: "web2Network"
+     cust_script: "test_script"
+     deploy: false
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+<li>target_vm_name - (Optional) target vm name</li> 
+<li>target_vapp - (Required) name of the target vapp</li> 
+<li>source_vdc - (Required) name of the source vdc</li> 
+<li>target_vdc - (Required) name of the target vdc</li> 
+<li>source_vapp - (Required) name of the sorce vapp</li> 
+<li>source_vm_name - (Required) source vm name</li> 
+<li>hostname - (Optional) target guest hostname</li> 
+<li>vmpassword - (Optional) the administrator password of the vm</li> 
+<li>vmpassword_auto - (Optional) if true, auto generate administrator password</li> 
+<li>vmpassword_reset - (Optional) true, if the administrator password for this vm must be reset after first use</li> 
+<li>ip_allocation_mode - (Optional) Name of the ip ip allocation mode</li> 
+<li>power_on - (Optional) True if the vApp should be powered-on at instantiation</li> 
+<li>all_eulas_accepted - (Optional) true confirms acceptance of all EULAs in the vApp</li> 
+<li>storage_profile - (Optional) the name of the storage profile to be used for this vm</li>
+<li>network - (Optional) name of the vApp network to connect. If omitted, the vm won't be connected to any network</li>
+<li>cust_script - (Optional) script to run on guest customization</li> 
+<li>deploy - (Optional) True, if the vApp should be deployed at instantiation</li>
+<li>state == "present" (Required) to create vapp vm</li>
+</ul>
+
+ <li>
+ <h5>Modify cpu Vapp VM</h5>
+ </li>
+ <pre>
+ <code>
+ - name: modify cpu vapp vm
+   vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "test_vm"
+    target_vapp: "web2"
+    source_vdc: "Terraform_VDC"
+    target_vdc: "Terraform_VDC"
+    virtual_cpus: 2
+    cores_per_socket: 2
+    state: "update"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <p>The following arguments are supported,</p>
+<ul>
+ <li>source_vapp - (Required) name of the source vApp</li> 
+ <li>target_vm_name - (Required) name of the target vm</li> 
+ <li>target_vapp - (Required) name of the target vapp</li> 
+ <li>source_vdc - (Required) name of the source vdc</li> 
+ <li>target_vdc - (Required) name of the target vdc</li>
+ <li>virtual_cpus - (Required) number of virtual CPUs to configure on the vm</li>
+ <li>cores_per_socket - (Optional) number of cores per socket</li>
+ <li>state == "update" (Required) to update vapp vm memory</li> 
+</ul>
+
+ <li>
+ <h5>Modify memory Vapp VM</h5>
+ </li>
+ <pre>
+ <code>
+ - name: modify memory vapp vm
+   vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "test_vm"
+    target_vapp: "web2"
+    source_vdc: "test_vdc"
+    target_vdc: "test_vdc"
+    memory: 4096
+    state: "update"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <p>The following arguments are supported,</p>
+<ul>
+ <li>source_vapp - (Required) name of the source vApp</li> 
+ <li>target_vm_name - (Required) name of the target vm</li> 
+ <li>target_vapp - (Required) name of the target vapp</li> 
+ <li>source_vdc - (Required) name of the source vdc</li> 
+ <li>target_vdc - (Required) name of the target vdc</li>
+ <li>memory - (Required) number of MB of memory to configure on the vm</li>
+ <li>state == "update" (Required) to update vapp vm memory</li> 
+</ul>
+
+ <li>
+ <h5>Delete Vapp VM</h5>
+ </li>
+ <pre>
+ <code>
+ - name: delete vapp vm
+   vcd_vapp_vm:
+     source_vapp: "web2"
+     target_vm_name: "test_vm"
+     target_vapp: "web2"
+     source_vdc: "test_vdc"
+     target_vdc: "test_vdc"
+     state: "absent"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <p>The following arguments are supported,</p>
+<ul>
+ <li>source_vapp - (Required) name of the source vApp</li> 
+ <li>target_vm_name - (Required) name of the target vm</li> 
+ <li>target_vapp - (Required) name of the target vapp</li> 
+ <li>source_vdc - (Required) name of the source vdc</li> 
+ <li>target_vdc - (Required) name of the target vdc</li>
+ <li>state == "absent" (Required) to delete vapp vm</li> 
+</ul>
+ 
+</ul>
+</li>
+
+
+<li>
+<h3>Vapp VM Operations</h3>
+<ul>
+
+<li>
+<h5>Power on vapp vm</h5>
+<pre>
+<code>
+ - name: power on vapp vm
+   vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "test_vapp"
+    target_vapp: "web2"
+    source_vdc: "test_vdc"
+    target_vdc: "test_vdc"
+    operation: "poweron"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>source_vapp - (Required) name of the source vApp</li> 
+ <li>target_vm_name - (Required) name of the target vm</li> 
+ <li>target_vapp - (Required) name of the target vapp</li> 
+ <li>source_vdc - (Required) name of the source vdc</li> 
+ <li>target_vdc - (Required) name of the target vdc</li>
+ <li>operation == "poweron" (Required) to power on vapp vm</li> 
+</ul>
+</li>
+
+<li>
+<h5>Power off vapp vm</h5>
+<pre>
+<code>
+ - name: power off vapp vm
+   vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "test_vapp"
+    target_vapp: "web2"
+    source_vdc: "test_vdc"
+    target_vdc: "test_vdc"
+    operation: "poweroff"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>source_vapp - (Required) name of the source vApp</li> 
+ <li>target_vm_name - (Required) name of the target vm</li> 
+ <li>target_vapp - (Required) name of the target vapp</li> 
+ <li>source_vdc - (Required) name of the source vdc</li> 
+ <li>target_vdc - (Required) name of the target vdc</li>
+ <li>operation == "poweroff" (Required) to power off vapp vm</li> 
+</ul>
+</li>
+
+<li>
+<h5>Reload vapp vm</h5>
+<pre>
+<code>
+ - name: reload vapp vm
+   vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "test_vapp_vm"
+    target_vapp: "web2"
+    source_vdc: "test_vdc"
+    target_vdc: "test_vdc"
+    operation: "reloadvm"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>source_vapp - (Required) name of the source vApp</li> 
+ <li>target_vm_name - (Required) name of the target vm</li> 
+ <li>target_vapp - (Required) name of the target vapp</li> 
+ <li>source_vdc - (Required) name of the source vdc</li> 
+ <li>target_vdc - (Required) name of the target vdc</li>
+ <li>operation == "reloadvm" (Required) to reload vapp vm</li> 
+</ul>
+</li>
+
+<li>
+<h5>Undeploy Vapp VM</h5>
+<pre>
+<code>
+ - name: undeploy vapp vm
+   vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "test_vm"
+    target_vapp: "web2"
+    source_vdc: "test_vdc"
+    target_vdc: "test_vdc"
+    operation: "undeploy"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>source_vapp - (Required) name of the source vApp</li> 
+ <li>target_vm_name - (Required) name of the target vm</li> 
+ <li>target_vapp - (Required) name of the target vapp</li> 
+ <li>source_vdc - (Required) name of the source vdc</li> 
+ <li>target_vdc - (Required) name of the target vdc</li>
+ <li>operation == "undeploy" (Required) to undeploy vapp vm</li> 
+</ul>
+</li>
+
+<li>
+<h5>Deploy Vapp VM</h5>
+<pre>
+<code>
+ - name: deploy vapp vm
+   vcd_vapp_vm:
+    source_vapp: "web2"
+    target_vm_name: "test_vm"
+    target_vapp: "web2"
+    source_vdc: "test_vdc"
+    target_vdc: "test_vdc"
+    operation: "deploy"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<p>The following arguments are supported,</p>
+<ul>
+ <li>source_vapp - (Required) name of the source vApp</li> 
+ <li>target_vm_name - (Required) name of the target vm</li> 
+ <li>target_vapp - (Required) name of the target vapp</li> 
+ <li>source_vdc - (Required) name of the source vdc</li> 
+ <li>target_vdc - (Required) name of the target vdc</li>
+ <li>operation == "deploy" (Required) to deploy vapp vm</li> 
+</ul>
+</li>
+
+</ul>
+</li>
+
+</ol>
+</div>
