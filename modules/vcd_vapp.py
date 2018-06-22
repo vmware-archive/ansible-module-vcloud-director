@@ -11,11 +11,12 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-client: vcd_vapp
-short_description: This module is to create vApps in vCloud Director
+module: vcd_vapp
+short_description: Ansible Module to manage (create/update/delete) vApps in vCloud Director.
 version_added: "2.4"
 description:
-    - "This module is to to create vApps in vCloud Director"
+    - "Ansible Module to manage (create/update/delete) vApps in vCloud Director."
+
 options:
     user:
         description:
@@ -44,26 +45,42 @@ options:
     vapp_name:
         description:
             - Vapp name
-        required: false
+        required: true
+    vdc:
+        description:
+            - Org Vdc where this VAPP gets created
+        required: true
     template_name:
         description:
             - source catalog item name
         required: false
-    catalog_name:
+    description:
         description:
-            - source catalog name
-        required: false
-    vdc:
-        description:
-            - Org Vdc where this VAPP gets created
+            - vApp description
         required: false
     network:
         description:
             - org network for the vapp
         required: false
-    ip_allocation_mode:
+    fence_mode:
         description:
-            - IP Allocation mode "static"/"DHCP"
+            - vApp fence mode
+        required: false
+    deploy:
+        description:
+            - "true" if to deploy vApp else "false"
+        required: false
+    power_on:
+        description:
+            - "true" if to power on vApp else "false"
+        required: false
+    accept_all_eulas:
+        description:
+            - "true"/"false"
+        required: false
+    disk_size:
+        description:
+            - vApp disk size
         required: false
     memory:
         description:
@@ -73,26 +90,50 @@ options:
         description:
             - number of CPU
         required: false
+    vmpassword:
+        description:
+            - vm password in vApps
+        required: false
+    cust_script:
+        description:
+            - vApp customization script
+        required: false
+    vm_name:
+        description:
+            - vm name in vApp
+        required: false
+    hostname:
+        description:
+            - vApp hostname
+        required: false
+    ip_address:
+        description:
+            - vApp ip address
+        required: false
+    ip_allocation_mode:
+        description:
+            - IP Allocation mode "static"/"DHCP"
+        required: false
     storage_profile:
         description:
             - storage profile to use for the vapp
         required: false
-    power_on:
+    network_adapter_type:
         description:
-            - "true"/"false"
+            - network adapter type for vApp
         required: false
-    accept_all_eulas:
+    force:
         description:
-            - "true"/"false"
+            - "true" if delete vApp forcefully else "false"
         required: false
     state:
         description:
             - state of new virtual machines ('present'/'absent').
-            - One from state or operation has to be provided. 
+            - One from state or operation has to be provided.
         required: false
     operation:
         description:
-            - operation which should be performed over new virtual machines ('poweron'/'poweroff'/'deploy'/'undeploy').
+            - operation on vApp ('poweron'/'poweroff'/'deploy'/'undeploy').
             - One from state or operation has to be provided.
         required: false
 
@@ -122,13 +163,15 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-result: success/failure message relates to vapp operation
+msg: success/failure message corresponding to vapp state/operation
+changed: true if resource has been changed else false
 '''
 
 from lxml import etree
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
+from pyvcloud.vcd.client import FenceMode
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
@@ -138,17 +181,28 @@ VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy']
 
 def vapp_argument_spec():
     return dict(
-        vapp_name=dict(type='str', required=False),
+        vapp_name=dict(type='str', required=True),
         template_name=dict(type='str', required=False),
         catalog_name=dict(type='str', required=False),
-        vdc=dict(type='str', required=False),
-        network=dict(type='str', required=False),
-        ip_allocation_mode=dict(type='str', required=False),
-        memory=dict(type='str', required=False),
-        cpu=dict(type='str', required=False),
-        storage_profile=dict(type='str', required=False),
-        power_on=dict(type='bool', required=False),
-        accept_all_eulas=dict(type='bool', required=False),
+        vdc=dict(type='str', required=True),
+        description=dict(type='str', required=False, default=None),
+        network=dict(type='str', required=False, default=None),
+        fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
+        ip_allocation_mode=dict(type='str', required=False, default="dhcp"),
+        deploy=dict(type='bool', required=False, default=True),
+        power_on=dict(type='bool', required=False, default=True),
+        accept_all_eulas=dict(type='bool', required=False, default=False),
+        memory=dict(type='int', required=False, default=None),
+        cpu=dict(type='int', required=False, default=None),
+        disk_size=dict(type='int', required=False, default=None),
+        vmpassword=dict(type='str', required=False, default=None),
+        cust_script=dict(type='str', required=False, default=None),
+        vm_name=dict(type='str', required=False, default=None),
+        hostname=dict(type='str', required=False, default=None),
+        ip_address=dict(type='str', required=False, default=None),
+        storage_profile=dict(type='str', required=False, default=None),
+        network_adapter_type=dict(type='str', required=False, default=None),
+        force=dict(type='bool', required=False, default=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
     )
@@ -189,12 +243,23 @@ class Vapp(VcdAnsibleModule):
         vapp_name = params.get('vapp_name')
         catalog_name = params.get('catalog_name')
         template_name = params.get('template_name')
+        description = params.get('description')
         network = params.get('network')
+        fence_mode = params.get('fence_mode')
+        ip_allocation_mode = params.get('ip_allocation_mode')
+        deploy = params.get('deploy')
+        power_on = params.get('power_on')
+        accept_all_eulas = params.get('accept_all_eulas')
         memory = params.get('memory')
-        storage_profile = params.get('storage_profile')
-        accept_all_eulas = params.get('accept_all_eulas', True)
-        power_on = params.get('power_on', True)
         cpu = params.get('cpu')
+        disk_size = params.get('disk_size')
+        vmpassword = params.get('vmpassword')
+        cust_script = params.get('cust_script')
+        vm_name = params.get('vm_name')
+        hostname = params.get('hostname')
+        ip_address = params.get('ip_address')
+        storage_profile = params.get('storage_profile')
+        network_adapter_type = params.get('network_adapter_type')
         response = dict()
         response['changed'] = False
 
@@ -205,31 +270,43 @@ class Vapp(VcdAnsibleModule):
                 name=vapp_name,
                 catalog=catalog_name,
                 template=template_name,
+                description=description,
                 network=network,
+                fence_mode=fence_mode,
+                ip_allocation_mode=ip_allocation_mode,
+                deploy=deploy,
+                power_on=power_on,
+                accept_all_eulas=accept_all_eulas,
                 memory=memory,
                 cpu=cpu,
-                power_on=power_on,
+                disk_size=disk_size,
+                password=vmpassword,
+                cust_script=cust_script,
+                vm_name=vm_name,
+                hostname=hostname,
+                ip_address=ip_address,
                 storage_profile=storage_profile,
-                accept_all_eulas=accept_all_eulas)
+                network_adapter_type=network_adapter_type)
             self.execute_task(create_vapp_task.Tasks.Task[0])
             response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
             response['changed'] = True
         else:
-            response['msg'] = "Vapp {} is already present.".format(vapp_name)
+            response['warnings'] = "Vapp {} is already present.".format(vapp_name)
 
         return response
 
     def delete(self):
         vapp_name = self.params.get('vapp_name')
+        force = self.params.get('force')
         response = dict()
         response['changed'] = False
 
         try:
             self.vdc.get_vapp(vapp_name)
         except EntityNotFoundException:
-            response['msg'] = "Vapp {} is not present.".format(vapp_name)
+            response['warnings'] = "Vapp {} is not present.".format(vapp_name)
         else:
-            delete_vapp_task = self.vdc.delete_vapp(name=vapp_name, force=True)
+            delete_vapp_task = self.vdc.delete_vapp(name=vapp_name, force=force)
             self.execute_task(delete_vapp_task)
             response['msg'] = 'Vapp {} has been deleted.'.format(vapp_name)
             response['changed'] = True
@@ -249,7 +326,7 @@ class Vapp(VcdAnsibleModule):
             response['msg'] = 'Vapp {} has been powered on.'.format(vapp_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['msg'] = 'Vapp {} is already powered on.'.format(vapp_name)
+            response['warnings'] = 'Vapp {} is already powered on.'.format(vapp_name)
 
         return response
 
@@ -266,7 +343,7 @@ class Vapp(VcdAnsibleModule):
             response['msg'] = 'Vapp {} has been powered off.'.format(vapp_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['msg'] = 'Vapp {} is already powered off.'.format(vapp_name)
+            response['warnings'] = 'Vapp {} is already powered off.'.format(vapp_name)
 
         return response
 
@@ -283,7 +360,7 @@ class Vapp(VcdAnsibleModule):
             response['msg'] = 'Vapp {} has been deployed.'.format(vapp_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['msg'] = 'Vapp {} is already deployed.'.format(vapp_name)
+            response['warnings'] = 'Vapp {} is already deployed.'.format(vapp_name)
 
         return response
 
@@ -300,7 +377,7 @@ class Vapp(VcdAnsibleModule):
             response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['msg'] = 'Vapp {} is already undeployed.'.format(vapp_name)
+            response['warnings'] = 'Vapp {} is already undeployed.'.format(vapp_name)
 
         return response
 

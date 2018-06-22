@@ -9,17 +9,15 @@ from ansible.module_utils.basic import AnsibleModule
 from pyvcloud.vcd.client import BasicLoginCredentials
 from ansible.module_utils.vcd_errors import VCDLoginError
 
-DEFAULT_VERSION = '30.0'
-
 
 def vcd_argument_spec():
     return dict(
-        user=dict(type='str', required=False, default=None),
-        password=dict(type='str', required=False, no_log=True, default=None),
-        org=dict(type='str', required=False, default=None),
-        host=dict(type='str', required=False, default=None),
-        api_version=dict(type='str', default=DEFAULT_VERSION),
-        verify_ssl_certs=dict(type='bool', default=False)
+        user=dict(type='str', required=False, default=os.environ['env_user']),
+        password=dict(type='str', required=False, no_log=True, default=os.environ['env_password']),
+        org=dict(type='str', required=False, default=os.environ['env_org']),
+        host=dict(type='str', required=False, default=os.environ['env_host']),
+        api_version=dict(type='str', default=os.environ['env_api_version']),
+        verify_ssl_certs=dict(type='bool', default=os.environ['env_verify_ssl_certs'])
     )
 
 
@@ -40,19 +38,9 @@ class VcdAnsibleModule(AnsibleModule):
             host = self.params.get('host')
             api_version = self.params.get('api_version')
             verify_ssl_certs = self.params.get('verify_ssl_certs')
-
-            # giving more precedence to module level details
-            user = user if user else os.environ['env_user']
-            password = password if password else os.environ['env_password']
-            host = host if host else os.environ['env_host']
-            org = org if org else os.environ['env_org']
-            api_version = api_version if api_version else os.environ['env_api_version']
-            verify_ssl_certs = verify_ssl_certs if verify_ssl_certs else os.environ['env_verify_ssl_certs']
-            verify_ssl_certs = False if verify_ssl_certs == "False" else True
-
             self.client = Client(host,
-                            api_version=api_version,
-                            verify_ssl_certs=verify_ssl_certs)
+                                 api_version=api_version,
+                                 verify_ssl_certs=verify_ssl_certs)
 
             self.client.set_credentials(BasicLoginCredentials(user, org, password))
 

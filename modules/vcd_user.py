@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_user
-short_description: Ansible user module to manage (create/update/delete) users in vCloud Director
+short_description: Ansible module to manage (create/update/delete) users in vCloud Director
 version_added: "2.4"
 description:
-    - Ansible user module to manage (create/update/delete) users in vCloud Director
+    - Ansible module to manage (create/update/delete) users in vCloud Director
 
 options:
     user:
@@ -149,7 +149,8 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-result: success/failure message relates to user operations
+msg: success/failure message corresponding to user state/operation
+changed: true if resource has been changed else false
 '''
 
 from pyvcloud.vcd.org import Org
@@ -165,20 +166,20 @@ def user_argument_spec():
         username=dict(type='str', required=True),
         userpassword=dict(type='str', required=False),
         role_name=dict(type='str', required=False),
-        full_username=dict(type='str', required=False),
-        description=dict(type='str', required=False),
-        email=dict(type='str', required=False),
-        telephone=dict(type='str', required=False),
-        im=dict(type='str', required=False),
-        alert_email=dict(type='str', required=False),
-        alert_email_prefix=dict(type='str', required=False),
-        stored_vm_quota=dict(type='str', required=False),
-        deployed_vm_quota=dict(type='str', required=False),
-        is_group_role=dict(type='str', required=False),
-        is_default_cached=dict(type='str', required=False),
-        is_external=dict(type='str', required=False),
-        is_alert_enabled=dict(type='str', required=False),
-        is_enabled=dict(type='str', required=False),
+        full_username=dict(type='str', required=False, default=''),
+        description=dict(type='str', required=False, default=''),
+        email=dict(type='str', required=False, default=''),
+        telephone=dict(type='str', required=False, default=''),
+        im=dict(type='str', required=False, default=''),
+        alert_email=dict(type='str', required=False, default=''),
+        alert_email_prefix=dict(type='str', required=False, default=''),
+        stored_vm_quota=dict(type='str', required=False, default=0),
+        deployed_vm_quota=dict(type='str', required=False, default=0),
+        is_group_role=dict(type='bool', required=False, default=False),
+        is_default_cached=dict(type='bool', required=False, default=False),
+        is_external=dict(type='bool', required=False, default=False),
+        is_alert_enabled=dict(type='bool', required=False, default=False),
+        is_enabled=dict(type='bool', required=False, default=True),
         state=dict(choices=USER_STATES, required=False),
     )
 
@@ -235,7 +236,7 @@ class User(VcdAnsibleModule):
             response['msg'] = "User {} has been created.".format(username)
             response['changed'] = True
         else:
-            response['msg'] = "User {} is already present.".format(username)
+            response['warnings'] = "User {} is already present.".format(username)
 
         return response
 
@@ -247,7 +248,7 @@ class User(VcdAnsibleModule):
         try:
             self.org.get_user(username)
         except EntityNotFoundException:
-            response['msg'] = "User {} is not present.".format(username)
+            response['warnings'] = "User {} is not present.".format(username)
         else:
             self.org.delete_user(username)
             response['msg'] = "User {} has been deleted.".format(username)
@@ -276,16 +277,16 @@ def main():
     )
     module = User(argument_spec=argument_spec, supports_check_mode=True)
 
-    try:
-        if not module.params.get('state'):
-            raise Exception('Please provide the state for the resource.')
+    # try:
+    if not module.params.get('state'):
+        raise Exception('Please provide the state for the resource.')
 
-        response = module.manage_states()
-        module.exit_json(**response)
+    response = module.manage_states()
+    module.exit_json(**response)
 
-    except Exception as error:
-        response['msg'] = error.__str__()
-        module.fail_json(**response)
+    # except Exception as error:
+    #     response['msg'] = error.__str__()
+    #     module.fail_json(**response)
 
 
 if __name__ == '__main__':

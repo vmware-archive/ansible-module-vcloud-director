@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_org
-short_description: Ansible org module to manage (create/update/delete) orgs in vCloud Director
+short_description: Ansible module to manage (create/update/delete) orgs in vCloud Director
 version_added: "2.4"
 description:
-    - Ansible org module to manage (create/update/delete) orgs in vCloud Director
+    - Ansible module to manage (create/update/delete) orgs in vCloud Director
 
 options:
     user:
@@ -115,9 +115,9 @@ def org_argument_spec():
     return dict(
         org_name=dict(type='str', required=True),
         full_name=dict(type='str', required=False),
-        is_enabled=dict(type='bool', required=False),
-        force=dict(type='bool', required=False),
-        recursive=dict(type='bool', required=False),
+        is_enabled=dict(type='bool', required=False, default=False),
+        force=dict(type='bool', required=False, default=None),
+        recursive=dict(type='bool', required=False, default=None),
         state=dict(choices=VCD_ORG_STATES, required=False),
         operation=dict(choices=VCD_ORG_OPERATIONS, required=False),
     )
@@ -157,7 +157,7 @@ class VCDOrg(VcdAnsibleModule):
             response['msg'] = 'Org {} has been created.'.format(org_name)
             response['changed'] = True
         except BadRequestException:
-            response['msg'] = 'Org {} is already present.'.format(org_name)
+            response['warnings'] = 'Org {} is already present.'.format(org_name)
 
         return response
 
@@ -204,7 +204,7 @@ class VCDOrg(VcdAnsibleModule):
             response['msg'] = "Org {} has been deleted.".format(org_name)
             response['changed'] = True
         except EntityNotFoundException:
-            response['msg'] = "Org {} is not present.".format(org_name)
+            response['warnings'] = "Org {} is not present.".format(org_name)
 
         return response
 

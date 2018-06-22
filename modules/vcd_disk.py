@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_disk
-short_description: Ansible disk module to manage (create/update/delete) disks in vCloud Director
+short_description: Ansible module to manage (create/update/delete) disks in vCloud Director
 version_added: "2.4"
 description:
-    - Ansible catalog module to manage (create/update/delete) disks in vCloud Director
+    - Ansible module to manage (create/update/delete) disks in vCloud Director
 
 options:
     user:
@@ -134,18 +134,18 @@ VCD_DISK_STATES = ['present', 'update', 'absent']
 def vcd_disk_argument_spec():
     return dict(
         disk_name=dict(type='str', required=True),
-        size=dict(type='str', required=False),
+        size=dict(type='int', required=False),
         vdc=dict(type='str', required=True),
         description=dict(type='str', required=False),
-        storage_profile=dict(type='str', required=False),
-        iops=dict(type='str', required=False),
-        bus_type=dict(type='str', required=False),
-        bus_sub_type=dict(type='str', required=False),
-        new_disk_name=dict(type='str', required=False),
-        new_size=dict(type='str', required=False),
-        new_description=dict(type='str', required=False),
-        new_storage_profile=dict(type='str', required=False),
-        new_iops=dict(type='str', required=False),
+        storage_profile=dict(type='str', required=False, default=None),
+        iops=dict(type='int', required=False, default=None),
+        bus_type=dict(type='str', required=False, default=None),
+        bus_sub_type=dict(type='str', required=False, default=None),
+        new_disk_name=dict(type='str', required=False, default=None),
+        new_size=dict(type='int', required=False, default=None),
+        new_description=dict(type='str', required=False, default=None),
+        new_storage_profile=dict(type='str', required=False, default=None),
+        new_iops=dict(type='int', required=False, default=None),
         disk_id=dict(type='str', required=False),
         state=dict(choices=VCD_DISK_STATES, required=False),
     )
@@ -196,7 +196,7 @@ class Disk(VcdAnsibleModule):
             response['msg'] = 'Disk {} has been created.'.format(disk_name)
             response['changed'] = True
         else:
-            response['msg'] = "Disk {} is already present.".format(disk_name)
+            response['warnings'] = "Disk {} is already present.".format(disk_name)
 
         return response
 
@@ -233,7 +233,7 @@ class Disk(VcdAnsibleModule):
         try:
             self.vdc.get_disk(name=disk_name, disk_id=disk_id)
         except EntityNotFoundException:
-            response['msg'] = "Disk {} is not present.".format(disk_name)
+            response['warnings'] = "Disk {} is not present.".format(disk_name)
         else:
             delete_disk_task = self.vdc.delete_disk(name=disk_name,
                                                     disk_id=disk_id)

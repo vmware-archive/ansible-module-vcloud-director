@@ -11,11 +11,12 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-client: vcd_org_vdc
-short_description: This module is to manage virtual datacenters for organizations
+module: vcd_org_vdc
+short_description: Ansible module to manage (create/update/delete) virtual datacenters in vCloud Director.
 version_added: "2.4"
 description:
-    - "This module is to manage virtual datacenters for organizations"
+    - "Ansible module to manage (create/update/delete) virtual datacenters in vCloud Director."
+
 options:
     user:
         description:
@@ -44,7 +45,7 @@ options:
     vdc_name:
         description:
             - The name of the new vdc
-        required: false
+        required: true
     provider_vdc_name:
         description:
             - The name of an existing provider vdc
@@ -97,7 +98,7 @@ options:
         description:
             - List of provider vDC storage profiles to add to this vDC. Each item is a dictionary that should include the following elements
                 - name: name of the PVDC storage profile
-                - enabled: True if the storage profile is enabled for this vDC else false
+                - enabled: "true" if the storage profile is enabled for this vDC else "false"
                 - units: Units used to define limit. One of MB or GB
                 - limit: Max number of units allocated for this storage profile
                 - default: True if this is default storage profile for this vDC
@@ -116,7 +117,7 @@ options:
         required: false
     is_thin_provision:
         description:
-            - Boolean to request thin provisioning
+            - "true"/"false" to request thin provisioning
         required: false
     network_pool_name:
         description:
@@ -124,19 +125,19 @@ options:
         required: false
     uses_fast_provisioning:
         description:
-            - Boolean to request fast provisioning
+            - "true"/"false" to request fast provisioning
         required: false
     over_commit_allowed:
         description:
-            - Set to false to disallow creation of the VDC if the AllocationModel is AllocationPool or ReservationPool and the ComputeCapacity you specified is greater than what the backing Provider VDC can supply. Defaults to true if empty or missing
+            - Set to "false" to disallow creation of the VDC if the AllocationModel is AllocationPool or ReservationPool and the ComputeCapacity you specified is greater than what the backing Provider VDC can supply. Defaults to "true" if empty or missing
         required: false
     vm_discovery_enabled:
         description:
-            - True if discovery of vCenter VMs is enabled for resource pools backing this vDC
+            - "true" if discovery of vCenter VMs is enabled for resource pools backing this vDC else "false"
         required: false
     is_enabled:
         description:
-            - True if this vDC is enabled for use by the organization users
+            - "true" if this vDC is enabled for use by the organization users else "false"
         required: false
     state:
         description:
@@ -183,7 +184,8 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-result: success/failure message relates to vapp_org_vdc operation
+msg: success/failure message corresponding to vdc state/operation
+changed: true if resource has been changed else false
 '''
 
 import json
@@ -202,27 +204,27 @@ def org_vdc_argument_spec():
     return dict(
         vdc_name=dict(type='str', required=False),
         provider_vdc_name=dict(type='str', required=False),
-        description=dict(type='str', required=False),
-        allocation_model=dict(type='str', required=False),
-        cpu_units=dict(type='str', required=False),
-        cpu_allocated=dict(type='str', required=False),
-        cpu_limit=dict(type='str', required=False),
-        mem_units=dict(type='str', required=False),
-        mem_allocated=dict(type='str', required=False),
-        mem_limit=dict(type='str', required=False),
-        nic_quota=dict(type='str', required=False),
-        network_quota=dict(type='str', required=False),
-        vm_quota=dict(type='str', required=False),
-        storage_profiles=dict(type='dict', required=False),
-        resource_guaranteed_memory=dict(type='str', required=False),
-        resource_guaranteed_cpu=dict(type='str', required=False),
-        vcpu_in_mhz=dict(type='str', required=False),
-        is_thin_provision=dict(type='str', required=False),
-        network_pool_name=dict(type='str', required=False),
-        uses_fast_provisioning=dict(type='str', required=False),
-        over_commit_allowed=dict(type='str', required=False),
-        vm_discovery_enabled=dict(type='str', required=False),
-        is_enabled=dict(type='str', required=False),
+        description=dict(type='str', required=False, default=''),
+        allocation_model=dict(type='str', required=False, default='AllocationVApp'),
+        cpu_units=dict(type='str', required=False, default='MHz'),
+        cpu_allocated=dict(type='int', required=False, default=0),
+        cpu_limit=dict(type='int', required=False, default=0),
+        mem_units=dict(type='str', required=False, default='MB'),
+        mem_allocated=dict(type='int', required=False, default=0),
+        mem_limit=dict(type='int', required=False, default=0),
+        nic_quota=dict(type='int', required=False, default=0),
+        network_quota=dict(type='int', required=False, default=0),
+        vm_quota=dict(type='int', required=False, default=0),
+        storage_profiles=dict(type='str', required=False, default='[]'),
+        resource_guaranteed_memory=dict(type='float', required=False, default=1.0),
+        resource_guaranteed_cpu=dict(type='float', required=False, default=1.0),
+        vcpu_in_mhz=dict(type='int', required=False, default=None),
+        is_thin_provision=dict(type='bool', required=False, default=None),
+        network_pool_name=dict(type='str', required=False, default=None),
+        uses_fast_provisioning=dict(type='bool', required=False, default=None),
+        over_commit_allowed=dict(type='bool', required=False, default=True),
+        vm_discovery_enabled=dict(type='bool', required=False, default=None),
+        is_enabled=dict(type='bool', required=False, default=True),
         state=dict(choices=ORG_VDC_STATES, required=False),
     )
 
@@ -246,31 +248,29 @@ class Vdc(VcdAnsibleModule):
 
     def create(self):
         vdc_name = self.params.get('vdc_name')
-        is_enabled = self.params.get('is_enabled', True)
+        is_enabled = self.params.get('is_enabled')
         provider_vdc_name = self.params.get('provider_vdc_name')
-        description = self.params.get('description', '')
-        allocation_model = self.params.get(
-            'allocation_model', 'AllocationVApp')
-        storage_profiles = self.params.get('storage_profiles', [])
-        # cpu_units = self.params.get('cpu_units', 'MHz')
-        # cpu_allocated = self.params.get('cpu_allocated', 0)
-        # cpu_limit = self.params.get('cpu_limit', 0)
-        # mem_units = self.params.get('mem_units', 'MB')
-        # mem_allocated = self.params.get('mem_allocated', 0)
-        # mem_limit = self.params.get('mem_limit', 0)
-        # nic_quota = self.params.get('nic_quota', 0)
-        # network_quota = self.params.get('network_quota', 0)
-        # vm_quota = self.params.get('vm_quota', 0)
-        # resource_guaranteed_memory = self.params.get('resource_guaranteed_memory', None)
-        # resource_guaranteed_cpu = self.params.get('resource_guaranteed_cpu', None)
-        # vcpu_in_mhz = self.params.get('vcpu_in_mhz', None)
-        # is_thin_provision = self.params.get('is_thin_provision', None)
-        # network_pool_name = self.params.get('network_pool_name', None)
-        # uses_fast_provisioning = self.params.get('uses_fast_provisioning', None)
-        # over_commit_allowed = self.params.get('over_commit_allowed', None)
-        # vm_discovery_enabled = self.params.get('vm_discovery_enabled', None)
-        storage_profiles = storage_profiles if type(
-            storage_profiles) is list else [storage_profiles]
+        description = self.params.get('description')
+        allocation_model = self.params.get('allocation_model')
+        storage_profiles = json.loads(self.params.get('storage_profiles'))
+        cpu_units = self.params.get('cpu_units')
+        cpu_allocated = self.params.get('cpu_allocated')
+        cpu_limit = self.params.get('cpu_limit')
+        mem_units = self.params.get('mem_units')
+        mem_allocated = self.params.get('mem_allocated')
+        mem_limit = self.params.get('mem_limit')
+        nic_quota = self.params.get('nic_quota')
+        network_quota = self.params.get('network_quota')
+        vm_quota = self.params.get('vm_quota')
+        resource_guaranteed_memory = self.params.get('resource_guaranteed_memory')
+        resource_guaranteed_cpu = self.params.get('resource_guaranteed_cpu')
+        vcpu_in_mhz = self.params.get('vcpu_in_mhz')
+        is_thin_provision = self.params.get('is_thin_provision')
+        network_pool_name = self.params.get('network_pool_name')
+        uses_fast_provisioning = self.params.get('uses_fast_provisioning')
+        over_commit_allowed = self.params.get('over_commit_allowed')
+        vm_discovery_enabled = self.params.get('vm_discovery_enabled')
+        storage_profiles = storage_profiles if type(storage_profiles) is list else [storage_profiles]
         response = dict()
         response['changed'] = False
 
@@ -283,30 +283,30 @@ class Vdc(VcdAnsibleModule):
                 description=description,
                 allocation_model=allocation_model,
                 storage_profiles=storage_profiles,
-                # cpu_units=cpu_units,
-                # cpu_allocated=cpu_allocated,
-                # cpu_limit=cpu_limit,
-                # mem_units=mem_units,
-                # mem_allocated=mem_allocated,
-                # mem_limit=mem_limit,
-                # nic_quota=nic_quota,
-                # network_quota=network_quota,
-                # vm_quota=vm_quota,
-                # resource_guaranteed_memory=resource_guaranteed_memory,
-                # resource_guaranteed_cpu=resource_guaranteed_cpu,
-                # vcpu_in_mhz=vcpu_in_mhz,
-                # is_thin_provision=is_thin_provision,
-                # network_pool_name=network_pool_name,
-                # uses_fast_provisioning=uses_fast_provisioning,
-                # over_commit_allowed=over_commit_allowed,
-                # vm_discovery_enabled=vm_discovery_enabled,
+                cpu_units=cpu_units,
+                cpu_allocated=cpu_allocated,
+                cpu_limit=cpu_limit,
+                mem_units=mem_units,
+                mem_allocated=mem_allocated,
+                mem_limit=mem_limit,
+                nic_quota=nic_quota,
+                network_quota=network_quota,
+                vm_quota=vm_quota,
+                resource_guaranteed_memory=resource_guaranteed_memory,
+                resource_guaranteed_cpu=resource_guaranteed_cpu,
+                vcpu_in_mhz=vcpu_in_mhz,
+                is_thin_provision=is_thin_provision,
+                network_pool_name=network_pool_name,
+                uses_fast_provisioning=uses_fast_provisioning,
+                over_commit_allowed=over_commit_allowed,
+                vm_discovery_enabled=vm_discovery_enabled,
                 is_enabled=is_enabled)
 
             self.execute_task(create_vdc_task.Tasks.Task[0])
             response['msg'] = 'VDC {} has been created.'.format(vdc_name)
             response['changed'] = True
         else:
-            response['msg'] = 'VDC {} is already present.'.format(vdc_name)
+            response['warnings'] = 'VDC {} is already present.'.format(vdc_name)
 
         return response
 
@@ -332,7 +332,7 @@ class Vdc(VcdAnsibleModule):
         try:
             vdc_resource = self.org.get_vdc(vdc_name)
         except EntityNotFoundException:
-            response['msg'] = 'VDC {} is not present.'.format(vdc_name)
+            response['warnings'] = 'VDC {} is not present.'.format(vdc_name)
         else:
             vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
             vdc.enable_vdc(enable=False)
@@ -351,16 +351,16 @@ def main():
     )
     module = Vdc(argument_spec=argument_spec, supports_check_mode=True)
 
-    try:
-        if not module.params.get('state'):
-            raise Exception('Please provide state for the resource.')
+    # try:
+    if not module.params.get('state'):
+        raise Exception('Please provide state for the resource.')
 
-        response = module.manage_states()
-        module.exit_json(**response)
+    response = module.manage_states()
+    module.exit_json(**response)
 
-    except Exception as error:
-        response['msg'] = error.__str__()
-        module.fail_json(**response)
+    # except Exception as error:
+        # response['msg'] = error.__str__()
+        # module.fail_json(**response)
 
 
 if __name__ == '__main__':

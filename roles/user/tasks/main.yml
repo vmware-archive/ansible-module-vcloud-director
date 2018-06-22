@@ -7,20 +7,6 @@
     username: "{{ username }}"
     userpassword: test_password
     role_name: "Organization Administrator"
-    full_username: "{{ username }}"
-    description: "admin test user"
-    email: "testuser@test.com"
-    telephone: "12345678"
-    im: "i_m_val"
-    is_enabled: "false"
-    stored_vm_quota: 5
-    deployed_vm_quota: 5
-    is_alert_enabled: "true"
-    is_external: "false"
-    is_default_cached: "false"
-    is_group_role: "false"
-    alert_email_prefix: "test"
-    alert_email: "test@test.com"
     state: "present"
   register: output
 

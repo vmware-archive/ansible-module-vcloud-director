@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_catalog
-short_description: Ansible catalog module to manage (create/update/delete) catalogs in vCloud Director
+short_description: Ansible module to manage (create/update/delete) catalogs in vCloud Director.
 version_added: "2.4"
 description:
-    - This module is to create, read, update, delete catalog in vCloud Director.
+    - Ansible module to manage (create/update/delete) catalogs in vCloud Director.
     - Task performed:
         - Create catalog
         - Read Catalog
@@ -60,7 +60,7 @@ options:
         required: false
     shared:
         description:
-            - shared state of catalog(true/false)
+            - shared state of catalog("true"/"false")
         required: false
     state:
         description:
@@ -71,7 +71,8 @@ options:
         description:
             - operation which should be performed over catalog.
             - various operations are:
-                - read : read catalog metadata e.g catalog name, description, shared state of catalog
+                - read : read catalog metadata
+                - shared: share/unshare catalog
             - One from state or operation has to be provided.
         required: false
 
@@ -106,9 +107,9 @@ VCD_CATALOG_OPERATIONS = ['read', 'shared']
 def vcd_catalog_argument_spec():
     return dict(
         catalog_name=dict(type='str', required=True),
-        new_catalog_name=dict(type='str', required=False, default=''),
-        description=dict(type='str', required=False, default=''),
-        shared=dict(type='bool', required=False, default=False),
+        new_catalog_name=dict(type='str', required=False),
+        description=dict(type='str', required=False),
+        shared=dict(type='bool', required=False, default=True),
         state=dict(choices=VCD_CATALOG_STATES, required=False),
         operation=dict(choices=VCD_CATALOG_OPERATIONS, required=False)
     )
@@ -152,7 +153,7 @@ class Catalog(VcdAnsibleModule):
             response['msg'] = 'Catalog {} has been created.'.format(catalog_name)
             response['changed'] = True
         else:
-            response['msg'] = 'Catalog {} is already present.'.format(catalog_name)
+            response['warnings'] = 'Catalog {} is already present.'.format(catalog_name)
 
         return response
 
@@ -164,7 +165,7 @@ class Catalog(VcdAnsibleModule):
         try:
             self.org.get_catalog(name=catalog_name)
         except EntityNotFoundException:
-            response['msg'] = 'Catalog {} is not present.'.format(catalog_name)
+            response['warnings'] = 'Catalog {} is not present.'.format(catalog_name)
         else:
             self.org.delete_catalog(catalog_name)
             response['msg'] = 'Catalog {} has been deleted.'.format(catalog_name)

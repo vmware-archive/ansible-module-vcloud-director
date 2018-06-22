@@ -12,7 +12,7 @@
     description: "test vdc"
     allocation_model: "AllocationVApp"
     is_enabled: "false"
-    storage_profiles: "{ \"name\" : \"Performance\",\"enabled\"  : true, \"units\" : \"MB\", \"limit\" : 0, \"default\" : true }"
+    storage_profiles: "{\"name\" : \"Performance\",\"enabled\"  : true, \"units\" : \"MB\", \"limit\" : 0, \"default\" : true }"
     state: "present"
   register: output
 

@@ -34,6 +34,10 @@
 ############################################ upload-ova ##############################################################
 - name: upload ova
   vcd_catalog_item:
+    user: 'acmeadmin'
+    org: 'acme'
+    password: 'VMware1!'
+    host: '10.172.158.109'
     catalog_name: "{{ catalog_name }}"
     item_name: "{{ ova_item_name }}"
     file_name : "{{ ova_file_name }}"

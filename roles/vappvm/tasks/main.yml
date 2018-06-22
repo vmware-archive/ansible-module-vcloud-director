@@ -22,11 +22,11 @@
     state: "present"
     power_on: "false"
     all_eulas_accepted: "true"
-    storage_profile: "{ \"name\" : \"Performance\",\"enabled\"  : true, \"units\" : \"MB\", \"limit\" : 0, \"default\" : true }"
+    storage_profile: "{ \"name\" : \"Standard\",\"href\" : \"https://csa-sandbox.eng.vmware.com/api/vdcStorageProfile/9eea97e7-f786-4de4-a55a-ae253ffca948\",\"type\": \"application/vnd.vmware.vcloud.vdcStorageProfile+xml\"}"
     network: "web2Network"
   register: output
 
-- name: create vapp output
+- name: create vapp vm  output
   debug:
     msg: "{{ output }}"
 
@@ -47,240 +47,208 @@
     state: "present"
     power_on: "false"
     all_eulas_accepted: "true"
-    # storage_profile: "Standard"
+    storage_profile: "{ \"name\" : \"Standard\",\"href\" : \"https://csa-sandbox.eng.vmware.com/api/vdcStorageProfile/9eea97e7-f786-4de4-a55a-ae253ffca948\",\"type\": \"application/vnd.vmware.vcloud.vdcStorageProfile+xml\"}"
     network: "web2Network"
   register: output
 
-- name: create vapp output
+- name: create vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: power on "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "poweron"
   register: output
 
-- name: power on vapp output
+- name: power on vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: power on "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "poweron"
   register: output
 
-- name: power on vapp output
+- name: power on vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: power off "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "poweroff"
   register: output
 
-- name: power off vapp output
+- name: power off vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: power off "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "poweroff"
   register: output
 
-- name: power off vapp output
+- name: power off vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: modify "{{ vapp_vm_1 }}" cpu vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     virtual_cpus: 2
     cores_per_socket: 2
     state: "update"
   register: output
 
-- name: update vapp output
+- name: update vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: modify "{{ vapp_vm_2 }}" cpu vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     virtual_cpus: 2
     cores_per_socket: 2
     state: "update"
   register: output
 
-- name: update vapp output
+- name: update vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: modify "{{ vapp_vm_1 }}" memory vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     memory: 4096
     state: "update"
   register: output
 
-- name: update vapp output
+- name: update vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: modify "{{ vapp_vm_2 }}" memory vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     memory: 4096
     state: "update"
   register: output
 
-- name: update vapp output
+- name: update vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: reload "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "reloadvm"
   register: output
 
-- name: reload vapp output
+- name: reload vapp vm output
   debug:
     msg: "{{ output }}"
 
 - name: reload "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "reloadvm"
   register: output
 
-- name: reload vapp output
+- name: reload vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: undeploy "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "undeploy"
   register: output
 
-- name: undeploy vapp output
+- name: undeploy vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: undeploy "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "undeploy"
   register: output
 
-- name: undeploy vapp output
+- name: undeploy vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: deploy "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "deploy"
   register: output
 
-- name: deploy vapp output
+- name: deploy vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: deploy "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     operation: "deploy"
   register: output
 
-- name: deploy vapp output
+- name: deploy vapp vm output
   debug:
     msg: "{{ output }}"
 
 - name: delete "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_1 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     state: "absent"
   register: output
 
-- name: delete vapp output
+- name: delete vapp vm  output
   debug:
     msg: "{{ output }}"
 
 - name: delete "{{ vapp_vm_2 }}" vapp vm
   vcd_vapp_vm:
-    source_vapp: "web2"
     target_vm_name: "{{ vapp_vm_2 }}"
     target_vapp: "web2"
-    source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     state: "absent"
   register: output
 
-- name: delete vapp output
+- name: delete vapp vm  output
   debug:
     msg: "{{ output }}"

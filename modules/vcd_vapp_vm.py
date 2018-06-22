@@ -11,11 +11,12 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-client: vcd_vapp_vm
-short_description: This module is to create virtual machines under provided vapp
+module: vcd_vapp_vm
+short_description: Ansible Module to manage (create/update/delete) VMs in vApps in vCloud Director.
 version_added: "2.4"
 description:
-    - "This module is to to create virtual machines under provided vapp"
+    - "Ansible Module to manage (create/update/delete) VMs in vApps."
+
 options:
     user:
         description:
@@ -44,15 +45,19 @@ options:
     target_vm_name:
         description:
             - target VM name
-        required: false
+        required: true
     target_vapp:
         description:
             - target vApp name
+        required: true
+    source_vdc:
+        description:
+            - source VDC
         required: false
     target_vdc:
         description:
             - target VDC
-        required: false
+        required: true
     source_vapp:
         description:
             - source vApp name
@@ -97,14 +102,6 @@ options:
         description:
             - the name of the storage profile to be used for this VM
         required: false
-    state:
-        description:
-            - state of new virtual machines ('present'/'absent').One from state or operation has to be provided.
-        required: false
-    operation:
-        description:
-            - operations performed over new vapp ('poweron'/'poweroff'/'modifycpu'/'modifymemory'/'reloadvm').One from state or operation has to be provided.
-        required: false
     all_eulas_accepted:
         description:
             - "true" / "false"
@@ -125,7 +122,22 @@ options:
         description:
             - memory size in MB
         required: false
-
+    deploy:
+        description:
+            - deploy VMs
+        required: false
+    power_on:
+        description:
+            - power on VMs
+        required: false
+    state:
+        description:
+            - state of new virtual machines ('present'/'absent').One from state or operation has to be provided.
+        required: false
+    operation:
+        description:
+            - operations performed over new vapp ('poweron'/'poweroff'/'modifycpu'/'modifymemory'/'reloadvm').One from state or operation has to be provided.
+        required: false
 author:
     - mtaneja@vmware.com
 '''
@@ -156,7 +168,8 @@ EXAMPLES = '''
 '''
 
 RETURN = '''
-result: success/failure message relates to vapp_vm operation
+msg: success/failure message corresponding to vapp vm state/operation
+changed: true if resource has been changed else false
 '''
 
 import json
@@ -177,9 +190,9 @@ VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
 
 def vapp_vm_argument_spec():
     return dict(
-        target_vm_name=dict(type='str', required=False),
-        target_vapp=dict(type='str', required=False),
-        target_vdc=dict(type='str', required=False),
+        target_vm_name=dict(type='str', required=True),
+        target_vapp=dict(type='str', required=True),
+        target_vdc=dict(type='str', required=True),
         source_vdc=dict(type='str', required=False),
         source_vapp=dict(type='str', required=False),
         source_catalog_name=dict(type='str', required=False),
@@ -189,15 +202,16 @@ def vapp_vm_argument_spec():
         vmpassword=dict(type='str', required=False),
         vmpassword_auto=dict(type='bool', required=False),
         vmpassword_reset=dict(type='bool', required=False),
-        cust_script=dict(type='str', required=False),
+        cust_script=dict(type='str', required=False, default=''),
         network=dict(type='str', required=False),
-        storage_profile=dict(type='str', required=False),
-        all_eulas_accepted=dict(type='bool', required=False),
-        ip_allocation_mode=dict(type='str', required=False),
+        storage_profile=dict(type='str', required=False, default='[]'),
+        ip_allocation_mode=dict(type='str', required=False, default='DHCP'),
         virtual_cpus=dict(type='int', required=False),
-        cores_per_socket=dict(type='int', required=False),
-        memory=dict(type='str', required=False),
-        power_on=dict(type='bool', required=False),
+        cores_per_socket=dict(type='int', required=False, default=None),
+        memory=dict(type='int', required=False),
+        deploy=dict(type='bool', required=False, default=True),
+        power_on=dict(type='bool', required=False, default=True),
+        all_eulas_accepted=dict(type='bool', required=False, default=None),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False)
     )
@@ -291,8 +305,8 @@ class VappVM(VcdAnsibleModule):
         all_eulas_accepted = params.get('all_eulas_accepted', True)
         power_on = params.get('power_on', True)
         ip_allocation_mode = params.get('ip_allocation_mode')
-        # cust_script = params.get('cust_script')
-        # storage_profile = params.get('storage_profile')
+        cust_script = params.get('cust_script')
+        storage_profile = params.get('storage_profile')
         response = dict()
         response['changed'] = False
 
@@ -309,8 +323,8 @@ class VappVM(VcdAnsibleModule):
                 'password_reset': vmpassword_reset,
                 'ip_allocation_mode': ip_allocation_mode,
                 'network': network,
-                # 'cust_script': cust_script,
-                # 'storage_profile': json.loads(storage_profile)
+                'cust_script': cust_script,
+                'storage_profile': json.loads(storage_profile)
             }]
             add_vms_task = self.vapp.add_vms(specs, power_on=power_on,
                                              all_eulas_accepted=all_eulas_accepted)
@@ -319,7 +333,7 @@ class VappVM(VcdAnsibleModule):
                 target_vm_name)
             response['changed'] = True
         else:
-            response['msg'] = 'Vapp VM {} is already present.'.format(
+            response['warnings'] = 'Vapp VM {} is already present.'.format(
                 target_vm_name)
 
         return response
@@ -332,7 +346,7 @@ class VappVM(VcdAnsibleModule):
         try:
             self.get_vm()
         except EntityNotFoundException:
-            response['msg'] = 'Vapp VM {} is not present.'.format(vm_name)
+            response['warnings'] = 'Vapp VM {} is not present.'.format(vm_name)
         else:
             self.undeploy_vm()
             delete_vms_task = self.vapp.delete_vms([vm_name])
@@ -388,7 +402,7 @@ class VappVM(VcdAnsibleModule):
             response['msg'] = 'Vapp VM {} has been powered on.'.format(vm_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['msg'] = 'Vapp VM {} is already powered on.'.format(
+            response['warnings'] = 'Vapp VM {} is already powered on.'.format(
                 vm_name)
 
         return response
@@ -406,7 +420,7 @@ class VappVM(VcdAnsibleModule):
                 vm_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['msg'] = 'Vapp VM {} is already powered off.'.format(
+            response['warnings'] = 'Vapp VM {} is already powered off.'.format(
                 vm_name)
 
         return response
@@ -435,7 +449,7 @@ class VappVM(VcdAnsibleModule):
             response['msg'] = 'Vapp VM {} has been deployed.'.format(vm_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['msg'] = 'Vapp VM {} is already deployed.'.format(vm_name)
+            response['warnings'] = 'Vapp VM {} is already deployed.'.format(vm_name)
 
         return response
 
@@ -451,7 +465,7 @@ class VappVM(VcdAnsibleModule):
             response['msg'] = 'Vapp VM {} has been undeployed.'.format(vm_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['msg'] = 'Vapp VM {} is already undeployed.'.format(
+            response['warnings'] = 'Vapp VM {} is already undeployed.'.format(
                 vm_name)
 
         return response
@@ -464,17 +478,17 @@ def main():
     )
     module = VappVM(argument_spec=argument_spec, supports_check_mode=True)
 
-    # try:
-    if module.params.get('state'):
-        response = module.manage_states()
-    elif module.params.get('operation'):
-        response = module.manage_operations()
-    else:
-        raise Exception('One of the state/operation should be provided.')
+    try:
+        if module.params.get('state'):
+            response = module.manage_states()
+        elif module.params.get('operation'):
+            response = module.manage_operations()
+        else:
+            raise Exception('One of the state/operation should be provided.')
 
-    # except Exception as error:
-    #     response['msg'] = error.__str__()
-    #     module.fail_json(**response)
+    except Exception as error:
+        response['msg'] = error.__str__()
+        module.fail_json(**response)
 
     module.exit_json(**response)
 

@@ -12,11 +12,11 @@ ANSIBLE_METADATA = {
 
 DOCUMENTATION = '''
 ---
-client: catalog_item
-short_description: Catalog_Item Module to manage catalog_item operations through vCloud Director
+module: vcd_catalog_item
+short_description: Ansible Module to manage (create/update/delete) catalog items in vCloud Director.
 version_added: "2.4"
 description:
-    - This module is to [upload, read, delete] ova/media, capture vapp in vCloud Director.
+    - Ansible Module to manage (create/update/delete) catalog items in vCloud Director.
     - Task performed:
         - Upload media
         - Upload ova
@@ -82,11 +82,12 @@ options:
         required: false
     customize_on_instantiate:
         description:
-            - if you want to customise vapp on instantiation
+            - "true"/"false" if you want to customise vapp on instantiation
         required: false
     overwrite:
         description:
-            - Flag indicating if the item in the catalog has to be overwritten if it already exists. If it doesn't exist, this flag is not used
+            - "true"/"false"
+            - Flag indicates if the item in the catalog has to be overwritten if it already exists.
         required: false
     state:
         description:
@@ -112,15 +113,16 @@ author:
 EXAMPLES = '''
 - name: upload media
   vcd_catalog_item:
-    catalog_name: "{{ catalog_name }}"
-    item_name: "{{ item_name }}"
-    file_name : "{{ file_name }}"
-    operation: "uploadmedia"
+    catalog_name: "test_catalog"
+    item_name: "test_item"
+    file_name : "test_item.ova"
+    state: "present"
   register: output
 '''
 
 RETURN = '''
-result: success/failure message relates to catalog items operation/operations
+msg: success/failure message corresponding to catalog item state/operation
+changed: true if resource has been changed else false
 '''
 
 import time
@@ -134,19 +136,20 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 VCD_CATALOG_ITEM_STATES = ['present', 'absent']
 VCD_CATALOG_ITEM_OPERATIONS = ['capturevapp']
+DEFAULT_CHUNK_SIZE = 1024 * 1024
 
 
 def vcd_catalog_item_argument_spec():
     return dict(
         catalog_name=dict(type='str', required=True),
-        item_name=dict(type='str', required=False),
+        item_name=dict(type='str', required=False, default=None),
         file_name=dict(type='str', required=False),
-        chunk_size=dict(type='int', required=False),
+        chunk_size=dict(type='int', required=False, default=DEFAULT_CHUNK_SIZE),
         vapp_name=dict(type='str', required=False),
         vdc_name=dict(type='str', required=False),
-        description=dict(type='str', required=False),
-        customize_on_instantiate=dict(type='bool', required=False),
-        overwrite=dict(type='bool', required=False),
+        description=dict(type='str', required=False, default=''),
+        customize_on_instantiate=dict(type='bool', required=False, default=False),
+        overwrite=dict(type='bool', required=False, default=False),
         state=dict(choices=VCD_CATALOG_ITEM_STATES, required=False),
         operation=dict(choices=VCD_CATALOG_ITEM_OPERATIONS, required=False)
     )
@@ -199,7 +202,7 @@ class CatalogItem(VcdAnsibleModule):
         }
 
         if self.is_present():
-            response['msg'] = "Catalog Item {} is already present.".format(item_name)
+            response['warnings'] = "Catalog Item {} is already present.".format(item_name)
             return response
 
         if file_name.endswith(".ova") or file_name.endswith(".ovf"):
@@ -222,7 +225,7 @@ class CatalogItem(VcdAnsibleModule):
         response['changed'] = False
 
         if not self.is_present():
-            response['msg'] = "Catalog Item {} is not present.".format(item_name)
+            response['warnings'] = "Catalog Item {} is not present.".format(item_name)
             return response
 
         self.org.delete_catalog_item(name=catalog_name, item_name=item_name)
