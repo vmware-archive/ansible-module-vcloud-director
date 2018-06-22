@@ -277,16 +277,16 @@ def main():
     )
     module = User(argument_spec=argument_spec, supports_check_mode=True)
 
-    # try:
-    if not module.params.get('state'):
-        raise Exception('Please provide the state for the resource.')
+    try:
+        if not module.params.get('state'):
+            raise Exception('Please provide the state for the resource.')
 
-    response = module.manage_states()
-    module.exit_json(**response)
+        response = module.manage_states()
+        module.exit_json(**response)
 
-    # except Exception as error:
-    #     response['msg'] = error.__str__()
-    #     module.fail_json(**response)
+    except Exception as error:
+        response['msg'] = error.__str__()
+        module.fail_json(**response)
 
 
 if __name__ == '__main__':
