@@ -14,7 +14,7 @@ ansible-module-vcloud-director is a set of ansible modules that manage a VMware 
 ### Build & Run
 
 1. pip install --user pyvcloud
-2. git clone https://github.com/vwmare/ansible-module-vcloud-director
+2. git clone https://github.com/vmware/ansible-module-vcloud-director
 3. cd ansible-module-vcloud-director
 
 ## Documentation
