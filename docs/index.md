@@ -481,11 +481,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 	ip_allocation_mode: "DHCP"
 	power_on: "false"
 	all_eulas_accepted: "true"
-	storage_profile: "{
-		\"name\" : \"Standard\",
-		\"href\" : \"https://csa-sandbox.eng.vmware.com/api/vdcStorageProfile/9eea97e7-f786-4de4-a55a-ae253ffca948\",
-		\"type\": \"application/vnd.vmware.vcloud.vdcStorageProfile+xml\
-	"}"
+	storage_profile: "Standard"
 	network: "web2Network"
 	cust_script: "test_script"
 	deploy: false
@@ -509,12 +505,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>ip_allocation_mode - (Optional) Name of the ip ip allocation mode. The default value is 'DHCP'.</li> 
 <li>power_on - (Optional) True if the vApp should be powered-on at instantiation. The default value is True.</li> 
 <li>all_eulas_accepted - (Optional) True confirms acceptance of all EULAs in the vApp.  The default value is None.</li> 
-<li>storage_profile - (Optional) storage profile should contain the following information,</li>
-<ul>
-<li>name - name of the storage profile</li>
-<li>href - storage profile href</li>
-<li>type - storage profile type</li>
-</ul>
+<li>storage_profile - (Optional) name of the storage profile. The default value is None.</li>
 <li>network - (Optional) name of the vApp network to connect. If omitted, the vm won't be connected to any network</li>
 <li>cust_script - (Optional) script to run on guest customization</li> 
 <li>deploy - (Optional) True, if the vApp should be deployed at instantiation.  The default value is True.</li>
@@ -540,11 +531,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 	ip_allocation_mode: "DHCP"
 	power_on: "false"
 	all_eulas_accepted: "true"
-	storage_profile: "{
-		\"name\" : \"Standard\",
-		\"href\" : \"https://csa-sandbox.eng.vmware.com/api/vdcStorageProfile/9eea97e7-f786-4de4-a55a-ae253ffca948\",
-		\"type\": \"application/vnd.vmware.vcloud.vdcStorageProfile+xml\"
-	}"
+	storage_profile: "Standard"
 	network: "web2Network"
 	cust_script: "test_script"
 	deploy: false
@@ -567,12 +554,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>ip_allocation_mode - (Optional) Name of the ip ip allocation mode. The default value is 'DHCP'.</li> 
 <li>power_on - (Optional) True if the vApp should be powered-on at instantiation. The default value is True.</li> 
 <li>all_eulas_accepted - (Optional) True confirms acceptance of all EULAs in the vApp. The default value is None.</li> 
-<li>storage_profile - (Optional) storage profile should contain the following information,</li>
-<ul>
-<li>name - name of the storage profile</li>
-<li>href - storage profile href</li>
-<li>type - storage profile type</li>
-</ul>
+<li>storage_profile - (Optional) name of the storage profile. The default value is None.</li>
 <li>network - (Optional) name of the vApp network to connect. If omitted, the vm won't be connected to any network</li>
 <li>cust_script - (Optional) script to run on guest customization</li> 
 <li>deploy - (Optional) True, if the vApp should be deployed at instantiation. The default value is True.</li>

@@ -162,7 +162,7 @@ EXAMPLES = '''
     vmpassword_reset = "false"
     cust_script = "/home/setup.sh"
     network = "MGMT"
-    storage_profile = "PERFORMACE_1"
+    storage_profile = "Standard"
     state = "present"
     all_eulas_accepted = "true"
 '''
@@ -172,7 +172,6 @@ msg: success/failure message corresponding to vapp vm state/operation
 changed: true if resource has been changed else false
 '''
 
-import json
 from lxml import etree
 from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.org import Org
@@ -204,7 +203,7 @@ def vapp_vm_argument_spec():
         vmpassword_reset=dict(type='bool', required=False),
         cust_script=dict(type='str', required=False, default=''),
         network=dict(type='str', required=False),
-        storage_profile=dict(type='str', required=False, default='[]'),
+        storage_profile=dict(type='str', required=False, default=''),
         ip_allocation_mode=dict(type='str', required=False, default='DHCP'),
         virtual_cpus=dict(type='int', required=False),
         cores_per_socket=dict(type='int', required=False, default=None),
@@ -287,6 +286,13 @@ class VappVM(VcdAnsibleModule):
 
         return target_vapp_resource
 
+    def get_storage_profile(self, profile_name):
+        target_vdc = self.params.get('target_vdc')
+        org_resource = Org(self.client, resource=self.client.get_org())
+        vdc_resource = VDC(self.client, resource=org_resource.get_vdc(target_vdc))
+
+        return vdc_resource.get_storage_profile(profile_name)
+
     def get_vm(self):
         vapp_vm_resource = self.vapp.get_vm(self.params.get('target_vm_name'))
 
@@ -324,7 +330,7 @@ class VappVM(VcdAnsibleModule):
                 'ip_allocation_mode': ip_allocation_mode,
                 'network': network,
                 'cust_script': cust_script,
-                'storage_profile': json.loads(storage_profile)
+                'storage_profile': self.get_storage_profile(storage_profile)
             }]
             add_vms_task = self.vapp.add_vms(specs, power_on=power_on,
                                              all_eulas_accepted=all_eulas_accepted)
@@ -449,7 +455,8 @@ class VappVM(VcdAnsibleModule):
             response['msg'] = 'Vapp VM {} has been deployed.'.format(vm_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            response['warnings'] = 'Vapp VM {} is already deployed.'.format(vm_name)
+            response['warnings'] = 'Vapp VM {} is already deployed.'.format(
+                vm_name)
 
         return response
 

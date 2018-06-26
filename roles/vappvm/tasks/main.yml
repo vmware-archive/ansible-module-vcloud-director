@@ -22,7 +22,7 @@
     state: "present"
     power_on: "false"
     all_eulas_accepted: "true"
-    storage_profile: "{ \"name\" : \"Standard\",\"href\" : \"https://csa-sandbox.eng.vmware.com/api/vdcStorageProfile/9eea97e7-f786-4de4-a55a-ae253ffca948\",\"type\": \"application/vnd.vmware.vcloud.vdcStorageProfile+xml\"}"
+    storage_profile: "Standard"
     network: "web2Network"
   register: output
 
@@ -47,7 +47,7 @@
     state: "present"
     power_on: "false"
     all_eulas_accepted: "true"
-    storage_profile: "{ \"name\" : \"Standard\",\"href\" : \"https://csa-sandbox.eng.vmware.com/api/vdcStorageProfile/9eea97e7-f786-4de4-a55a-ae253ffca948\",\"type\": \"application/vnd.vmware.vcloud.vdcStorageProfile+xml\"}"
+    storage_profile: "Standard"
     network: "web2Network"
   register: output
 
