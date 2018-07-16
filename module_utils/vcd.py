@@ -12,12 +12,12 @@ from ansible.module_utils.vcd_errors import VCDLoginError
 
 def vcd_argument_spec():
     return dict(
-        user=dict(type='str', required=False, default=os.environ['env_user']),
-        password=dict(type='str', required=False, no_log=True, default=os.environ['env_password']),
-        org=dict(type='str', required=False, default=os.environ['env_org']),
-        host=dict(type='str', required=False, default=os.environ['env_host']),
-        api_version=dict(type='str', default=os.environ['env_api_version']),
-        verify_ssl_certs=dict(type='bool', default=os.environ['env_verify_ssl_certs'])
+        user=dict(type='str', required=False, default=os.environ.get('env_user')),
+        password=dict(type='str', required=False, no_log=True, default=os.environ.get('env_password')),
+        org=dict(type='str', required=False, default=os.environ.get('env_org')),
+        host=dict(type='str', required=False, default=os.environ.get('env_host')),
+        api_version=dict(type='str', default=os.environ.get('env_api_version', '30.0')),
+        verify_ssl_certs=dict(type='bool', default=os.environ.get('env_verify_ssl_certs', False))
     )
 
 
