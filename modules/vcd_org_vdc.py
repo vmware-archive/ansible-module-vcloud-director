@@ -34,6 +34,10 @@ options:
         description:
             - Organization name on vCloud Director to access
         required: false
+    org_name:
+        description:
+            - Organization name on vCloud Director to create the vcd into, if unset it uses the org option value (or env_org environment var)
+        required: false
     api_version:
         description:
             - Pyvcloud API version
@@ -226,6 +230,7 @@ def org_vdc_argument_spec():
         vm_discovery_enabled=dict(type='bool', required=False, default=None),
         is_enabled=dict(type='bool', required=False, default=True),
         state=dict(choices=ORG_VDC_STATES, required=False),
+        org_name=dict(type='str', required=False, default=''),
     )
 
 
@@ -270,14 +275,20 @@ class Vdc(VcdAnsibleModule):
         uses_fast_provisioning = self.params.get('uses_fast_provisioning')
         over_commit_allowed = self.params.get('over_commit_allowed')
         vm_discovery_enabled = self.params.get('vm_discovery_enabled')
+        org_name = self.params.get('org_name', None)
         storage_profiles = storage_profiles if type(storage_profiles) is list else [storage_profiles]
         response = dict()
         response['changed'] = False
 
+        if org_name:
+            org_name = Org(self.client, resource=self.client.get_org_by_name(org_name))
+        else:
+            org_name = self.org
+
         try:
-            self.org.get_vdc(vdc_name)
+            org_name.get_vdc(vdc_name)
         except EntityNotFoundException:
-            create_vdc_task = self.org.create_org_vdc(
+            create_vdc_task = org_name.create_org_vdc(
                 vdc_name=vdc_name,
                 provider_vdc_name=provider_vdc_name,
                 description=description,

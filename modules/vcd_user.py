@@ -34,6 +34,10 @@ options:
         description:
             - Organization name on vCloud Director to access
         required: false
+    org_name:
+        description:
+            - Organization name on vCloud Director where the user is created, if unset it uses the org option value (or env_org environment var).
+        required: false
     api_version:
         description:
             - Pyvcloud API version
@@ -181,6 +185,7 @@ def user_argument_spec():
         is_alert_enabled=dict(type='bool', required=False, default=False),
         is_enabled=dict(type='bool', required=False, default=True),
         state=dict(choices=USER_STATES, required=False),
+        org_name=dict(type='str', required=False, default=''),
     )
 
 
@@ -203,8 +208,6 @@ class User(VcdAnsibleModule):
 
     def create(self):
         params = self.params
-        role = self.org.get_role_record(params.get('role_name'))
-        role_href = role.get('href')
         username = params.get('username')
         userpassword = params.get('userpassword')
         full_username = params.get('full_username')
@@ -221,13 +224,21 @@ class User(VcdAnsibleModule):
         is_external = params.get('is_external')
         is_alert_enabled = params.get('is_alert_enabled')
         is_enabled = params.get('is_enabled')
+        org_name = params.get('org_name', None)
         response = dict()
         response['changed'] = False
 
+        if org_name:
+            org_name = Org(self.client, resource=self.client.get_org_by_name(org_name))
+        else:
+            org_name = self.org
+        role = org_name.get_role_record(params.get('role_name'))
+        role_href = role.get('href')
+
         try:
-            self.org.get_user(username)
+            org_name.get_user(username)
         except EntityNotFoundException:
-            self.org.create_user(
+            org_name.create_user(
                 username, userpassword, role_href, full_username, description,
                 email, telephone, im, alert_email, alert_email_prefix,
                 stored_vm_quota, deployed_vm_quota, is_group_role,
