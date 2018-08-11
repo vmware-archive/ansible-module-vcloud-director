@@ -13,14 +13,14 @@ layout: default
 <pre>
 <code>
  - name: vCloudDirectorAnsible
-   hosts: XXXXXXXXXXXX
+   hosts: localhost
    environment:
-	env_user: XXXXXXXXXXXX
-	env_password: XXXXXXXXXXXX
-	env_host: XXXXXXXXXXXX
-	env_org: XXXXXXXXXXXX
-	env_api_version: XXXXXXXXXXXX
-	env_verify_ssl_certs: XXXXXXXXXXXX
+	env_user: VCD_USER_NAME
+	env_password: VCD_USER_PASSWORD
+	env_host: VCD_URL            ## VCD Instance URL
+	env_org: VCD_ORG             ## VCD ORG to login
+	env_api_version: PYVCLOUD_API_VERSION
+	env_verify_ssl_certs: False
 
 </code>
 </pre>
