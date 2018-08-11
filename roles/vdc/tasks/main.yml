@@ -3,10 +3,10 @@
 - name: create vdc
   no_log: False
   vcd_org_vdc:
-    user: "administrator"
-    password: "VMware1!"
-    host: "10.172.158.109"
-    org: "System"
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
     vdc_name: "{{ vdc_name }}"
     provider_vdc_name: "PVDC1"
     description: "test vdc"
@@ -23,10 +23,10 @@
 - name: update vdc
   no_log: False
   vcd_org_vdc:
-    user: "administrator"
-    password: "VMware1!"
-    host: "10.172.158.109"
-    org: "System"
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
     vdc_name: "{{ vdc_name }}"
     is_enabled: "true"
     state: "update"
@@ -39,10 +39,10 @@
 - name: delete vdc
   no_log: False
   vcd_org_vdc:
-    user: "administrator"
-    password: "VMware1!"
-    host: "10.172.158.109"
-    org: "System"
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
     vdc_name: "{{ vdc_name }}"
     state: "absent"
   register: output

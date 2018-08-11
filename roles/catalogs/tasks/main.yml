@@ -7,10 +7,10 @@
 #################################### Create ##########################################################################
 - name: create catalog
   vcd_catalog:
-    user: 'acmeadmin'
-    org: 'acme'
-    password: 'VMware1!'
-    host: '10.172.158.109'
+    user: 'XXXXXXXXXX'
+    org: 'XXXXXXXXXX'
+    password: 'XXXXXXXXXX'
+    host: 'XXXXXXXXXX'
     catalog_name: "{{ catalog_name }}"
     description: "{{ description }}"
     state: "present"
@@ -24,10 +24,10 @@
 
 - name: read catalog
   vcd_catalog:
-    user: 'acmeadmin'
-    org: 'acme'
-    password: 'VMware1!'
-    host: '10.172.158.109'
+    user: 'XXXXXXXXXX'
+    org: 'XXXXXXXXXX'
+    password: 'XXXXXXXXXX'
+    host: 'XXXXXXXXXX'
     catalog_name: "{{ catalog_name }}" 
     operation: "read"
   register: output
@@ -41,10 +41,10 @@
 
 - name: update catalog name and description
   vcd_catalog:
-    user: 'acmeadmin'
-    org: 'acme'
-    password: 'VMware1!'
-    host: '10.172.158.109'
+    user: 'XXXXXXXXXX'
+    org: 'XXXXXXXXXX'
+    password: 'XXXXXXXXXX'
+    host: 'XXXXXXXXXX'
     catalog_name: "{{ catalog_name }}" 
     new_catalog_name: "{{ new_catalog_name }}" 
     description: "{{ description }}"
@@ -59,10 +59,10 @@
 
 - name: share/unshare catalog
   vcd_catalog:
-    user: 'acmeadmin'
-    org: 'acme'
-    password: 'VMware1!'
-    host: '10.172.158.109'
+    user: 'XXXXXXXXXX'
+    org: 'XXXXXXXXXX'
+    password: 'XXXXXXXXXX'
+    host: 'XXXXXXXXXX'
     catalog_name: "{{ new_catalog_name }}" 
     shared: "{{ shared }}"
     operation: "shared"
@@ -75,10 +75,10 @@
 #################################### Delete ##########################################################################
 - name: delete catalog
   vcd_catalog:
-    user: 'acmeadmin'
-    org: 'acme'
-    password: 'VMware1!'
-    host: '10.172.158.109'
+    user: 'XXXXXXXXXX'
+    org: 'XXXXXXXXXX'
+    password: 'XXXXXXXXXX'
+    host: 'XXXXXXXXXX'
     catalog_name: "{{ new_catalog_name }}"
     state: "absent"
   register: output
