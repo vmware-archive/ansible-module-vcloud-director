@@ -285,7 +285,7 @@ def main():
         module.exit_json(**response)
 
     except Exception as error:
-        response['msg'] = error.__str__()
+        response['msg'] = error
         module.fail_json(**response)
 
 

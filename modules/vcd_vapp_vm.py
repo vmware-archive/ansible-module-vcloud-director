@@ -308,8 +308,8 @@ class VappVM(VcdAnsibleModule):
         vmpassword_auto = params.get('vmpassword_auto')
         vmpassword_reset = params.get('vmpassword_reset')
         network = params.get('network')
-        all_eulas_accepted = params.get('all_eulas_accepted', True)
-        power_on = params.get('power_on', True)
+        all_eulas_accepted = params.get('all_eulas_accepted')
+        power_on = params.get('power_on')
         ip_allocation_mode = params.get('ip_allocation_mode')
         cust_script = params.get('cust_script')
         storage_profile = params.get('storage_profile')
@@ -494,7 +494,7 @@ def main():
             raise Exception('One of the state/operation should be provided.')
 
     except Exception as error:
-        response['msg'] = error.__str__()
+        response['msg'] = error
         module.fail_json(**response)
 
     module.exit_json(**response)

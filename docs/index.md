@@ -307,7 +307,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 	memory: 1024000
 	cpu: 1000
 	disk_size: 10240000
-	password: "test_password"
+	vmpassword: "test_password"
 	cust_script: "test_script"
 	vm_name: "test_vm"
 	hostname: "test_host"
@@ -334,7 +334,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>memory - (Optional) max memory that can allocated. The default value is None.</li> 
 <li>cpu - (Optional) max cpu that can be allocated. The default value is None.</li> 
 <li>disk_size - size of the disk(Optional). The default value is None.</li> 
-<li>password - (Optional) the administrator password of vm. The default value is None.</li> 
+<li>vmpassword - (Optional) the administrator password of vm. The default value is None.</li> 
 <li>cust_script - (Optional) script to run on guest customization. The default value is None.</li> 
 <li>vm_name - (Optional) when provided, sets the name of the vm. The default value is None.</li> 
 <li>ip_address - (Optional) when provided, sets the ip_address of the vm. The default value is None.</li> 

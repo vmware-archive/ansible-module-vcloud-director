@@ -225,7 +225,7 @@ def main():
             raise Exception('One of from state/operation should be provided.')
 
     except Exception as error:
-        response['msg'] = error.__str__()
+        response['msg'] = error
         module.fail_json(**response)
 
     module.exit_json(**response)
