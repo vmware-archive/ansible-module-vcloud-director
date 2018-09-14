@@ -70,3 +70,14 @@
 - name: delete vapp output
   debug:
     msg: '{{ output }}'
+
+- name: get list of vms
+  vcd_vapp:
+    vapp_name: "{{ vapp_name }}"
+    vdc: "Terraform_VDC"
+    operation: "list_vms"
+  register: output
+
+- name: get list of vms output
+  debug:
+    msg: '{{ output }}'

@@ -133,7 +133,7 @@ options:
         required: false
     operation:
         description:
-            - operation on vApp ('poweron'/'poweroff'/'deploy'/'undeploy').
+            - operation on vApp ('poweron'/'poweroff'/'deploy'/'undeploy'/'list_vms').
             - One from state or operation has to be provided.
         required: false
 
@@ -176,7 +176,9 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy']
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy', 'list_vms']
+
+VM_STATUSES = { '3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF' }
 
 
 def vapp_argument_spec():
@@ -237,6 +239,9 @@ class Vapp(VcdAnsibleModule):
 
         if state == "undeploy":
             return self.undeploy()
+
+        if state == "list_vms":
+            return self.list_vms()
 
     def create(self):
         params = self.params
@@ -379,6 +384,24 @@ class Vapp(VcdAnsibleModule):
         except OperationNotSupportedException:
             response['warnings'] = 'Vapp {} is already undeployed.'.format(vapp_name)
 
+        return response
+
+    def list_vms(self):
+        vapp_name = self.params.get('vapp_name')
+        vapp_resource = self.vdc.get_vapp(vapp_name)
+        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+        response = dict()
+        response['msg'] = []
+        for vm in vapp.get_all_vms():
+            vm_details = dict()
+            vm_details['name'] = vm.get('name')
+            vm_details['status'] = VM_STATUSES[vm.get('status')]
+            vm_details['deployed'] = vm.get('deployed')=='true'
+            try:
+                vm_details['ip_address'] = vapp.get_primary_ip(vm.get('name'))
+            except:
+                vm_details['ip_address'] = None
+            response['msg'].append(vm_details)
         return response
 
 
