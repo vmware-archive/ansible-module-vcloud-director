@@ -221,7 +221,11 @@ class Vapp(VcdAnsibleModule):
     def manage_states(self):
         state = self.params.get('state')
         if state == "present":
-            return self.create()
+            catalog_name = self.params.get('catalog_name')
+            if catalog_name:
+                return self.instantiate()
+            else:
+                return self.create()
 
         if state == "absent":
             return self.delete()
@@ -243,7 +247,7 @@ class Vapp(VcdAnsibleModule):
         if state == "list_vms":
             return self.list_vms()
 
-    def create(self):
+    def instantiate(self):
         params = self.params
         vapp_name = params.get('vapp_name')
         catalog_name = params.get('catalog_name')
@@ -292,6 +296,33 @@ class Vapp(VcdAnsibleModule):
                 ip_address=ip_address,
                 storage_profile=storage_profile,
                 network_adapter_type=network_adapter_type)
+            self.execute_task(create_vapp_task.Tasks.Task[0])
+            response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
+            response['changed'] = True
+        else:
+            response['warnings'] = "Vapp {} is already present.".format(vapp_name)
+
+        return response
+
+    def create(self):
+        params = self.params
+        vapp_name = params.get('vapp_name')
+        description = params.get('description')
+        network = params.get('network')
+        fence_mode = params.get('fence_mode')
+        accept_all_eulas = params.get('accept_all_eulas')
+        response = dict()
+        response['changed'] = False
+
+        try:
+            self.vdc.get_vapp(vapp_name)
+        except EntityNotFoundException:
+            create_vapp_task = self.vdc.create_vapp(
+                name=vapp_name,
+                description=description,
+                network=network,
+                fence_mode=fence_mode,
+                accept_all_eulas=accept_all_eulas)
             self.execute_task(create_vapp_task.Tasks.Task[0])
             response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
             response['changed'] = True

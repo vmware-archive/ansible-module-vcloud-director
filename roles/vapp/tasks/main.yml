@@ -1,10 +1,23 @@
 ---
 # tasks file for roles/vapp
-- name: create vapp
+- name: instantiate vapp
   vcd_vapp:
     vapp_name: "{{ vapp_name }}"
     template_name: "centos7"
     catalog_name: "test_catalog"
+    vdc: "Terraform_VDC"
+    power_on: False
+    storage_profile: "Standard"
+    state: "present"
+  register: output
+
+- name: instantiate vapp output
+  debug:
+    msg: '{{ output }}'
+
+- name: create vapp
+  vcd_vapp:
+    vapp_name: "{{ vapp_name }}"
     vdc: "Terraform_VDC"
     power_on: False
     storage_profile: "Standard"

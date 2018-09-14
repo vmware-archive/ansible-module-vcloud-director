@@ -370,6 +370,24 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <h3>Vapp Operations</h3>
 <ul>
 <li>
+<h5>Create vapp</h5>
+<pre>
+<code>
+ - name: create vapp
+   vcd_vapp:
+        vapp_name: "test_vapp"
+        vdc: "test_vdc"
+        state: "present"
+
+</code>
+</pre>
+<ul>
+<li>vapp_name - (Required) name of the vApp to be deploy</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>state == "present" (Required) to create vapp</li>
+</ul>
+</li>
+<li>
 <h5>Power on vapp</h5>
 <pre>
 <code>
