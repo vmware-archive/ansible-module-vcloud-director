@@ -163,6 +163,28 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
  <li>state == "operation" (Required) to share/unshare catalog</li>
 </ul>
 </li>
+<li>
+ <h5>List Catalog Items</h5>
+ <pre>
+ <code>
+ - name: list catalog items
+   vcd_catalog:
+        catalog_name: "test_catalog"
+        operation: "list_items"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>catalog_name - (Required) Name of the catalog</li>
+ <li>operation == "list_items" (Required) to list catalog items</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>

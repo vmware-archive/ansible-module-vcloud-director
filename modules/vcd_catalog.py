@@ -73,6 +73,7 @@ options:
             - various operations are:
                 - read : read catalog metadata
                 - shared: share/unshare catalog
+                - list_items: get list of catalog items
             - One from state or operation has to be provided.
         required: false
 
@@ -95,13 +96,14 @@ msg: success/failure message corresponding to catalog state/operation
 changed: true if resource has been changed else false
 '''
 
+from pyvcloud.vcd.client import NSMAP
 from pyvcloud.vcd.org import Org
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 VCD_CATALOG_STATES = ['present', 'absent', 'update']
-VCD_CATALOG_OPERATIONS = ['read', 'shared']
+VCD_CATALOG_OPERATIONS = ['read', 'shared', 'list_items']
 
 
 def vcd_catalog_argument_spec():
@@ -139,6 +141,9 @@ class Catalog(VcdAnsibleModule):
 
         if operation == "read":
             return self.read()
+
+        if operation == "list_items":
+            return self.list_items()
 
     def create(self):
         catalog_name = self.params.get('catalog_name')
@@ -214,6 +219,17 @@ class Catalog(VcdAnsibleModule):
         result['description'] = str(catalog.Description)
         result['shared'] = str(catalog.IsPublished)
         response['msg'] = result
+        response['changed'] = False
+
+        return response
+
+    def list_items(self):
+        catalog_name = self.params.get('catalog_name')
+        response = dict()
+        response['changed'] = False
+
+        catalog_items = self.org.list_catalog_items(catalog_name)
+        response['msg'] = [catalog_item['name'] for catalog_item in catalog_items]
         response['changed'] = False
 
         return response
