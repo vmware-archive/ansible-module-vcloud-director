@@ -295,6 +295,35 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>operation == "capturevapp" (Required) to capture vApp as a template into a catalog</li> 
 </ul>
 </li>
+<li>
+<h5>List Catalog Item vms</h5>
+<pre>
+<code>
+  - name: capture vapp
+    vcd_catalog_item:
+        catalog_name: "test_catalog"
+        item_name: "test_item"
+        vdc_name: "test_vdc"
+        description: "test_description"
+        operation: "list_vms"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>catalog_name - (Required) Name of the catalog</li>
+<li>item_name - (Required) Name of the catalog media/ova</li>
+<li>vdc_name - (Required) Name of the vdc</li>
+<li>description - (Optional) Description of the catalog item</li>
+<li>operation == "list_vms" (Required) to list catalog item vms</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>

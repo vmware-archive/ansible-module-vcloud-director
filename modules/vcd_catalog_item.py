@@ -23,6 +23,7 @@ description:
         - Delete media
         - Delete ova
         - Capture vapp
+        - List vms
 options:
     user:
         description:
@@ -104,6 +105,7 @@ options:
             - operation which should be performed over catalog.
             - various operations
                 - 'capturevapp'         : capture vapp
+                - 'list_vms'            : list catalog item vms
             - One of operation/state has to be provided.
         required: false
 author:
@@ -128,6 +130,7 @@ changed: true if resource has been changed else false
 import time
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.org import Org
+from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import Client
 from pyvcloud.vcd.client import QueryResultFormat
 from ansible.module_utils.vcd import VcdAnsibleModule
@@ -135,7 +138,7 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 VCD_CATALOG_ITEM_STATES = ['present', 'absent']
-VCD_CATALOG_ITEM_OPERATIONS = ['capturevapp']
+VCD_CATALOG_ITEM_OPERATIONS = ['capturevapp', 'list_vms']
 DEFAULT_CHUNK_SIZE = 1024 * 1024
 
 
@@ -173,6 +176,8 @@ class CatalogItem(VcdAnsibleModule):
         operation = self.params.get('operation')
         if operation == "capturevapp":
             return self.capture_vapp()
+        if operation == "list_vms":
+            return self.list_vms()
 
     def is_present(self):
         params = self.params
@@ -292,6 +297,27 @@ class CatalogItem(VcdAnsibleModule):
             else:
                 time.sleep(5)
                 # TODO might have to check when status goes to other state than resolved
+
+    def list_vms(self):
+        params = self.params
+        catalog_name = params.get('catalog_name')
+        item_name = params.get('item_name')
+        response = dict()
+        result = list()
+        response['changed'] = False
+
+        catalog_item = self.org.get_catalog_item(catalog_name, item_name)
+        vapp_template_resource = self.client.get_resource(
+            catalog_item.Entity.get('href'))
+        vapp_template = VApp(self.client, name=item_name, resource=vapp_template_resource)
+
+        for vm in vapp_template.get_all_vms():
+            result.append(vm.get('name'))
+
+        response['msg'] = result
+        response['changed'] = False
+
+        return response
 
 
 def main():
