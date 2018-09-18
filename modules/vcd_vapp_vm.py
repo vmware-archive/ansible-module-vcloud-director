@@ -122,6 +122,9 @@ options:
         description:
             - memory size in MB
         required: false
+    properties:
+        description:
+            - custom properties
     deploy:
         description:
             - deploy VMs
@@ -165,6 +168,7 @@ EXAMPLES = '''
     storage_profile = "Standard"
     state = "present"
     all_eulas_accepted = "true"
+    properties = {"hostname": "vm_name"}
 '''
 
 RETURN = '''
@@ -177,7 +181,11 @@ from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
+from pyvcloud.vcd.client import E
+from pyvcloud.vcd.client import E_OVF
 from pyvcloud.vcd.client import EntityType
+from pyvcloud.vcd.client import NSMAP
+from pyvcloud.vcd.client import RelationType
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
@@ -211,6 +219,7 @@ def vapp_vm_argument_spec():
         deploy=dict(type='bool', required=False, default=True),
         power_on=dict(type='bool', required=False, default=True),
         all_eulas_accepted=dict(type='bool', required=False, default=None),
+        properties=dict(type='dict', required=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False)
     )
@@ -313,13 +322,14 @@ class VappVM(VcdAnsibleModule):
         ip_allocation_mode = params.get('ip_allocation_mode')
         cust_script = params.get('cust_script')
         storage_profile = params.get('storage_profile')
+        properties = params.get('properties')
         response = dict()
         response['changed'] = False
 
         try:
             self.get_vm()
         except EntityNotFoundException:
-            specs = [{
+            spec = {
                 'source_vm_name': source_vm_name,
                 'vapp': source_vapp_resource,
                 'target_vm_name': target_vm_name,
@@ -329,11 +339,36 @@ class VappVM(VcdAnsibleModule):
                 'password_reset': vmpassword_reset,
                 'ip_allocation_mode': ip_allocation_mode,
                 'network': network,
-                'cust_script': cust_script,
-                'storage_profile': self.get_storage_profile(storage_profile)
-            }]
-            add_vms_task = self.vapp.add_vms(specs, power_on=power_on,
-                                             all_eulas_accepted=all_eulas_accepted)
+                'cust_script': cust_script
+            }
+            if storage_profile!='':
+                spec['storage_profile'] = self.get_storage_profile(storage_profile)
+            spec = {k: v for k, v in spec.items() if v}
+            source_vm = self.vapp.to_sourced_item(spec)
+
+            # Check the source vm if we need to inject OVF properties.
+            source_vapp = VApp(self.client, resource=source_vapp_resource)
+            vm = source_vapp.get_vm(source_vm_name)
+            productsection = vm.find('ovf:ProductSection', NSMAP)
+            for prop in productsection.iterfind('ovf:Property', NSMAP):
+                if properties and prop.get('{'+NSMAP['ovf']+'}key') in properties:
+                    val = prop.find('ovf:Value', NSMAP)
+                    if val:
+                        prop.remove(val)
+                    val = E_OVF.Value()
+                    val.set('{'+NSMAP['ovf']+'}value', properties[prop.get('{'+NSMAP['ovf']+'}key')])
+                    prop.append(val)
+                source_vm.InstantiationParams.append(productsection)
+                source_vm.VmGeneralParams.NeedsCustomization = E.NeedsCustomization('true')
+
+            params = E.RecomposeVAppParams(deploy='true', powerOn='true' if power_on else 'false')
+            params.append(source_vm)
+            if all_eulas_accepted is not None:
+                params.append(E.AllEULAsAccepted(all_eulas_accepted))
+
+            add_vms_task = self.client.post_linked_resource(
+                self.get_target_resource(), RelationType.RECOMPOSE,
+                EntityType.RECOMPOSE_VAPP_PARAMS.value, params)
             self.execute_task(add_vms_task)
             response['msg'] = 'Vapp VM {} has been created.'.format(
                 target_vm_name)
