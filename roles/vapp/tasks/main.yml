@@ -94,3 +94,14 @@
 - name: get list of vms output
   debug:
     msg: '{{ output }}'
+
+- name: get list of networks
+  vcd_vapp:
+    vapp_name: "{{ vapp_name }}"
+    vdc: "Terraform_VDC"
+    operation: "list_networks"
+  register: output
+
+- name: get list of networks output
+  debug:
+    msg: '{{ output }}'

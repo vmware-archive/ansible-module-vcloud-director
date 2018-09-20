@@ -133,7 +133,7 @@ options:
         required: false
     operation:
         description:
-            - operation on vApp ('poweron'/'poweroff'/'deploy'/'undeploy'/'list_vms').
+            - operation on vApp ('poweron'/'poweroff'/'deploy'/'undeploy'/'list_vms'/'list_networks').
             - One from state or operation has to be provided.
         required: false
 
@@ -172,11 +172,12 @@ from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import FenceMode
+from pyvcloud.vcd.client import NSMAP
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy', 'list_vms']
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy', 'list_vms', 'list_networks']
 
 VM_STATUSES = { '3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF' }
 
@@ -246,6 +247,9 @@ class Vapp(VcdAnsibleModule):
 
         if state == "list_vms":
             return self.list_vms()
+
+        if state == "list_networks":
+            return self.list_networks()
 
     def instantiate(self):
         params = self.params
@@ -433,6 +437,16 @@ class Vapp(VcdAnsibleModule):
             except:
                 vm_details['ip_address'] = None
             response['msg'].append(vm_details)
+        return response
+
+    def list_networks(self):
+        vapp_name = self.params.get('vapp_name')
+        vapp_resource = self.vdc.get_vapp(vapp_name)
+        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+        response = dict()
+        response['msg'] = []
+        for network in vapp.get_all_networks():
+            response['msg'].append(network.get('{'+NSMAP['ovf']+'}name'))
         return response
 
 

@@ -532,6 +532,25 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>operation == "list_vms" (Required) get list of vms</li>
 </ul>
 </li>
+<li>
+<h5>Get list of vapp networks</h5>
+<pre>
+<code>
+ - name: get list of networks
+   vcd_vapp:
+        vapp_name: "test_vapp"
+        vdc: "test_vdc"
+        operation: "list_networks"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vapp_name - (Required) name of the vApp to get a list of networks from</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>operation == "list_networks" (Required) get list of networks</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>
