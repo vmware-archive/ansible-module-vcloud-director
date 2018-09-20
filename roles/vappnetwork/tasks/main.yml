@@ -1,0 +1,31 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause
+
+# ---
+# tasks file for roles/vappnetwork
+
+- name: create vapp network "{{ vapp_network }}"
+  no_log: False
+  vcd_vapp_network:
+    network: "{{ vapp_network }}"
+    vapp: "web2"
+    vdc: "Terraform_VDC"
+    ip_scope: "192.168.0.5/24"
+    state: "present"
+  register: output
+
+- name: create vapp network output
+  debug:
+    msg: "{{ output }}"
+
+- name: delete "{{ vapp_network }}" vapp network
+  vcd_vapp_network:
+    network: "{{ vapp_network }}"
+    target_vapp: "web2"
+    target_vdc: "Terraform_VDC"
+    state: "absent"
+  register: output
+
+- name: delete vapp network output
+  debug:
+    msg: "{{ output }}"

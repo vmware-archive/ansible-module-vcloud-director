@@ -857,6 +857,89 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </li>
 </ol>
 </div>
+<!--                  -->
+<!-- vApp Network Use Case -->
+<div class="vapp-network-usage col-12" id="vapp-network-usage">
+<h2>Vapp Network Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp Network States</h3>
+<ul>
+<li>
+<h5>Create Vapp Network connected to VDC network</h5>
+</li>
+<pre>
+<code>
+ - name: create vapp network connected to vdc network
+   vcd_vapp_network:
+     network: "web2Network"
+	 vapp: "web2"
+	 vdc: "test_vdc"
+	 parent_network: "webs"
+	 state: "present"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>network: - (Required) name of the network</li>
+<li>target_vapp - (Required) name of the vapp</li>
+<li>source_vdc - (Required) name of the vdc</li>
+<li>parent_network - (Required) name of the vdc network to connect.
+<li>state == "present" (Required) to create vapp network</li>
+</ul>
+</li>
+<li>
+<h5>Create internal Vapp Network</h5>
+</li>
+<pre>
+<code>
+ - name: create internal vapp network
+   vcd_vapp_network:
+     network: "web2Network"
+     vapp: "web2"
+     vdc: "test_vdc"
+     ip_scope: "192.168.4.1/24"
+     state: "present"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>network: - (Required) name of the network</li>
+<li>target_vapp - (Required) name of the vapp</li>
+<li>source_vdc - (Required) name of the vdc</li>
+<li>ip_scope - (Required) ip scope of the network (gateway-address/bits).
+<li>state == "present" (Required) to create vapp network</li>
+</ul>
+</li>
+<li>
+<h5>Delete Vapp Network</h5>
+</li>
+<pre>
+<code>
+ - name: delete vapp network
+   vcd_vapp_network:
+     network: "web2Network"
+     vapp: "web2"
+     vdc: "test_vdc"
+     state: "absent"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>network: - (Required) name of the network</li>
+<li>target_vapp - (Required) name of the vapp</li>
+<li>source_vdc - (Required) name of the vdc</li>
+<li>state == "absent" (Required) to delete vapp network</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</div>
 <!--				  -->
 <!-- Independent Disk Use Case -->
 <div class="disk-usage col-12" id="disk-usage">
