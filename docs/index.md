@@ -878,6 +878,91 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </ol>
 </div>
 <!--                  -->
+<!-- vApp VM Disk Use Case -->
+<div class="vapp-vm-disk-usage col-12" id="vapp-vm-disk-usage">
+<h2>Vapp VM Disk Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp VM Disk States</h3>
+<ul>
+<li>
+<h5>Create Vapp VM Disk</h5>
+</li>
+<pre>
+<code>
+  - name: create vapp vm disk
+    vcd_vapp_vm_disk:
+     vm_name: "test_vm"
+     vapp: "test_vapp"
+     vdc: "test_vdc"
+     size: "10240"
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>size - (Required) size in MB of the new disk</li>
+<li>state == "present" (Required) to create disk</li>
+</ul>
+<li>
+<h5>Delete Vapp VM Disk</h5>
+</li>
+<pre>
+<code>
+  - name: delete disk
+    vcd_vapp_vm_disk:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      disk_id: "2001"
+      state: "absent"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>disk_id - (Required) instance id of the disk</li>
+<li>state == "absent" (Required) to delete disk</li>
+</ul>
+</ul>
+</li>
+<li>
+<h3>Vapp VM Disk Operations</h3>
+<ul>
+<li>
+<h5>Update vapp vm disk</h5>
+<pre>
+<code>
+ - name: update disk
+   vcd_vapp_vm_disk:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      disk_id: "2001"
+      size: "10240"
+      operation: "update"
+</code>
+</pre>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>disk_id - (Required) instance id of the disk</li>
+<li>size - new size of the disk</li>
+<li>operation == "update" (Required) to update disk</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</div>
+<!--                  -->
 <!-- vApp Network Use Case -->
 <div class="vapp-network-usage col-12" id="vapp-network-usage">
 <h2>Vapp Network Example Usage</h2>

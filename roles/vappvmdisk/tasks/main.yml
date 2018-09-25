@@ -1,0 +1,38 @@
+---
+# tasks file for roles/vappvmdisk
+- name: create vapp vm disk
+  vcd_vapp_vm_disk:
+     vm_name: "test_vm"
+     vapp: "test_vapp"
+     vdc: "test_vdc"
+     size: "10240"
+     state: "present"
+
+- name: create vapp vm disk output
+  debug:
+    msg: '{{ output }}'
+
+- name: delete disk
+    vcd_vapp_vm_disk:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      disk_id: "2001"
+      state: "absent"
+
+- name: delete disk output
+  debug:
+    msg: '{{ output }}'
+
+- name: update disk
+   vcd_vapp_vm_disk:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      disk_id: "2001"
+      size: "10240"
+      operation: "update"
+
+- name: update disk output
+  debug:
+    msg: '{{ output }}'
