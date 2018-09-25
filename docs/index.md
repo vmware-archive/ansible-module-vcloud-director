@@ -853,6 +853,26 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>operation == "deploy" (Required) to deploy vapp vm</li> 
 </ul>
 </li>
+<li>
+<h5>List Vapp VM Disks</h5>
+<pre>
+<code>
+ - name: list vapp vm disks
+   vcd_vapp_vm:
+    target_vm_name: "test_vm"
+    target_vapp: "web2"
+    target_vdc: "test_vdc"
+    operation: "list_disks"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
+<li>target_vdc - (Required) name of the target vdc</li>
+<li>operation == "list_disks" (Required) to list vapp vm disks</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>

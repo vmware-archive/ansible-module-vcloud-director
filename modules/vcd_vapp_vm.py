@@ -139,7 +139,7 @@ options:
         required: false
     operation:
         description:
-            - operations performed over new vapp ('poweron'/'poweroff'/'modifycpu'/'modifymemory'/'reloadvm').One from state or operation has to be provided.
+            - operations performed over new vapp ('poweron'/'poweroff'/'modifycpu'/'modifymemory'/'reloadvm'/'list_disks').One from state or operation has to be provided.
         required: false
 author:
     - mtaneja@vmware.com
@@ -192,7 +192,7 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupport
 
 VAPP_VM_STATES = ['present', 'absent', 'update']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
-                      'deploy', 'undeploy']
+                      'deploy', 'undeploy', 'list_disks']
 
 
 def vapp_vm_argument_spec():
@@ -258,6 +258,9 @@ class VappVM(VcdAnsibleModule):
 
         if operation == "undeploy":
             return self.undeploy_vm()
+
+        if operation == "list_disks":
+            return self.list_disks()
 
     def get_source_resource(self):
         source_catalog_name = self.params.get('source_catalog_name')
@@ -509,6 +512,24 @@ class VappVM(VcdAnsibleModule):
         except OperationNotSupportedException:
             response['warnings'] = 'Vapp VM {} is already undeployed.'.format(
                 vm_name)
+
+        return response
+
+    def list_disks(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = []
+
+        vm = self.get_vm()
+        disks = self.client.get_resource(vm.resource.get('href') + '/virtualHardwareSection/disks')
+        for disk in disks.Item:
+            if disk['{'+NSMAP['rasd']+'}ResourceType'] == 17:
+                response['msg'].append({
+                    'id': disk['{'+NSMAP['rasd']+'}InstanceID'].text,
+                    'name': disk['{'+NSMAP['rasd']+'}ElementName'].text,
+                    'description': disk['{'+NSMAP['rasd']+'}Description'].text,
+                    'size': disk['{'+NSMAP['rasd']+'}HostResource'].get('{'+NSMAP['vcloud']+'}capacity')
+                })
 
         return response
 

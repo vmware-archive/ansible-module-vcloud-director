@@ -252,3 +252,15 @@
 - name: delete vapp vm  output
   debug:
     msg: "{{ output }}"
+
+- name: list "{{ vapp_vm_2 }}" vapp vm disks
+  vcd_vapp_vm:
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    target_vdc: "Terraform_VDC"
+    operation: "list_disks"
+  register: output
+
+- name: list "{{ vapp_vm_2 }}" vapp vm disks output
+  debug:
+    msg: "{{ output }}"
