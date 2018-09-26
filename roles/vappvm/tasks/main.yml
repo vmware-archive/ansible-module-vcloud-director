@@ -264,3 +264,15 @@
 - name: list "{{ vapp_vm_2 }}" vapp vm disks output
   debug:
     msg: "{{ output }}"
+
+- name: list "{{ vapp_vm_2 }}" vapp vm nics
+  vcd_vapp_vm:
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    target_vdc: "Terraform_VDC"
+    operation: "list_nics"
+  register: output
+
+- name: list "{{ vapp_vm_2 }}" vapp vm nics output
+  debug:
+    msg: "{{ output }}"
