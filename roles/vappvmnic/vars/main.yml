@@ -1,0 +1,5 @@
+---
+# vars file for roles/vappvmnic
+vm_name: "test_vm"
+vapp: "test_vapp"
+vdc: "test_vdc"

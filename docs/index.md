@@ -983,6 +983,91 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </ol>
 </div>
 <!--                  -->
+<!-- vApp VM NIC Use Case -->
+<div class="vapp-vm-nic-usage col-12" id="vapp-vm-nic-usage">
+<h2>Vapp VM NIC Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp VM NIC States</h3>
+<ul>
+<li>
+<h5>Create Vapp VM NIC</h5>
+</li>
+<pre>
+<code>
+  - name: create vapp vm nic
+    vcd_vapp_vm_nic:
+     vm_name: "test_vm"
+     vapp: "test_vapp"
+     vdc: "test_vdc"
+     network: "web2Network"
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>network - (Required) name of the vApp network to connect</li>
+<li>state == "present" (Required) to create nic</li>
+</ul>
+<li>
+<h5>Delete Vapp VM NIC</h5>
+</li>
+<pre>
+<code>
+  - name: delete nic
+    vcd_vapp_vm_nic:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      nic_id: "1"
+      state: "absent"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>nic_id - (Required) connection index of the nic</li>
+<li>state == "absent" (Required) to delete nic</li>
+</ul>
+</ul>
+</li>
+<li>
+<h3>Vapp VM NIC Operations</h3>
+<ul>
+<li>
+<h5>Update vapp vm nic</h5>
+<pre>
+<code>
+ - name: update nic
+   vcd_vapp_vm_nic:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      nic_id: "1"
+      network: "web2Network"
+      operation: "update"
+</code>
+</pre>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>nic_id - (Required) connection index of the nic</li>
+<li>network - name of the vApp network to connect</li>
+<li>operation == "update" (Required) to update nic</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</div>
+<!--                  -->
 <!-- vApp Network Use Case -->
 <div class="vapp-network-usage col-12" id="vapp-network-usage">
 <h2>Vapp Network Example Usage</h2>
