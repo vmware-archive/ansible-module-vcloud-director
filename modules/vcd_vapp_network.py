@@ -169,10 +169,11 @@ class VappNetwork(VcdAnsibleModule):
             for network_config in network_config_section.NetworkConfig:
                 if network_config.get('networkName') == network_name:
                     network_config_section.remove(network_config)
-            self.client.put_linked_resource(
+            delete_network_task = self.client.put_linked_resource(
                 self.vapp.resource.NetworkConfigSection, RelationType.EDIT,
                 EntityType.NETWORK_CONFIG_SECTION.value,
                 network_config_section)
+            self.execute_task(delete_network_task)
             response['msg'] = 'Vapp Network {} has been deleted.'.format(network_name)
             response['changed'] = True
             
@@ -215,10 +216,11 @@ class VappNetwork(VcdAnsibleModule):
             network_config = E.NetworkConfig(config, networkName=network_name)
             network_config_section.append(network_config)
 
-            self.client.put_linked_resource(
+            add_network_task = self.client.put_linked_resource(
                 self.vapp.resource.NetworkConfigSection, RelationType.EDIT,
                 EntityType.NETWORK_CONFIG_SECTION.value,
                 network_config_section)
+            self.execute_task(add_network_task)
             response['msg'] = 'Vapp Network {} has been added'.format(network_name)
             response['changed'] = True
         else:
