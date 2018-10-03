@@ -21,8 +21,8 @@
 - name: delete "{{ vapp_network }}" vapp network
   vcd_vapp_network:
     network: "{{ vapp_network }}"
-    target_vapp: "web2"
-    target_vdc: "Terraform_VDC"
+    vapp: "web2"
+    vdc: "Terraform_VDC"
     state: "absent"
   register: output
 
