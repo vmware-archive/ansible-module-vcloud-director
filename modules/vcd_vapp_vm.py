@@ -356,14 +356,15 @@ class VappVM(VcdAnsibleModule):
             source_vapp = VApp(self.client, resource=source_vapp_resource)
             vm = source_vapp.get_vm(source_vm_name)
             productsection = vm.find('ovf:ProductSection', NSMAP)
-            for prop in productsection.iterfind('ovf:Property', NSMAP):
-                if properties and prop.get('{'+NSMAP['ovf']+'}key') in properties:
-                    val = prop.find('ovf:Value', NSMAP)
-                    if val:
-                        prop.remove(val)
-                    val = E_OVF.Value()
-                    val.set('{'+NSMAP['ovf']+'}value', properties[prop.get('{'+NSMAP['ovf']+'}key')])
-                    prop.append(val)
+            if productsection is not None:
+                for prop in productsection.iterfind('ovf:Property', NSMAP):
+                    if properties and prop.get('{'+NSMAP['ovf']+'}key') in properties:
+                        val = prop.find('ovf:Value', NSMAP)
+                        if val:
+                            prop.remove(val)
+                        val = E_OVF.Value()
+                        val.set('{'+NSMAP['ovf']+'}value', properties[prop.get('{'+NSMAP['ovf']+'}key')])
+                        prop.append(val)
                 source_vm.InstantiationParams.append(productsection)
                 source_vm.VmGeneralParams.NeedsCustomization = E.NeedsCustomization('true')
 
