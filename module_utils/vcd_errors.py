@@ -97,6 +97,11 @@ class VappVmPowerOffError(Exception):
         Exception.__init__(self, msg)
 
 
+class VappNetworkCreateError(Exception):
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
+
+
 class VappUpdateError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)

@@ -163,6 +163,28 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
  <li>state == "operation" (Required) to share/unshare catalog</li>
 </ul>
 </li>
+<li>
+ <h5>List Catalog Items</h5>
+ <pre>
+ <code>
+ - name: list catalog items
+   vcd_catalog:
+        catalog_name: "test_catalog"
+        operation: "list_items"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>catalog_name - (Required) Name of the catalog</li>
+ <li>operation == "list_items" (Required) to list catalog items</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>
@@ -273,6 +295,35 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>operation == "capturevapp" (Required) to capture vApp as a template into a catalog</li> 
 </ul>
 </li>
+<li>
+<h5>List Catalog Item vms</h5>
+<pre>
+<code>
+  - name: capture vapp
+    vcd_catalog_item:
+        catalog_name: "test_catalog"
+        item_name: "test_item"
+        vdc_name: "test_vdc"
+        description: "test_description"
+        operation: "list_vms"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>catalog_name - (Required) Name of the catalog</li>
+<li>item_name - (Required) Name of the catalog media/ova</li>
+<li>vdc_name - (Required) Name of the vdc</li>
+<li>description - (Optional) Description of the catalog item</li>
+<li>operation == "list_vms" (Required) to list catalog item vms</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>
@@ -370,6 +421,24 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <h3>Vapp Operations</h3>
 <ul>
 <li>
+<h5>Create vapp</h5>
+<pre>
+<code>
+ - name: create vapp
+   vcd_vapp:
+        vapp_name: "test_vapp"
+        vdc: "test_vdc"
+        state: "present"
+
+</code>
+</pre>
+<ul>
+<li>vapp_name - (Required) name of the vApp to be deploy</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>state == "present" (Required) to create vapp</li>
+</ul>
+</li>
+<li>
 <h5>Power on vapp</h5>
 <pre>
 <code>
@@ -442,6 +511,44 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>vapp_name - (Required) name of the vApp to be deploy</li> 
 <li>vdc - (Required) name of the vdc</li> 
 <li>operation == "deploy" (Required) to deploy vapp</li> 
+</ul>
+</li>
+<li>
+<h5>Get list of vms</h5>
+<pre>
+<code>
+ - name: get list of vms
+   vcd_vapp:
+        vapp_name: "test_vapp"
+        vdc: "test_vdc"
+        operation: "list_vms"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vapp_name - (Required) name of the vApp to get a list of vms from</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>operation == "list_vms" (Required) get list of vms</li>
+</ul>
+</li>
+<li>
+<h5>Get list of vapp networks</h5>
+<pre>
+<code>
+ - name: get list of networks
+   vcd_vapp:
+        vapp_name: "test_vapp"
+        vdc: "test_vdc"
+        operation: "list_networks"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vapp_name - (Required) name of the vApp to get a list of networks from</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>operation == "list_networks" (Required) get list of networks</li>
 </ul>
 </li>
 </ul>
@@ -744,6 +851,299 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>target_vapp - (Required) name of the target vapp</li> 
 <li>target_vdc - (Required) name of the target vdc</li>
 <li>operation == "deploy" (Required) to deploy vapp vm</li> 
+</ul>
+</li>
+<li>
+<h5>List Vapp VM Disks</h5>
+<pre>
+<code>
+ - name: list vapp vm disks
+   vcd_vapp_vm:
+    target_vm_name: "test_vm"
+    target_vapp: "web2"
+    target_vdc: "test_vdc"
+    operation: "list_disks"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
+<li>target_vdc - (Required) name of the target vdc</li>
+<li>operation == "list_disks" (Required) to list vapp vm disks</li>
+</ul>
+</li>
+<li>
+<h5>List Vapp VM NICs</h5>
+<pre>
+<code>
+ - name: list vapp vm nics
+   vcd_vapp_vm:
+    target_vm_name: "test_vm"
+    target_vapp: "web2"
+    target_vdc: "test_vdc"
+    operation: "list_nics"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
+<li>target_vdc - (Required) name of the target vdc</li>
+<li>operation == "list_nics" (Required) to list vapp vm nics</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</div>
+<!--                  -->
+<!-- vApp VM Disk Use Case -->
+<div class="vapp-vm-disk-usage col-12" id="vapp-vm-disk-usage">
+<h2>Vapp VM Disk Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp VM Disk States</h3>
+<ul>
+<li>
+<h5>Create Vapp VM Disk</h5>
+</li>
+<pre>
+<code>
+  - name: create vapp vm disk
+    vcd_vapp_vm_disk:
+     vm_name: "test_vm"
+     vapp: "test_vapp"
+     vdc: "test_vdc"
+     size: "10240"
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>size - (Required) size in MB of the new disk</li>
+<li>state == "present" (Required) to create disk</li>
+</ul>
+<li>
+<h5>Delete Vapp VM Disk</h5>
+</li>
+<pre>
+<code>
+  - name: delete disk
+    vcd_vapp_vm_disk:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      disk_id: "2001"
+      state: "absent"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>disk_id - (Required) instance id of the disk</li>
+<li>state == "absent" (Required) to delete disk</li>
+</ul>
+</ul>
+</li>
+<li>
+<h3>Vapp VM Disk Operations</h3>
+<ul>
+<li>
+<h5>Update vapp vm disk</h5>
+<pre>
+<code>
+ - name: update disk
+   vcd_vapp_vm_disk:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      disk_id: "2001"
+      size: "10240"
+      operation: "update"
+</code>
+</pre>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>disk_id - (Required) instance id of the disk</li>
+<li>size - new size of the disk</li>
+<li>operation == "update" (Required) to update disk</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</div>
+<!--                  -->
+<!-- vApp VM NIC Use Case -->
+<div class="vapp-vm-nic-usage col-12" id="vapp-vm-nic-usage">
+<h2>Vapp VM NIC Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp VM NIC States</h3>
+<ul>
+<li>
+<h5>Create Vapp VM NIC</h5>
+</li>
+<pre>
+<code>
+  - name: create vapp vm nic
+    vcd_vapp_vm_nic:
+     vm_name: "test_vm"
+     vapp: "test_vapp"
+     vdc: "test_vdc"
+     network: "web2Network"
+     state: "present"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>network - (Required) name of the vApp network to connect</li>
+<li>state == "present" (Required) to create nic</li>
+</ul>
+<li>
+<h5>Delete Vapp VM NIC</h5>
+</li>
+<pre>
+<code>
+  - name: delete nic
+    vcd_vapp_vm_nic:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      nic_id: "1"
+      state: "absent"
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>nic_id - (Required) connection index of the nic</li>
+<li>state == "absent" (Required) to delete nic</li>
+</ul>
+</ul>
+</li>
+<li>
+<h3>Vapp VM NIC Operations</h3>
+<ul>
+<li>
+<h5>Update vapp vm nic</h5>
+<pre>
+<code>
+ - name: update nic
+   vcd_vapp_vm_nic:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      nic_id: "1"
+      network: "web2Network"
+      operation: "update"
+</code>
+</pre>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>nic_id - (Required) connection index of the nic</li>
+<li>network - name of the vApp network to connect</li>
+<li>operation == "update" (Required) to update nic</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</div>
+<!--                  -->
+<!-- vApp Network Use Case -->
+<div class="vapp-network-usage col-12" id="vapp-network-usage">
+<h2>Vapp Network Example Usage</h2>
+<hr />
+<ol>
+<li>
+<h3>Vapp Network States</h3>
+<ul>
+<li>
+<h5>Create Vapp Network connected to VDC network</h5>
+</li>
+<pre>
+<code>
+ - name: create vapp network connected to vdc network
+   vcd_vapp_network:
+     network: "web2Network"
+	 vapp: "web2"
+	 vdc: "test_vdc"
+	 parent_network: "webs"
+	 state: "present"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>network: - (Required) name of the network</li>
+<li>target_vapp - (Required) name of the vapp</li>
+<li>source_vdc - (Required) name of the vdc</li>
+<li>parent_network - (Required) name of the vdc network to connect.
+<li>state == "present" (Required) to create vapp network</li>
+</ul>
+</li>
+<li>
+<h5>Create internal Vapp Network</h5>
+</li>
+<pre>
+<code>
+ - name: create internal vapp network
+   vcd_vapp_network:
+     network: "web2Network"
+     vapp: "web2"
+     vdc: "test_vdc"
+     ip_scope: "192.168.4.1/24"
+     state: "present"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>network: - (Required) name of the network</li>
+<li>target_vapp - (Required) name of the vapp</li>
+<li>source_vdc - (Required) name of the vdc</li>
+<li>ip_scope - (Required) ip scope of the network (gateway-address/bits).
+<li>state == "present" (Required) to create vapp network</li>
+</ul>
+</li>
+<li>
+<h5>Delete Vapp Network</h5>
+</li>
+<pre>
+<code>
+ - name: delete vapp network
+   vcd_vapp_network:
+     network: "web2Network"
+     vapp: "web2"
+     vdc: "test_vdc"
+     state: "absent"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>network: - (Required) name of the network</li>
+<li>target_vapp - (Required) name of the vapp</li>
+<li>source_vdc - (Required) name of the vdc</li>
+<li>state == "absent" (Required) to delete vapp network</li>
 </ul>
 </li>
 </ul>

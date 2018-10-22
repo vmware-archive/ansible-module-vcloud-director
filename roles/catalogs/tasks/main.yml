@@ -86,3 +86,18 @@
 - name: delete catalog output
   debug:
     msg: '{{ output }}' 
+
+#################################### List items ##########################################################################
+- name: list catalog items
+  vcd_catalog:
+    user: 'XXXXXXXXXX'
+    org: 'XXXXXXXXXX'
+    password: 'XXXXXXXXXX'
+    host: 'XXXXXXXXXX'
+    catalog_name: "{{ new_catalog_name }}"
+    operation: "list_items"
+  register: output
+
+- name: list catalog items output
+  debug:
+    msg: '{{ output }}'

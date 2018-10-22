@@ -133,7 +133,7 @@ options:
         required: false
     operation:
         description:
-            - operation on vApp ('poweron'/'poweroff'/'deploy'/'undeploy').
+            - operation on vApp ('poweron'/'poweroff'/'deploy'/'undeploy'/'list_vms'/'list_networks').
             - One from state or operation has to be provided.
         required: false
 
@@ -172,11 +172,14 @@ from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import FenceMode
+from pyvcloud.vcd.client import NSMAP
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy']
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy', 'list_vms', 'list_networks']
+
+VM_STATUSES = { '3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF' }
 
 
 def vapp_argument_spec():
@@ -219,7 +222,11 @@ class Vapp(VcdAnsibleModule):
     def manage_states(self):
         state = self.params.get('state')
         if state == "present":
-            return self.create()
+            catalog_name = self.params.get('catalog_name')
+            if catalog_name:
+                return self.instantiate()
+            else:
+                return self.create()
 
         if state == "absent":
             return self.delete()
@@ -238,7 +245,13 @@ class Vapp(VcdAnsibleModule):
         if state == "undeploy":
             return self.undeploy()
 
-    def create(self):
+        if state == "list_vms":
+            return self.list_vms()
+
+        if state == "list_networks":
+            return self.list_networks()
+
+    def instantiate(self):
         params = self.params
         vapp_name = params.get('vapp_name')
         catalog_name = params.get('catalog_name')
@@ -287,6 +300,33 @@ class Vapp(VcdAnsibleModule):
                 ip_address=ip_address,
                 storage_profile=storage_profile,
                 network_adapter_type=network_adapter_type)
+            self.execute_task(create_vapp_task.Tasks.Task[0])
+            response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
+            response['changed'] = True
+        else:
+            response['warnings'] = "Vapp {} is already present.".format(vapp_name)
+
+        return response
+
+    def create(self):
+        params = self.params
+        vapp_name = params.get('vapp_name')
+        description = params.get('description')
+        network = params.get('network')
+        fence_mode = params.get('fence_mode')
+        accept_all_eulas = params.get('accept_all_eulas')
+        response = dict()
+        response['changed'] = False
+
+        try:
+            self.vdc.get_vapp(vapp_name)
+        except EntityNotFoundException:
+            create_vapp_task = self.vdc.create_vapp(
+                name=vapp_name,
+                description=description,
+                network=network,
+                fence_mode=fence_mode,
+                accept_all_eulas=accept_all_eulas)
             self.execute_task(create_vapp_task.Tasks.Task[0])
             response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
             response['changed'] = True
@@ -379,6 +419,34 @@ class Vapp(VcdAnsibleModule):
         except OperationNotSupportedException:
             response['warnings'] = 'Vapp {} is already undeployed.'.format(vapp_name)
 
+        return response
+
+    def list_vms(self):
+        vapp_name = self.params.get('vapp_name')
+        vapp_resource = self.vdc.get_vapp(vapp_name)
+        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+        response = dict()
+        response['msg'] = []
+        for vm in vapp.get_all_vms():
+            vm_details = dict()
+            vm_details['name'] = vm.get('name')
+            vm_details['status'] = VM_STATUSES[vm.get('status')]
+            vm_details['deployed'] = vm.get('deployed')=='true'
+            try:
+                vm_details['ip_address'] = vapp.get_primary_ip(vm.get('name'))
+            except:
+                vm_details['ip_address'] = None
+            response['msg'].append(vm_details)
+        return response
+
+    def list_networks(self):
+        vapp_name = self.params.get('vapp_name')
+        vapp_resource = self.vdc.get_vapp(vapp_name)
+        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+        response = dict()
+        response['msg'] = []
+        for network in vapp.get_all_networks():
+            response['msg'].append(network.get('{'+NSMAP['ovf']+'}name'))
         return response
 
 

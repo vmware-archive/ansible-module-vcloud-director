@@ -1,0 +1,38 @@
+---
+# tasks file for roles/vappvmnic
+- name: create vapp vm nic
+  vcd_vapp_vm_nic:
+     vm_name: "test_vm"
+     vapp: "test_vapp"
+     vdc: "test_vdc"
+     network: "web2Network"
+     state: "present"
+
+- name: create vapp vm nic output
+  debug:
+    msg: '{{ output }}'
+
+- name: delete nic
+    vcd_vapp_vm_nic:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      nic_id: "1"
+      state: "absent"
+
+- name: delete nic output
+  debug:
+    msg: '{{ output }}'
+
+- name: update nic
+   vcd_vapp_vm_nic:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      nic_id: "1"
+      network: "web2Network"
+      operation: "update"
+
+- name: update nic output
+  debug:
+    msg: '{{ output }}'

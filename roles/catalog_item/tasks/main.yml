@@ -96,4 +96,20 @@
 
 - name: delete capture-vapp output
   debug:
-    msg: '{{ output }}'  
+    msg: '{{ output }}'
+
+############################################ list-vms ##############################################################
+- name: list catalog item vms
+  vcd_catalog_item:
+    user: 'XXXXXXXXXX'
+    org: 'XXXXXXXXXX'
+    password: 'XXXXXXXXXX'
+    host: 'XXXXXXXXXX'
+    catalog_name: "{{ catalog_name }}"
+    item_name: "{{ capture_vapp_item_name }}"
+    operation: "list_vms"
+  register: output
+
+- name: list catalog item vms output
+  debug:
+    msg: '{{ output }}'
