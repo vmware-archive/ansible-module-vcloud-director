@@ -239,13 +239,11 @@ msg: success/failure message corresponding to vdc state/operation
 changed: true if resource has been changed else false
 '''
 
-import json
+
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
-from lxml import objectify, etree
-from pyvcloud.vcd.system import System
-from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
+from ansible.module_utils.vcd import VcdAnsibleModule
 
 
 ORG_VDC_STATES = ['present', 'absent', 'update']
