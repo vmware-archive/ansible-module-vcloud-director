@@ -308,7 +308,7 @@ class Vdc(VcdAnsibleModule):
         provider_vdc_name = self.params.get('provider_vdc_name')
         description = self.params.get('description')
         allocation_model = self.params.get('allocation_model')
-        storage_profiles = json.loads(self.params.get('storage_profiles'))
+        storage_profiles = self.params.get('storage_profiles')
         cpu_units = self.params.get('cpu_units')
         cpu_allocated = self.params.get('cpu_allocated')
         cpu_limit = self.params.get('cpu_limit')
@@ -326,7 +326,6 @@ class Vdc(VcdAnsibleModule):
         uses_fast_provisioning = self.params.get('uses_fast_provisioning')
         over_commit_allowed = self.params.get('over_commit_allowed')
         vm_discovery_enabled = self.params.get('vm_discovery_enabled')
-        storage_profiles = storage_profiles if type(storage_profiles) is list else [storage_profiles]
         response = dict()
         response['changed'] = False
 
