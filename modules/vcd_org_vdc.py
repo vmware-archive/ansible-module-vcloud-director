@@ -253,10 +253,13 @@ ORG_VDC_STATES = ['present', 'absent', 'update']
 
 def org_vdc_argument_spec():
     return dict(
-        vdc_name=dict(type='str', required=False),
-        provider_vdc_name=dict(type='str', required=False),
+        vdc_name=dict(type='str', required=True),
+        provider_vdc_name=dict(type='str', required=True),
         description=dict(type='str', required=False, default=''),
-        allocation_model=dict(type='str', required=False, default='AllocationVApp'),
+        allocation_model=dict(type='str', required=False,
+                              default='AllocationVApp',
+                              choices=['AllocationVApp', 'AllocationPool',
+                                       'ReservationPool']),
         cpu_units=dict(type='str', required=False, default='MHz'),
         cpu_allocated=dict(type='int', required=False, default=0),
         cpu_limit=dict(type='int', required=False, default=0),
@@ -266,9 +269,11 @@ def org_vdc_argument_spec():
         nic_quota=dict(type='int', required=False, default=0),
         network_quota=dict(type='int', required=False, default=0),
         vm_quota=dict(type='int', required=False, default=0),
-        storage_profiles=dict(type='str', required=False, default='[]'),
-        resource_guaranteed_memory=dict(type='float', required=False, default=1.0),
-        resource_guaranteed_cpu=dict(type='float', required=False, default=1.0),
+        storage_profiles=dict(type='list', required=False, default='[]'),
+        resource_guaranteed_memory=dict(type='float', required=False,
+                                        default=1.0),
+        resource_guaranteed_cpu=dict(type='float', required=False,
+                                     default=1.0),
         vcpu_in_mhz=dict(type='int', required=False, default=None),
         is_thin_provision=dict(type='bool', required=False, default=None),
         network_pool_name=dict(type='str', required=False, default=None),
@@ -276,7 +281,7 @@ def org_vdc_argument_spec():
         over_commit_allowed=dict(type='bool', required=False, default=True),
         vm_discovery_enabled=dict(type='bool', required=False, default=None),
         is_enabled=dict(type='bool', required=False, default=True),
-        state=dict(choices=ORG_VDC_STATES, required=False),
+        state=dict(choices=ORG_VDC_STATES, required=False, default='present'),
     )
 
 
