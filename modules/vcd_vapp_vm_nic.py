@@ -15,7 +15,7 @@ module: vcd_vapp_vm_nic
 short_description: Ansible Module to manage (create/delete) NICs in vApp VMs in vCloud Director.
 version_added: "2.4"
 description:
-    - "Ansible Module to manage (create/delete) NICs in vApp VMs."
+    - "Ansible Module to manage (create/modify/delete) NICs in vApp VMs."
 
 options:
     user:
@@ -49,6 +49,14 @@ options:
     network:
         description:
             - VApp network name
+        required: false
+    ip_allocation_mode:
+        description:
+            - IP allocation mode (DHCP, POOL or MANUAL)
+        required: false
+    ip_address:
+        description:
+            - NIC IP address (required for MANUAL IP allocation mode)
         required: false
     vm_name:
         description:
@@ -90,6 +98,8 @@ EXAMPLES = '''
     vapp = "vapp1"
     vdc = "vdc1"
     nic_id = "2000"
+    ip_allocation_mode = "MANUAL"
+    ip_address = "172.16.0.11"
     state = "present"
 '''
 
@@ -123,6 +133,8 @@ def vapp_vm_nic_argument_spec():
         vdc=dict(type='str', required=True),
         nic_id=dict(type='int', required=False),
         network=dict(type='str', required=False),
+        ip_allocation_mode=dict(type='str', required=False),
+        ip_address=dict(type='str', required=False),
         state=dict(choices=VAPP_VM_NIC_STATES, required=False),
         operation=dict(choices=VAPP_VM_NIC_OPERATIONS, required=False),
     )
@@ -166,23 +178,34 @@ class VappVMNIC(VcdAnsibleModule):
         vm = self.get_vm()
         nic_id = self.params.get('nic_id')
         network = self.params.get('network')
+        ip_allocation_mode = self.params.get('ip_allocation_mode')
+        ip_address = self.params.get('ip_address')
         response = dict()
         response['changed'] = False
+        note = 'added'
         max_id = -1;
 
         nics = self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
         for nic in nics.NetworkConnection:
             if nic.NetworkConnectionIndex == nic_id:
                 response['warnings'] = 'NIC is already present.'
-                return response
+                note = 'changed'
             if nic.NetworkConnectionIndex > max_id:
                 max_id = int(nic.NetworkConnectionIndex.text)
 
-        nic = E.NetworkConnection(
-            E.NetworkConnectionIndex(max_id+1 if nic_id is None else nic_id),
-            E.IsConnected(True),
-            E.IpAddressAllocationMode('DHCP'),
-            network=network)
+        if ip_allocation_mode == "MANUAL":
+            nic = E.NetworkConnection(
+                E.NetworkConnectionIndex(max_id+1 if nic_id is None else nic_id),
+                E.IpAddress(ip_address),
+                E.IsConnected(True),
+                E.IpAddressAllocationMode(ip_allocation_mode),
+                network=network)
+        else:
+            nic = E.NetworkConnection(
+                E.NetworkConnectionIndex(max_id+1 if nic_id is None else nic_id),
+                E.IsConnected(True),
+                E.IpAddressAllocationMode(ip_allocation_mode),
+                network=network)
         nics.NetworkConnection.addnext(nic)
 
         add_nic_task = self.client.put_resource(
@@ -190,7 +213,7 @@ class VappVMNIC(VcdAnsibleModule):
             EntityType.NETWORK_CONNECTION_SECTION.value)
         self.execute_task(add_nic_task)
 
-        response['msg'] = 'Vapp VM NIC has been added.'
+        response['msg'] = 'Vapp VM NIC has been ' + note + '.'
         response['changed'] = True
 
         return response
