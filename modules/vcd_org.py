@@ -63,17 +63,12 @@ options:
             - recursive delete org
         required: false
     state:
-        description:
-            - state of org
-                - present
-                - absent
-                - update
+        description: state of org (present/absent/update)
             - One from state or operation has to be provided.
         required: false
     operation:
         description:
-            - operation which should be performed over org
-                - read : read org metadata
+            - operation which should be performed over org (read)
             - One from state or operation has to be provided.
         required: false
 author:

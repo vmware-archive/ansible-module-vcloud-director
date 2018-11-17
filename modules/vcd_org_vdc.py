@@ -95,13 +95,12 @@ options:
             - The maximum number of VMs that can be created in this vDC. Defaults to 0, which specifies an unlimited number
         required: false
     storage_profiles:
-        description:
-            - List of provider vDC storage profiles to add to this vDC. Each item is a dictionary that should include the following elements
-                - name: name of the PVDC storage profile
-                - enabled: "true" if the storage profile is enabled for this vDC else "false"
-                - units: Units used to define limit. One of MB or GB
-                - limit: Max number of units allocated for this storage profile
-                - default: True if this is default storage profile for this vDC
+        description: List of provider vDC storage profiles to add to this vDC. Each item is a dictionary that should include the following elements
+                name (name of the PVDC storage profile)
+                enabled (true if the storage profile is enabled for this vDC else false)
+                units (Units used to define limit. One of MB or GB)
+                limit (Max number of units allocated for this storage profile)
+                default (True if this is default storage profile for this vDC)
         required: false
     resource_guaranteed_memory:
         description:
@@ -117,7 +116,7 @@ options:
         required: false
     is_thin_provision:
         description:
-            - "true"/"false" to request thin provisioning
+            - true/false to request thin provisioning
         required: false
     network_pool_name:
         description:
@@ -125,19 +124,19 @@ options:
         required: false
     uses_fast_provisioning:
         description:
-            - "true"/"false" to request fast provisioning
+            - true/false to request fast provisioning
         required: false
     over_commit_allowed:
         description:
-            - Set to "false" to disallow creation of the VDC if the AllocationModel is AllocationPool or ReservationPool and the ComputeCapacity you specified is greater than what the backing Provider VDC can supply. Defaults to "true" if empty or missing
+            - Set to false to disallow creation of the VDC if the AllocationModel is AllocationPool or ReservationPool and the ComputeCapacity you specified is greater than what the backing Provider VDC can supply. Defaults to true if empty or missing
         required: false
     vm_discovery_enabled:
         description:
-            - "true" if discovery of vCenter VMs is enabled for resource pools backing this vDC else "false"
+            - true if discovery of vCenter VMs is enabled for resource pools backing this vDC else false
         required: false
     is_enabled:
         description:
-            - "true" if this vDC is enabled for use by the organization users else "false"
+            - true if this vDC is enabled for use by the organization users else false
         required: false
     state:
         description:

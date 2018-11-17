@@ -84,11 +84,11 @@ options:
         required: false
     vmpassword_auto:
         description:
-            - "true"/"false", autogenerate administrator password
+            - true/false, autogenerate administrator password
         required: false
     vmpassword_reset:
         description:
-            - "true" if the administrator password for this virtual machine must be reset after first use else "false"
+            - true if the administrator password for this virtual machine must be reset after first use else false
         required: false
     cust_script:
         description:
@@ -104,11 +104,11 @@ options:
         required: false
     all_eulas_accepted:
         description:
-            - "true" / "false"
+            - true / false
         required: false
     ip_allocation_mode:
         description:
-            - "dhcp"
+            - dhcp
         required: false
     virtual_cpus:
         description:
@@ -135,11 +135,11 @@ options:
         required: false
     state:
         description:
-            - state of new virtual machines ('present'/'absent').One from state or operation has to be provided.
+            - state of new virtual machines (present/absent).One from state or operation has to be provided.
         required: false
     operation:
         description:
-            - operations performed over new vapp ('poweron'/'poweroff'/'modifycpu'/'modifymemory'/'reloadvm'/'list_disks'/'list_nics').One from state or operation has to be provided.
+            - operations performed over new vapp (poweron/poweroff/modifycpu/modifymemory/reloadvm/list_disks/list_nics).One from state or operation has to be provided.
         required: false
 author:
     - mtaneja@vmware.com
