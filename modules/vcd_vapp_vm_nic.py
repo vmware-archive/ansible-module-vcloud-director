@@ -64,15 +64,14 @@ options:
         required: true
     state:
         description:
-            - state of nic ('present'/'absent').
+            - state of nic (present/absent).
             - One from state or operation has to be provided.
         required: true
     operation:
         description:
-            - operation on nic ('update').
+            - operation on nic (update).
             - One from state or operation has to be provided.
-        required:
-            - false
+        required: false
 author:
     - mtaneja@vmware.com
 '''

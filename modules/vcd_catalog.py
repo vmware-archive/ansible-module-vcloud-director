@@ -15,12 +15,8 @@ module: vcd_catalog
 short_description: Ansible module to manage (create/update/delete) catalogs in vCloud Director.
 version_added: "2.4"
 description:
-    - Ansible module to manage (create/update/delete) catalogs in vCloud Director.
-    - Task performed:
-        - Create catalog
-        - Read Catalog
-        - Update name, description and shared state of catalog
-        - Delete catalog
+    - "Ansible module to manage (create/update/delete) catalogs in vCloud Director."
+
 options:
     user:
         description:
@@ -69,11 +65,7 @@ options:
         required: false
     operation:
         description:
-            - operation which should be performed over catalog.
-            - various operations are:
-                - read : read catalog metadata
-                - shared: share/unshare catalog
-                - list_items: get list of catalog items
+            - operation which should be performed over catalog (read/shared/list_items).
             - One from state or operation has to be provided.
         required: false
 
