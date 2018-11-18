@@ -84,11 +84,11 @@ options:
         required: false
     vmpassword_auto:
         description:
-            - "true"/"false", autogenerate administrator password
+            - true/false, autogenerate administrator password
         required: false
     vmpassword_reset:
         description:
-            - "true" if the administrator password for this virtual machine must be reset after first use else "false"
+            - true if the administrator password for this virtual machine must be reset after first use else "false"
         required: false
     cust_script:
         description:
@@ -104,11 +104,11 @@ options:
         required: false
     all_eulas_accepted:
         description:
-            - "true" / "false"
+            - true / false
         required: false
     ip_allocation_mode:
         description:
-            - "dhcp"
+            - dhcp
         required: false
     virtual_cpus:
         description:
@@ -135,11 +135,12 @@ options:
         required: false
     state:
         description:
-            - state of new virtual machines ('present'/'absent').One from state or operation has to be provided.
+            - state of new virtual machines (present/absent).One from state or operation has to be provided.
         required: false
     operation:
         description:
-            - operations performed over new vapp ('poweron'/'poweroff'/'modifycpu'/'modifymemory'/'reloadvm'/'list_disks'/'list_nics').One from state or operation has to be provided.
+            - operations performed over new vapp (poweron/shutdown/reboot/poweroff/modifycpu/modifymemory/reloadvm/list_disks/list_nics).
+              One from state or operation has to be provided.
         required: false
 author:
     - mtaneja@vmware.com
@@ -191,7 +192,7 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupport
 
 
 VAPP_VM_STATES = ['present', 'absent', 'update']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
+VAPP_VM_OPERATIONS = ['poweron', 'shutdown', 'reboot', 'poweroff', 'reloadvm',
                       'deploy', 'undeploy', 'list_disks', 'list_nics']
 
 
@@ -246,6 +247,12 @@ class VappVM(VcdAnsibleModule):
         operation = self.params.get('operation')
         if operation == "poweron":
             return self.power_on_vm()
+
+        if operation == "shutdown":
+            return self.shutdown_vm()
+
+        if operation == "reboot":
+            return self.reboot_vm()
 
         if operation == "poweroff":
             return self.power_off_vm()
@@ -451,6 +458,42 @@ class VappVM(VcdAnsibleModule):
             response['changed'] = True
         except OperationNotSupportedException:
             response['warnings'] = 'Vapp VM {} is already powered on.'.format(
+                vm_name)
+
+        return response
+
+    def shutdown_vm(self,):
+        vm_name = self.params.get('target_vm_name')
+        response = dict()
+        response['changed'] = False
+
+        try:
+            vm = self.get_vm()
+            shutdown_task = vm.shutdown()
+            self.execute_task(shutdown_task)
+            response['msg'] = 'Vapp VM {} has been shutted down.'.format(
+                vm_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['warnings'] = 'Vapp VM {} is already powered off.'.format(
+                vm_name)
+
+        return response
+
+    def reboot_vm(self,):
+        vm_name = self.params.get('target_vm_name')
+        response = dict()
+        response['changed'] = False
+
+        try:
+            vm = self.get_vm()
+            reboot_task = vm.reboot()
+            self.execute_task(reboot_task)
+            response['msg'] = 'Vapp VM {} has been rebooted.'.format(
+                vm_name)
+            response['changed'] = True
+        except OperationNotSupportedException:
+            response['warnings'] = 'Vapp VM {} is already powered off.'.format(
                 vm_name)
 
         return response
