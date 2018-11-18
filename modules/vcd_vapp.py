@@ -68,15 +68,15 @@ options:
         required: false
     deploy:
         description:
-            - "true" if to deploy vApp else "false"
+            - true if to deploy vApp else false
         required: false
     power_on:
         description:
-            - "true" if to power on vApp else "false"
+            - true if to power on vApp else false
         required: false
     accept_all_eulas:
         description:
-            - "true"/"false"
+            - true/false
         required: false
     disk_size:
         description:
@@ -112,7 +112,7 @@ options:
         required: false
     ip_allocation_mode:
         description:
-            - IP Allocation mode "static"/"DHCP"
+            - IP Allocation mode static/DHCP
         required: false
     storage_profile:
         description:
@@ -124,16 +124,16 @@ options:
         required: false
     force:
         description:
-            - "true" if delete vApp forcefully else "false"
+            - true if delete vApp forcefully else false
         required: false
     state:
         description:
-            - state of new virtual machines ('present'/'absent').
+            - state of new virtual machines (present/absent).
             - One from state or operation has to be provided.
         required: false
     operation:
         description:
-            - operation on vApp ('poweron'/'poweroff'/'deploy'/'undeploy'/'list_vms'/'list_networks').
+            - operation on vApp (poweron/poweroff/deploy/undeploy/list_vms/list_networks).
             - One from state or operation has to be provided.
         required: false
 

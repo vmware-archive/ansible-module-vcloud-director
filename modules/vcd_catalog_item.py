@@ -17,13 +17,7 @@ short_description: Ansible Module to manage (create/update/delete) catalog items
 version_added: "2.4"
 description:
     - Ansible Module to manage (create/update/delete) catalog items in vCloud Director.
-    - Task performed:
-        - Upload media
-        - Upload ova
-        - Delete media
-        - Delete ova
-        - Capture vapp
-        - List vms
+
 options:
     user:
         description:
@@ -73,39 +67,24 @@ options:
         description:
             - name of the vdc
         required: false
-    vdc_name:
-        description:
-            - name of the vdc
-        required: false
     description:
         description:
             - description of vapp capture
         required: false
     customize_on_instantiate:
-        description:
-            - "true"/"false" if you want to customise vapp on instantiation
+        description: true if you want to customise vapp on instantiation else false
         required: false
     overwrite:
-        description:
-            - "true"/"false"
-            - Flag indicates if the item in the catalog has to be overwritten if it already exists.
+        description: true if the item in the catalog has to be overwritten if it already exists else false
         required: false
     state:
         description:
             - state of catalog_item ('present'/'absent').
-            - used for
-                - 'uploadova'           : upload ova file
-                - 'deleteova'           : delete ova file
-                - 'uploadmedia'         : upload media file
-                - 'deletemedia'         : delete media file
             - One of operation/state has to be provided.
         required: false
     operation:
         description:
-            - operation which should be performed over catalog.
-            - various operations
-                - 'capturevapp'         : capture vapp
-                - 'list_vms'            : list catalog item vms
+            - operation which should be performed over catalog (capturevapp/list_vms).
             - One of operation/state has to be provided.
         required: false
 author:

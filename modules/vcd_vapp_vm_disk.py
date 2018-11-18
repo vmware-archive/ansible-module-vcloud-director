@@ -71,8 +71,7 @@ options:
         description:
             - operation on Disk ('update').
             - One from state or operation has to be provided.
-        required:
-            - false
+        required: false
 author:
     - mtaneja@vmware.com
 '''

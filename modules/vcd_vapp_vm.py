@@ -88,7 +88,7 @@ options:
         required: false
     vmpassword_reset:
         description:
-            - true if the administrator password for this virtual machine must be reset after first use else "false"
+            - true if the administrator password for this virtual machine must be reset after first use else false
         required: false
     cust_script:
         description:
