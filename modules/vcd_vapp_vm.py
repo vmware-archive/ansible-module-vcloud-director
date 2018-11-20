@@ -331,6 +331,7 @@ class VappVM(VcdAnsibleModule):
         vmpassword_reset = params.get('vmpassword_reset')
         network = params.get('network')
         all_eulas_accepted = params.get('all_eulas_accepted')
+        deploy = params.get('deploy')
         power_on = params.get('power_on')
         ip_allocation_mode = params.get('ip_allocation_mode')
         cust_script = params.get('cust_script')
@@ -354,9 +355,9 @@ class VappVM(VcdAnsibleModule):
                 'network': network,
                 'cust_script': cust_script
             }
+            spec = {k: v for k, v in spec.items() if v}
             if storage_profile!='':
                 spec['storage_profile'] = self.get_storage_profile(storage_profile)
-            spec = {k: v for k, v in spec.items() if v}
             source_vm = self.vapp.to_sourced_item(spec)
 
             # Check the source vm if we need to inject OVF properties.
@@ -375,7 +376,7 @@ class VappVM(VcdAnsibleModule):
                 source_vm.InstantiationParams.append(productsection)
                 source_vm.VmGeneralParams.NeedsCustomization = E.NeedsCustomization('true')
 
-            params = E.RecomposeVAppParams(deploy='true', powerOn='true' if power_on else 'false')
+            params = E.RecomposeVAppParams(deploy='true' if deploy else 'false', powerOn='true' if power_on else 'false')
             params.append(source_vm)
             if all_eulas_accepted is not None:
                 params.append(E.AllEULAsAccepted(all_eulas_accepted))
