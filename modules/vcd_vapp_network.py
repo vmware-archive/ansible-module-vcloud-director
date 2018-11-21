@@ -128,8 +128,8 @@ def vapp_network_argument_spec():
         fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
         parent_network=dict(type='str', required=False, default=None),
         ip_scope=dict(type='str', required=False, default=None),
-        dns1=dict(type='str', required=False, default=None),
-        dns2=dict(type='str', required=False, default=None),
+        dns1=dict(type='str', required=False, default=''),
+        dns2=dict(type='str', required=False, default=''),
         state=dict(choices=VAPP_NETWORK_STATES, required=True),
     )
 
