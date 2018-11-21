@@ -56,7 +56,7 @@ options:
         required: true
     fence_mode:
         description:
-            - Network fence mode
+            - Network fence mode ('bridged'/'isolated'/'natRouted').
         required: false
     parent_network:
         description:
@@ -64,7 +64,12 @@ options:
         required: false
     ip_scope:
         description:
-            - IP scope when no parent_network is defined
+            - IP scope for 'isolated' and 'natRouted' network,
+              if fence_mode is 'natRouted', parent_network is needed
+    dns1, dns2:
+        description:
+            - DNS1 and DNS2 of network
+        required: false
     state:
         description:
             - state of network ('present'/'absent').
@@ -75,16 +80,20 @@ author:
 
 EXAMPLES = '''
 - name: Test with a message
-  vcd_vapp_vm:
+  vcd_vapp_network:
     user: terraform
     password: abcd
     host: csa.sandbox.org
     org: Terraform
     api_version: 30
     verify_ssl_certs: False
-    network = "uplink"
+    network = "vapp1_net"
     vapp = "vapp1"
     vdc = "vdc1"
+    ip_scope: "192.168.0.0/24"
+    parent_network: "org_net"
+    fence_mode: "natRouted"
+    dns1: "8.8.8.8"
     state = "present"
 '''
 
@@ -119,6 +128,8 @@ def vapp_network_argument_spec():
         fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
         parent_network=dict(type='str', required=False, default=None),
         ip_scope=dict(type='str', required=False, default=None),
+        dns1=dict(type='str', required=False, default=None),
+        dns2=dict(type='str', required=False, default=None),
         state=dict(choices=VAPP_NETWORK_STATES, required=True),
     )
 
@@ -184,6 +195,8 @@ class VappNetwork(VcdAnsibleModule):
         fence_mode = self.params.get('fence_mode')
         parent_network = self.params.get('parent_network')
         ip_scope = self.params.get('ip_scope')
+        dns1 = self.params.get('dns1')
+        dns2 = self.params.get('dns2')
 
         response = dict()
         response['changed'] = False
@@ -200,6 +213,14 @@ class VappNetwork(VcdAnsibleModule):
                 orgvdc_networks = vdc_resource.list_orgvdc_network_resources(parent_network)
                 parent = next((network for network in orgvdc_networks if network.get('name') == parent_network), None)
                 if parent:
+                    if ip_scope:
+                        scope = E.IpScope(
+                            E.IsInherited('false'),
+                            E.Gateway(str(ip_network(ip_scope, strict=False).network_address+1)),
+                            E.Netmask(str(ip_network(ip_scope, strict=False).netmask)),
+                            E.Dns1(dns1),
+                            E.Dns2(dns2))
+                        config.append(E.IpScopes(scope))
                     config.append(E.ParentNetwork(href=parent.get('href')))
                 else:
                     raise EntityNotFoundException('Parent network \'%s\' does not exist'.format(parent_network))
@@ -207,7 +228,9 @@ class VappNetwork(VcdAnsibleModule):
                 scope = E.IpScope(
                     E.IsInherited('false'),
                     E.Gateway(str(ip_network(ip_scope, strict=False).network_address+1)),
-                    E.Netmask(str(ip_network(ip_scope, strict=False).netmask)))
+                    E.Netmask(str(ip_network(ip_scope, strict=False).netmask)),
+                    E.Dns1(dns1),
+                    E.Dns2(dns2))
                 config.append(E.IpScopes(scope))
             else:
                 raise VappNetworkCreateError('Either parent_network or ip_scope must be set')
