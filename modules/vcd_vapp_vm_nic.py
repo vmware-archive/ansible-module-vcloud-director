@@ -132,8 +132,8 @@ def vapp_vm_nic_argument_spec():
         vdc=dict(type='str', required=True),
         nic_id=dict(type='int', required=False),
         network=dict(type='str', required=False),
-        ip_allocation_mode=dict(type='str', required=False),
-        ip_address=dict(type='str', required=False),
+        ip_allocation_mode=dict(type='str', required=False, default='DHCP'),
+        ip_address=dict(type='str', required=False, default=''),
         state=dict(choices=VAPP_VM_NIC_STATES, required=False),
         operation=dict(choices=VAPP_VM_NIC_OPERATIONS, required=False),
     )
@@ -156,7 +156,8 @@ class VappVMNIC(VcdAnsibleModule):
     def manage_operations(self):
         operation = self.params.get('operation')
         if operation == "update":
-            return self.update_nic()
+            #return self.update_nic()
+            return self.add_nic("update")
 
     def get_resource(self):
         vapp = self.params.get('vapp')
@@ -173,7 +174,8 @@ class VappVMNIC(VcdAnsibleModule):
 
         return VM(self.client, resource=vapp_vm_resource)
 
-    def add_nic(self):
+    # add_nic used to create a nic (default) or to modify an existing one (op = "update")
+    def add_nic(self, op = "create"):
         vm = self.get_vm()
         nic_id = self.params.get('nic_id')
         network = self.params.get('network')
@@ -183,28 +185,30 @@ class VappVMNIC(VcdAnsibleModule):
         response['changed'] = False
         note = 'added'
         max_id = -1;
+        index = -1
 
         nics = self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
         for nic in nics.NetworkConnection:
             if nic.NetworkConnectionIndex == nic_id:
-                response['warnings'] = 'NIC is already present.'
-                note = 'changed'
+                index = nic_id
+                if op == "create":
+                    response['warnings'] = 'NIC is already present.'
+                    return response
+                else:
+                    note = 'updated'
             if nic.NetworkConnectionIndex > max_id:
                 max_id = int(nic.NetworkConnectionIndex.text)
 
-        if ip_allocation_mode == "MANUAL":
-            nic = E.NetworkConnection(
-                E.NetworkConnectionIndex(max_id+1 if nic_id is None else nic_id),
-                E.IpAddress(ip_address),
-                E.IsConnected(True),
-                E.IpAddressAllocationMode(ip_allocation_mode),
-                network=network)
-        else:
-            nic = E.NetworkConnection(
-                E.NetworkConnectionIndex(max_id+1 if nic_id is None else nic_id),
-                E.IsConnected(True),
-                E.IpAddressAllocationMode(ip_allocation_mode),
-                network=network)
+        if index < 0 and op == "update":
+            response['warnings'] = 'NIC not found.'
+            return response
+
+        nic = E.NetworkConnection(
+            E.NetworkConnectionIndex(max_id+1 if nic_id is None else nic_id),
+            E.IpAddress(ip_address),
+            E.IsConnected(True),
+            E.IpAddressAllocationMode(ip_allocation_mode),
+            network=network)
         nics.NetworkConnection.addnext(nic)
 
         add_nic_task = self.client.put_resource(
@@ -238,6 +242,7 @@ class VappVMNIC(VcdAnsibleModule):
         response['warnings'] = 'VM nic was not found'
         return response
 
+    # update_nic no more used -> replaced by add_nic("update")
     def update_nic(self):
         vm = self.get_vm()
         nic_id = self.params.get('nic_id')
