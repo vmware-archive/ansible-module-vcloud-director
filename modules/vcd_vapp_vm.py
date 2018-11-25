@@ -589,8 +589,17 @@ class VappVM(VcdAnsibleModule):
         vm = self.get_vm()
         nics = self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
         for nic in nics.NetworkConnection:
+            if nic.IsConnected:
+                connected = "true"
+            else:
+                connected = "false"
             response['msg'].append({
                 'index': nic.NetworkConnectionIndex.text,
+                'connected': connected,
+                'allocation mode': nic.IpAddressAllocationMode.text,
+                'ip address': nic.IpAddress.text,
+                'mac address': nic.MACAddress.text,
+                'adapter': nic.NetworkAdapterType.text,
                 'network': nic.get('network')
             })
 
