@@ -2,37 +2,53 @@
 # tasks file for roles/vappvmdisk
 - name: create vapp vm disk
   vcd_vapp_vm_disk:
-     vm_name: "test_vm"
-     vapp: "test_vapp"
-     vdc: "test_vdc"
-     size: "10240"
-     state: "present"
+    vm_name: "Tiny Linux template"
+    vapp: "web2"
+    vdc: "ACME_PAYG"
+    size: "12000"
+    state: "present"
+  register: output
 
 - name: create vapp vm disk output
   debug:
     msg: '{{ output }}'
 
-- name: delete disk
-    vcd_vapp_vm_disk:
-      vm_name: "test_vm"
-      vapp: "test_vapp"
-      vdc: "test_vdc"
-      disk_id: "2001"
-      state: "absent"
+- name: read vapp vm disks
+  vcd_vapp_vm_disk:
+    vm_name: "Tiny Linux template"
+    vapp: "web2"
+    vdc: "ACME_PAYG"
+    operation: "read"
+  register: output
 
-- name: delete disk output
+- name: read vapp vm disks output
   debug:
     msg: '{{ output }}'
 
+
 - name: update disk
-   vcd_vapp_vm_disk:
-      vm_name: "test_vm"
-      vapp: "test_vapp"
-      vdc: "test_vdc"
-      disk_id: "2001"
-      size: "10240"
-      operation: "update"
+  vcd_vapp_vm_disk:
+    vm_name: "Tiny Linux template"
+    vapp: "web2"
+    vdc: "ACME_PAYG"
+    disk_name: "Hard disk 2"
+    size: "13000"
+    operation: "update"
+  register: output
 
 - name: update disk output
   debug:
     msg: '{{ output }}'
+
+- name: delete disk
+  vcd_vapp_vm_disk:
+    vm_name: "Tiny Linux template"
+    vapp: "web2"
+    vdc: "ACME_PAYG"
+    disk_name: 'Hard disk 4'
+    state: "absent"
+  register: output
+
+# - name: delete disk output
+#   debug:
+#     msg: '{{ output }}'

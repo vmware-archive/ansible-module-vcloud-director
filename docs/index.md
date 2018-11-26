@@ -920,6 +920,10 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
      state: "present"
 </code>
 </pre>
+<h4>
+	Note: Name of the new disk and instance id are not in user control. They are going to managed by Pyvcloud internally. But our module manages to return metadata such as new disk name/size/instance id which can be further
+	used.
+</h4>
 <h5>Argument Reference</h5>
 <ul>
 <li>vm_name - (Required) name of the VM</li>
@@ -938,7 +942,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
       vm_name: "test_vm"
       vapp: "test_vapp"
       vdc: "test_vdc"
-      disk_id: "2001"
+      disk_name: "Hard disk 3"
       state: "absent"
 </code>
 </pre>
@@ -947,7 +951,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>vm_name - (Required) name of the VM</li>
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
-<li>disk_id - (Required) instance id of the disk</li>
+<li>disk_name - (Required) name of the disk to be deleted</li>
 <li>state == "absent" (Required) to delete disk</li>
 </ul>
 </ul>
@@ -964,18 +968,40 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
       vm_name: "test_vm"
       vapp: "test_vapp"
       vdc: "test_vdc"
-      disk_id: "2001"
+      disk_name: "Hard disk 3"
       size: "10240"
       operation: "update"
+</code>
+</pre>
+<h4>
+	Note: There are few things to take care before trying to update existing hard disks such as,
+	a) Fast-provisioned hard drives can not be resized.
+	b) Hard drives part of the VM snapshot may not be able to resize.
+</h4>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>disk_name - (Required) name of the disk to be updated</li>
+<li>size - new size of the disk</li>
+<li>operation == "update" (Required) to update disk</li>
+<li>
+<h5>Read vapp vm disk</h5>
+<pre>
+<code>
+ - name: read disks
+   vcd_vapp_vm_disk:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      operation: "read"
 </code>
 </pre>
 <ul>
 <li>vm_name - (Required) name of the VM</li>
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
-<li>disk_id - (Required) instance id of the disk</li>
-<li>size - new size of the disk</li>
-<li>operation == "update" (Required) to update disk</li>
+<li>operation == "read" (Required) to read disks</li>
 </ul>
 </li>
 </ul>
