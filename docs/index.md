@@ -921,7 +921,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </code>
 </pre>
 <h4>
-	Note: Name of the new disk and instance id are not in user control. They are going to managed by Pyvcloud internally. But our module manages to return metadata such as new disk name/size/instance id which can be further
+	Note: Name of the new disk and instance id are not in user control. They are going to be managed by Pyvcloud internally. But our module manages to return metadata such as new disk name/size/instance id which can be further
 	used.
 </h4>
 <h5>Argument Reference</h5>
@@ -974,8 +974,8 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </code>
 </pre>
 <h4>
-	Note: There are few things to take care before trying to update existing hard disks such as,
-	a) Fast-provisioned hard drives can not be resized.
+	Note: There are few things to take care before trying to update existing hard disks such as,<br />
+	a) Fast-provisioned hard drives can not be resized. <br />
 	b) Hard drives part of the VM snapshot may not be able to resize.
 </h4>
 <ul>
