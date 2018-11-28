@@ -64,12 +64,15 @@ options:
         required: false
     ip_scope:
         description:
-            - IP scope for 'isolated' and 'natRouted' network,
+            - IP scope for 'isolated' and 'natRouted' networks,
               if fence_mode is 'natRouted', parent_network is needed
     dns1, dns2:
         description:
             - DNS1 and DNS2 of network
         required: false
+    nat_state, fw_state:
+        description:
+            - state of nat and firewall services for 'natRouted' networks ('enabled'/'disabled')
     state:
         description:
             - state of network ('present'/'absent').
@@ -93,6 +96,7 @@ EXAMPLES = '''
     ip_scope: "192.168.0.0/24"
     parent_network: "org_net"
     fence_mode: "natRouted"
+    nat_state: "disabled"
     dns1: "8.8.8.8"
     state = "present"
 '''
@@ -128,6 +132,8 @@ def vapp_network_argument_spec():
         fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
         parent_network=dict(type='str', required=False, default=None),
         ip_scope=dict(type='str', required=False, default=None),
+        nat_state=dict(type='str', required=False, default='enabled'),
+        fw_state=dict(type='str', required=False, default='enabled'),
         dns1=dict(type='str', required=False, default=''),
         dns2=dict(type='str', required=False, default=''),
         state=dict(choices=VAPP_NETWORK_STATES, required=True),
@@ -197,6 +203,8 @@ class VappNetwork(VcdAnsibleModule):
         ip_scope = self.params.get('ip_scope')
         dns1 = self.params.get('dns1')
         dns2 = self.params.get('dns2')
+        nat_state = self.params.get('nat_state')
+        fw_state = self.params.get('fw_state')
 
         response = dict()
         response['changed'] = False
@@ -235,6 +243,13 @@ class VappNetwork(VcdAnsibleModule):
             else:
                 raise VappNetworkCreateError('Either parent_network or ip_scope must be set')
             config.append(E.FenceMode(fence_mode))
+
+            features = E.Features()
+            if fw_state == 'disabled':
+                features.append(E.FirewallService(E.IsEnabled('false')))
+            if nat_state == 'disabled':
+                features.append(E.NatService(E.IsEnabled('false')))
+            config.append(features)
 
             network_config = E.NetworkConfig(config, networkName=network_name)
             network_config_section.append(network_config)
