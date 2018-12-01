@@ -325,6 +325,7 @@ class VappVM(VcdAnsibleModule):
         network = params.get('network')
         all_eulas_accepted = params.get('all_eulas_accepted')
         power_on = params.get('power_on')
+        deploy = params.get('deploy')
         ip_allocation_mode = params.get('ip_allocation_mode')
         cust_script = params.get('cust_script')
         storage_profile = params.get('storage_profile')
@@ -368,7 +369,7 @@ class VappVM(VcdAnsibleModule):
                 source_vm.InstantiationParams.append(productsection)
                 source_vm.VmGeneralParams.NeedsCustomization = E.NeedsCustomization('true')
 
-            params = E.RecomposeVAppParams(deploy='true', powerOn='true' if power_on else 'false')
+            params = E.RecomposeVAppParams(deploy='true' if deploy else 'false', powerOn='true' if power_on else 'false')
             params.append(source_vm)
             if all_eulas_accepted is not None:
                 params.append(E.AllEULAsAccepted(all_eulas_accepted))
