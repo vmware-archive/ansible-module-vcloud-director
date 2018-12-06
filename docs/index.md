@@ -1443,13 +1443,12 @@ and any objects it contains that are in a state that normally allows removal. Th
 	description: "test vdc description"
 	allocation_model: "AllocationVApp"
 	is_enabled: "false"
-	storage_profiles: "{
-		\"name\" : \"Performance\",
-		\"enabled\"  : true,
-		\"units\" : \"MB\",
-		\"limit\" : 0,
-		\"default\"  : true
-	}"
+	storage_profiles: 
+		- name: "Performance"
+          enabled: true
+          units: "MB"
+          limit: 50000
+          default: true
 	cpu_units : "MHz"
 	cpu_allocated : 0
 	cpu_limit : 0

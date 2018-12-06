@@ -3,16 +3,21 @@
 - name: create vdc
   no_log: False
   vcd_org_vdc:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
+    user: administrator
+    password: VMware1!
+    host: 192.168.110.40
+    org: System
     vdc_name: "{{ vdc_name }}"
     provider_vdc_name: "PVDC1"
     description: "test vdc"
     allocation_model: "AllocationVApp"
     is_enabled: "false"
-    storage_profiles: "{\"name\" : \"Performance\",\"enabled\"  : true, \"units\" : \"MB\", \"limit\" : 0, \"default\" : true }"
+    storage_profiles:
+      - name: "Performance"
+        enabled: true
+        units: "MB"
+        limit: 50000
+        default: true
     state: "present"
   register: output
 
@@ -23,10 +28,10 @@
 - name: update vdc
   no_log: False
   vcd_org_vdc:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
+    user: administrator
+    password: VMware1!
+    host: 192.168.110.40
+    org: System
     vdc_name: "{{ vdc_name }}"
     is_enabled: "true"
     state: "update"
@@ -39,10 +44,10 @@
 - name: delete vdc
   no_log: False
   vcd_org_vdc:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
+    user: administrator
+    password: VMware1!
+    host: 192.168.110.40
+    org: System
     vdc_name: "{{ vdc_name }}"
     state: "absent"
   register: output
