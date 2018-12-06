@@ -1444,7 +1444,7 @@ and any objects it contains that are in a state that normally allows removal. Th
 	allocation_model: "AllocationVApp"
 	is_enabled: "false"
 	storage_profiles: 
-		- name: "Performance"
+	- name: "Performance"
           enabled: true
           units: "MB"
           limit: 50000

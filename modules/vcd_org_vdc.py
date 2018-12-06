@@ -1,4 +1,4 @@
-# Copyright © 2018 VMware, Inc. All Rights Reserved.
+required: false# Copyright © 2018 VMware, Inc. All Rights Reserved.
 # SPDX-License-Identifier: BSD-2-Clause
 
 # !/usr/bin/python
@@ -23,22 +23,27 @@ options:
     user:
         description:
             - vCloud Director user name
+        required: false
         type: str
     password:
         description:
             - vCloud Director user password
+        required: false
         type: str
     host:
         description:
             - vCloud Director host address
+        required: false
         type: str
     org:
         description:
             - Organization name on vCloud Director to access
+        required: false
         type: str
     api_version:
         description:
             - Pyvcloud API version, required as float i.e 31 => 31.0
+        required: false
         type: float
     verify_ssl_certs:
         description:
@@ -57,59 +62,70 @@ options:
     description:
         description:
             - The description of the new org vdc
+        required: false
         type: str
     allocation_model:
         description:
             - The allocation model used by this vDC.
+        required: false
         type: str
         choices: ['AllocationVApp', 'AllocationPool', 'ReservationPool']
     cpu_units:
         description:
             - The cpu units compute capacity allocated to this vDC.
+        required: false
         default: "MHz"
         type: str
     cpu_allocated:
         description:
             - Capacity that is committed to be available
+        required: false
         type: int
         default: 0
     cpu_limit:
         description:
             - Capacity limit relative to the value specified for Allocation
+        required: false
         type: int
         default: 0
     mem_units:
         description:
             - The memory units compute capacity allocated to this vDC.
+        required: false
         default: "MB"
         type: str
     mem_allocated:
         description:
             - Memory capacity that is committed to be available
+        required: false
         type: int
         default: 0
     mem_limit:
         description:
             - Memory capacity limit relative to the value specified for
               Allocation
+        required: false
         type: int
         default: 0
     nic_quota:
         description:
             - Maximum number of virtual NICs allowed in this vDC.
               Defaults to 0, which specifies an unlimited number
+        required: false
         type: int
         default: 0
     network_quota:
         description:
             - Maximum number of network objects that can be deployed in this
               vDC. Defaults to 0, which means no networks can be deployed
+        required: false
         type: int
         default: 0
     vm_quota:
         description:
             - The maximum number of VMs that can be created in this vDC.
               Defaults to 0, which specifies an unlimited number
+        required: false
         type: int
         default: 0
     storage_profiles:
@@ -144,12 +160,14 @@ options:
                         - True if this is default storage profile for this vDC.
                     type: bool
                     required: true
+        required: false
         type: list
     resource_guaranteed_memory:
         description:
             - Percentage of allocated CPU resources guaranteed to vApps
               deployed in this vDC. Value defaults to 1.0 if the element is
               empty
+        required: false
         type: float
         default: 1.0
     resource_guaranteed_cpu:
@@ -157,24 +175,29 @@ options:
             - Percentage of allocated memory resources guaranteed to vApps
               deployed in this vDC. Value defaults to 1.0 if the element is
               empty
+        required: false
         type: float
         default: 1.0
     vcpu_in_mhz:
         description:
             - Specifies the clock frequency, in Megahertz, for any virtual CPU
               that is allocated to a VM
+        required: false
         type: int
     is_thin_provision:
         description:
             - request thin provisioning
+        required: false
         type: bool
     network_pool_name:
         description:
             - Reference to a network pool in the Provider vDC
+        required: false
         type: str
     uses_fast_provisioning:
         description:
             - request fast provisioning
+        required: false
         type: bool
     over_commit_allowed:
         description:
@@ -182,23 +205,27 @@ options:
               AllocationModel is AllocationPool or ReservationPool and the
               ComputeCapacity you specified is greater than what the backing
               Provider VDC can supply. Defaults to "true" if empty or missing
+        required: false
         type: bool
         default: true
     vm_discovery_enabled:
         description:
             - True if discovery of vCenter VMs is enabled for resource pools
               backing this vDC else False
+        required: false
         type: bool
     is_enabled:
         description:
             - True if this vDC is enabled for use by the organization users
               else False
+        required: false
         type: bool
         default: true
     state:
         description:
             - state of new virtual datacenter ('present'/'absent').
             - One from state or operation has to be provided.
+        required: false
         type: str
         choices: ['present', 'absent', 'update']
         default: 'present'
