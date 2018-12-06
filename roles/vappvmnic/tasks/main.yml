@@ -2,37 +2,55 @@
 # tasks file for roles/vappvmnic
 - name: create vapp vm nic
   vcd_vapp_vm_nic:
-     vm_name: "test_vm"
-     vapp: "test_vapp"
-     vdc: "test_vdc"
-     network: "web2Network"
+     vm_name: "Tiny Linux template"
+     vapp: "web2"
+     vdc: "ACME_PAYG"
+     network: "172.16.1.0"
+     ip_allocation_mode: "MANUAL"
+     ip_address: "172.16.1.121"
      state: "present"
+  register: output
 
 - name: create vapp vm nic output
   debug:
     msg: '{{ output }}'
 
+- name: read vapp vm nics
+  vcd_vapp_vm_nic:
+     vm_name: "Tiny Linux template"
+     vapp: "web2"
+     vdc: "ACME_PAYG"
+     operation: "read"
+  register: output
+
+- name: read vapp vm nics output
+  debug:
+    msg: '{{ output }}'
+
 - name: delete nic
-    vcd_vapp_vm_nic:
-      vm_name: "test_vm"
-      vapp: "test_vapp"
-      vdc: "test_vdc"
-      nic_id: "1"
-      state: "absent"
+  vcd_vapp_vm_nic:
+    vm_name: "Tiny Linux template"
+    vapp: "web2"
+    vdc: "ACME_PAYG"
+    nic_id: 5
+    state: "absent"
+  register: output
 
 - name: delete nic output
   debug:
     msg: '{{ output }}'
 
-- name: update nic
-   vcd_vapp_vm_nic:
-      vm_name: "test_vm"
-      vapp: "test_vapp"
-      vdc: "test_vdc"
-      nic_id: "1"
-      network: "web2Network"
-      operation: "update"
+# - name: update nic
+#   vcd_vapp_vm_nic:
+#     vm_name: "Tiny Linux template"
+#     vapp: "web2"
+#     vdc: "ACME_PAYG"
+#     nic_id: 6
+#     ip_allocation_mode: "MANUAL"
+#     ip_address: "172.16.1.122"
+#     operation: "update"
+#   register: output
 
-- name: update nic output
-  debug:
-    msg: '{{ output }}'
+# - name: update nic output
+#   debug:
+#     msg: '{{ output }}'
