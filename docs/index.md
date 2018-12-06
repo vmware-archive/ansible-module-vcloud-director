@@ -1037,6 +1037,8 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
 <li>network - (Required) name of the vApp network to connect</li>
+<li>ip_allocation_mode - (Optional) Set Ip Allocation Mode (DHCP/MANUAL/POOL) for newly added Nic</li>
+<li>ip_address - (Optional) Set Ip Address of newly added Nic</li>
 <li>state == "present" (Required) to create nic</li>
 </ul>
 <li>
@@ -1066,6 +1068,24 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>
 <h3>Vapp VM NIC Operations</h3>
 <ul>
+<h5>Read vapp vm nics</h5>
+<pre>
+<code>
+ - name: update nic
+   vcd_vapp_vm_nic:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      operation: "read"
+</code>
+</pre>
+<ul>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>operation == "read" (Required) to read available Nics</li>
+</ul>
+</li>
 <li>
 <h5>Update vapp vm nic</h5>
 <pre>
