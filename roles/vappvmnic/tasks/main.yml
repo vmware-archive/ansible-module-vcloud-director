@@ -1,5 +1,15 @@
 ---
 # tasks file for roles/vappvmnic
+- name: delete nic
+  vcd_vapp_vm_nic:
+    vm_name: "Tiny Linux template"
+    vapp: "web2"
+    vdc: "ACME_PAYG"
+    nic_ids: 
+      - 2
+    state: "absent"
+  register: output
+
 - name: create vapp vm nic
   vcd_vapp_vm_nic:
      vm_name: "Tiny Linux template"
@@ -27,19 +37,9 @@
   debug:
     msg: '{{ output }}'
 
-- name: delete nic
-  vcd_vapp_vm_nic:
-    vm_name: "Tiny Linux template"
-    vapp: "web2"
-    vdc: "ACME_PAYG"
-    nic_ids: 
-      - 3
-    state: "absent"
-  register: output
-
-- name: delete nic output
-  debug:
-    msg: '{{ output }}'
+# - name: delete nic output
+#   debug:
+#     msg: '{{ output }}'
 
 # - name: update nic
 #   vcd_vapp_vm_nic:

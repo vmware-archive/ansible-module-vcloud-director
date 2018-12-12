@@ -190,17 +190,23 @@ class VappVMNIC(VcdAnsibleModule):
         response = dict()
         response['msg'] = dict()
         response['changed'] = False
+        new_nic_id = None
 
         nics = self.client.get_resource(
             vm.resource.get('href') + '/networkConnectionSection')
-        total_nics = len([int(nic.NetworkConnectionIndex)
-                          for nic in nics.NetworkConnection])
+        nics_connection_indexes = [int(nic.NetworkConnectionIndex) for nic in nics.NetworkConnection]
+        nics_connection_indexes = sorted(nics_connection_indexes)
+        total_nics = len(nics_connection_indexes)
 
         if total_nics >= 10:
             raise Exception(
                 'A new nic can not be added to the VM {0}.'.format(vm_name))
 
-        new_nic_id = total_nics
+        for index, nics_connection_index in enumerate(nics_connection_indexes):
+            new_nic_id = nics_connection_index + 1
+            if index != nics_connection_index:
+                new_nic_id = index
+                break
 
         if ip_allocation_mode in ('DHCP', 'POOL'):
             nic = E.NetworkConnection(
