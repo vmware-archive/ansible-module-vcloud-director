@@ -32,7 +32,8 @@
     vm_name: "Tiny Linux template"
     vapp: "web2"
     vdc: "ACME_PAYG"
-    nic_id: 5
+    nic_ids: 
+      - 3
     state: "absent"
   register: output
 

@@ -26,29 +26,31 @@
     msg: '{{ output }}'
 
 
-- name: update disk
-  vcd_vapp_vm_disk:
-    vm_name: "Tiny Linux template"
-    vapp: "web2"
-    vdc: "ACME_PAYG"
-    disk_name: "Hard disk 2"
-    size: "13000"
-    operation: "update"
-  register: output
+# - name: update disk
+#   vcd_vapp_vm_disk:
+#     vm_name: "Tiny Linux template"
+#     vapp: "web2"
+#     vdc: "ACME_PAYG"
+#     disk_name: "Hard disk 3"
+#     size: "13000"
+#     operation: "update"
+#   register: output
 
-- name: update disk output
-  debug:
-    msg: '{{ output }}'
+# - name: update disk output
+#   debug:
+#     msg: '{{ output }}'
 
 - name: delete disk
   vcd_vapp_vm_disk:
     vm_name: "Tiny Linux template"
     vapp: "web2"
     vdc: "ACME_PAYG"
-    disk_name: 'Hard disk 4'
+    disks:
+      - 'Hard disk 3'
+      - 'Hard disk 4'
     state: "absent"
   register: output
 
-# - name: delete disk output
-#   debug:
-#     msg: '{{ output }}'
+- name: delete disk output
+  debug:
+    msg: '{{ output }}'

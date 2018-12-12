@@ -46,6 +46,10 @@ options:
         description:
             - NIC ID
         required: false
+    nic_ids:
+        description:
+            - List of NIC IDs
+        required: false
     network:
         description:
             - VApp network name
@@ -130,6 +134,7 @@ def vapp_vm_nic_argument_spec():
         vapp=dict(type='str', required=True),
         vdc=dict(type='str', required=True),
         nic_id=dict(type='int', required=False),
+        nic_ids=dict(type='list', required=False),
         ip_allocation_mode=dict(type='str', required=False, default='DHCP'),
         ip_address=dict(type='str', required=False, default=''),
         network=dict(type='str', required=False),
@@ -186,11 +191,14 @@ class VappVMNIC(VcdAnsibleModule):
         response['msg'] = dict()
         response['changed'] = False
 
-        nics = self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
-        total_nics = len([int(nic.NetworkConnectionIndex) for nic in nics.NetworkConnection])
+        nics = self.client.get_resource(
+            vm.resource.get('href') + '/networkConnectionSection')
+        total_nics = len([int(nic.NetworkConnectionIndex)
+                          for nic in nics.NetworkConnection])
 
         if total_nics >= 10:
-            raise Exception('A new nic can not be added to the VM {0}.'.format(vm_name))
+            raise Exception(
+                'A new nic can not be added to the VM {0}.'.format(vm_name))
 
         new_nic_id = total_nics
 
@@ -198,7 +206,7 @@ class VappVMNIC(VcdAnsibleModule):
             nic = E.NetworkConnection(
                 E.NetworkConnectionIndex(new_nic_id),
                 E.IsConnected(True),
-                E.IpAddressAllocationMode("DHCP"),
+                E.IpAddressAllocationMode(ip_allocation_mode),
                 network=network)
         else:
             nic = E.NetworkConnection(
@@ -224,25 +232,29 @@ class VappVMNIC(VcdAnsibleModule):
 
     def delete_nic(self):
         vm = self.get_vm()
-        nic_id = self.params.get('nic_id')
+        nic_ids = self.params.get('nic_ids')
         response = dict()
         response['changed'] = False
 
         nics = self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
-        nic_indexs = [nic.NetworkConnectionIndex for nic in nics.NetworkConnection]
-
-        if nic_id not in nic_indexs:
-            EntityNotFoundException('Can\'t find the specified VM nic')
 
         for nic in nics.NetworkConnection:
-            if nic.NetworkConnectionIndex == nic_id:
+            if nic.NetworkConnectionIndex in nic_ids:
                 nics.remove(nic)
+                nic_ids.remove(nic.NetworkConnectionIndex)
+
+        if len(nic_ids) > 0:
+            nic_ids = [str(nic_id) for nic_id in nic_ids]
+            err_msg = 'Can\'t find the specified VM nic(s) {0}'
+            err_msg = err_msg.format(','.join(nic_ids))
+
+            raise EntityNotFoundException(err_msg)
 
         remove_nic_task = self.client.put_resource(vm.resource.get(
             'href') + '/networkConnectionSection', nics,
             EntityType.NETWORK_CONNECTION_SECTION.value)
         self.execute_task(remove_nic_task)
-        response['msg'] = 'VM nic {0} has been deleted.'.format(nic_id)
+        response['msg'] = 'VM nic(s) has been deleted.'
         response['changed'] = True
 
         return response
@@ -296,7 +308,8 @@ class VappVMNIC(VcdAnsibleModule):
         response['msg'] = defaultdict(dict)
         response['changed'] = False
 
-        nics = self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
+        nics = self.client.get_resource(
+            vm.resource.get('href') + '/networkConnectionSection')
 
         for nic in nics.NetworkConnection:
             meta = defaultdict(dict)

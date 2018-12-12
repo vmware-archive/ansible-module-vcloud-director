@@ -46,6 +46,10 @@ options:
         description:
             - Disk Name
         required: false
+    disks:
+        description:
+            - List of Disk Names
+        required: false
     vm_name:
         description:
             - VM name
@@ -119,6 +123,7 @@ def vapp_vm_disk_argument_spec():
         vapp=dict(type='str', required=True),
         vdc=dict(type='str', required=True),
         disk_name=dict(type='str', required=False),
+        disks=dict(type='list', required=False),
         size=dict(type='int', required=False),
         state=dict(choices=VAPP_VM_DISK_STATES, required=False),
         operation=dict(choices=VAPP_VM_DISK_OPERATIONS, required=False),
@@ -253,29 +258,28 @@ class VappVMDisk(VcdAnsibleModule):
 
     def delete_disk(self):
         vm = self.get_vm()
-        disk_name = self.params.get('disk_name')
+        disks_to_remove = self.params.get('disks')
         response = dict()
         response['changed'] = False
-        response['msg'] = ''
-        found = False
 
         disks = self.client.get_resource(vm.resource.get('href') + '/virtualHardwareSection/disks')
-        for disk in disks.Item:
-            if disk['{' + NSMAP['rasd'] + '}ElementName'] == disk_name:
-                found = True
-                disks.remove(disk)
 
-        if not found:
-            err = 'VM disk with name {0} was not found.'
-            err = err.format(disk_name)
+        for disk in disks.Item:
+            if disk['{' + NSMAP['rasd'] + '}ElementName'] in disks_to_remove:
+                disks.remove(disk)
+                disks_to_remove.remove(disk['{' + NSMAP['rasd'] + '}ElementName'])
+
+        if len(disks_to_remove) > 0:
+            err = 'VM disk(s) with name {0} was not found.'
+            err = err.format(','.join(disks_to_remove))
+
             raise EntityNotFoundException(err)
 
         remove_disk_task = self.client.put_resource(vm.resource.get(
-            'href') + '/virtualHardwareSection/disks', disks, EntityType.RASD_ITEMS_LIST.value)
+            'href') + '/virtualHardwareSection/disks',
+            disks, EntityType.RASD_ITEMS_LIST.value)
         self.execute_task(remove_disk_task)
-
-        msg = 'VM disk with name {0} has been deleted.'
-        response['msg'] = msg.format(disk_name)
+        response['msg'] = 'VM disk(s) has been deleted.'
         response['changed'] = True
 
         return response
