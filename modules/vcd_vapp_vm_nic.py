@@ -135,8 +135,8 @@ def vapp_vm_nic_argument_spec():
         vdc=dict(type='str', required=True),
         nic_id=dict(type='int', required=False),
         nic_ids=dict(type='list', required=False),
-        ip_allocation_mode=dict(type='str', required=False, default='DHCP'),
-        ip_address=dict(type='str', required=False, default=''),
+        ip_allocation_mode=dict(type='str', required=False),
+        ip_address=dict(type='str', required=False,),
         network=dict(type='str', required=False),
         state=dict(choices=VAPP_VM_NIC_STATES, required=False),
         operation=dict(choices=VAPP_VM_NIC_OPERATIONS, required=False),
@@ -170,8 +170,7 @@ class VappVMNIC(VcdAnsibleModule):
         vdc = self.params.get('vdc')
         org_resource = Org(self.client, resource=self.client.get_org())
         vdc_resource = VDC(self.client, resource=org_resource.get_vdc(vdc))
-        vapp_resource_href = vdc_resource.get_resource_href(
-            name=vapp, entity_type=EntityType.VAPP)
+        vapp_resource_href = vdc_resource.get_resource_href(name=vapp, entity_type=EntityType.VAPP)
         vapp_resource = self.client.get_resource(vapp_resource_href)
 
         return vapp_resource
@@ -181,32 +180,35 @@ class VappVMNIC(VcdAnsibleModule):
 
         return VM(self.client, resource=vapp_vm_resource)
 
+    def get_vm_nics(self):
+        vm = self.get_vm()
+        return self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
+
     def add_nic(self):
+        '''
+            Error - More than 10 Nics are not permissible in vCD
+        '''
         vm = self.get_vm()
         vm_name = self.params.get('vm_name')
         network = self.params.get('network')
         ip_address = self.params.get('ip_address')
         ip_allocation_mode = self.params.get('ip_allocation_mode')
-        response = dict()
-        response['msg'] = dict()
+        uri = vm.resource.get('href') + '/networkConnectionSection'
+        response = defaultdict(dict)
         response['changed'] = False
         new_nic_id = None
 
-        nics = self.client.get_resource(
-            vm.resource.get('href') + '/networkConnectionSection')
-        nics_connection_indexes = [int(nic.NetworkConnectionIndex) for nic in nics.NetworkConnection]
-        nics_connection_indexes = sorted(nics_connection_indexes)
-        total_nics = len(nics_connection_indexes)
-
-        if total_nics >= 10:
-            raise Exception(
-                'A new nic can not be added to the VM {0}.'.format(vm_name))
-
-        for index, nics_connection_index in enumerate(nics_connection_indexes):
-            new_nic_id = nics_connection_index + 1
-            if index != nics_connection_index:
+        nics = self.get_vm_nics()
+        nics_indexes = [int(nic.NetworkConnectionIndex) for nic in nics.NetworkConnection]
+        nics_indexes.sort()
+        for index, nic_index in enumerate(nics_indexes):
+            new_nic_id = nic_index + 1
+            if index != nic_index:
                 new_nic_id = index
                 break
+
+        if ip_allocation_mode not in ('DHCP', 'POOL', 'MANUAL'):
+            raise Exception('IpAllocationMode should be one of DHCP/POOL/MANUAL')
 
         if ip_allocation_mode in ('DHCP', 'POOL'):
             nic = E.NetworkConnection(
@@ -215,6 +217,8 @@ class VappVMNIC(VcdAnsibleModule):
                 E.IpAddressAllocationMode(ip_allocation_mode),
                 network=network)
         else:
+            if not ip_address:
+                raise Exception('IpAddress is missing.')
             nic = E.NetworkConnection(
                 E.NetworkConnectionIndex(new_nic_id),
                 E.IpAddress(ip_address),
@@ -223,12 +227,10 @@ class VappVMNIC(VcdAnsibleModule):
                 network=network)
 
         nics.NetworkConnection.addnext(nic)
-        add_nic_task = self.client.put_resource(vm.resource.get(
-            'href') + '/networkConnectionSection', nics,
-            EntityType.NETWORK_CONNECTION_SECTION.value)
+        add_nic_task = self.client.put_resource(uri, nics, EntityType.NETWORK_CONNECTION_SECTION.value)
         self.execute_task(add_nic_task)
         response['msg'] = {
-            'nic_id': new_nic_id,
+            'nic_id': new_nic_id, 
             'ip_allocation_mode': ip_allocation_mode,
             'ip_address': ip_address
         }
@@ -236,14 +238,77 @@ class VappVMNIC(VcdAnsibleModule):
 
         return response
 
+    def update_nic(self):
+        '''
+            Following update scenarios are covered
+            1. MANUAL mode to DHCP
+            2. Update IP address in MANUAL mode 
+        '''
+        vm = self.get_vm()
+        nic_id = self.params.get('nic_id')
+        network = self.params.get('network')
+        ip_address = self.params.get('ip_address')
+        ip_allocation_mode = self.params.get('ip_allocation_mode')
+        uri = vm.resource.get('href') + '/networkConnectionSection'
+        response = defaultdict(dict)
+        response['changed'] = False
+
+        nics = self.get_vm_nics()
+        nic_indexs = [nic.NetworkConnectionIndex for nic in nics.NetworkConnection]
+        if nic_id not in nic_indexs:
+            raise EntityNotFoundException('Can\'t find the specified VM nic')
+        nic_to_update = nic_indexs.index(nic_id)
+
+        if network:
+            nics.NetworkConnection[nic_to_update].network = network
+            response['changed'] = True
+
+        if ip_allocation_mode:
+            allocation_mode_element = E.IpAddressAllocationMode(ip_allocation_mode)
+            nics.NetworkConnection[nic_to_update].IpAddressAllocationMode = allocation_mode_element
+            response['changed'] = True
+
+        if ip_address:
+            nics.NetworkConnection[nic_to_update].IpAddress = E.IpAddress(ip_address)
+            response['changed'] = True
+
+        if response['changed']:
+            update_nic_task = self.client.put_resource(uri, nics, EntityType.NETWORK_CONNECTION_SECTION.value)
+            self.execute_task(update_nic_task)
+            response['msg'] = 'Vapp VM nic has been updated.'
+
+        return response
+
+    def read_nics(self):
+        vm = self.get_vm()
+        response = defaultdict(dict)
+        response['changed'] = False
+
+        nics = self.get_vm_nics()
+        for nic in nics.NetworkConnection:
+            meta = defaultdict(dict)
+            nic_id = str(nic.NetworkConnectionIndex)
+            meta['MACAddress'] = str(nic.MACAddress)
+            meta['IsConnected'] = str(nic.IsConnected)
+            meta['NetworkAdapterType'] = str(nic.NetworkAdapterType)
+            meta['NetworkConnectionIndex'] = str(nic.NetworkConnectionIndex)
+            meta['IpAddressAllocationMode'] = str(nic.IpAddressAllocationMode)
+
+            if hasattr(nic, 'IpAddress'):
+                meta['IpAddress'] = str(nic.IpAddress)
+
+            response['msg'][nic_id] = meta
+
+        return response
+
     def delete_nic(self):
         vm = self.get_vm()
         nic_ids = self.params.get('nic_ids')
-        response = dict()
+        response = defaultdict(dict)
         response['changed'] = False
+        uri = vm.resource.get('href') + '/networkConnectionSection'
 
-        nics = self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
-
+        nics = self.get_vm_nics()
         for nic in nics.NetworkConnection:
             if nic.NetworkConnectionIndex in nic_ids:
                 nics.remove(nic)
@@ -251,98 +316,13 @@ class VappVMNIC(VcdAnsibleModule):
 
         if len(nic_ids) > 0:
             nic_ids = [str(nic_id) for nic_id in nic_ids]
-            err_msg = 'Can\'t find the specified VM nic(s) {0}'
-            err_msg = err_msg.format(','.join(nic_ids))
-
+            err_msg = 'Can\'t find the specified VM nic(s) {0}'.format(','.join(nic_ids))
             raise EntityNotFoundException(err_msg)
 
-        remove_nic_task = self.client.put_resource(vm.resource.get(
-            'href') + '/networkConnectionSection', nics,
-            EntityType.NETWORK_CONNECTION_SECTION.value)
+        remove_nic_task = self.client.put_resource(uri, nics, EntityType.NETWORK_CONNECTION_SECTION.value)
         self.execute_task(remove_nic_task)
         response['msg'] = 'VM nic(s) has been deleted.'
         response['changed'] = True
-
-        return response
-
-    # TODO
-    # def update_nic(self):
-    #     vm = self.get_vm()
-    #     nic_id = self.params.get('nic_id')
-    #     network = self.params.get('network')
-    #     ip_allocation_mode = self.params.get('ip_allocation_mode')
-    #     ip_address = self.params.get('ip_address')
-    #     response = dict()
-    #     response['changed'] = False
-
-    #     nics = self.client.get_resource(
-    #         vm.resource.get('href') + '/networkConnectionSection')
-    #     nic_indexs = [
-    #         nic.NetworkConnectionIndex for nic in nics.NetworkConnection]
-
-    #     if nic_id not in nic_indexs:
-    #         EntityNotFoundException('Can\'t find the specified VM nic')
-
-    #     if network:
-    #         nics.NetworkConnection[nic_id].set('network', network)
-    #         response['changed'] = True
-
-    #     if ip_allocation_mode:
-    #         nics.NetworkConnection[nic_id].set(
-    #             'IpAddressAllocationMode', ip_allocation_mode)
-    #         response['changed'] = True
-
-    #     if ip_address:
-    #         nics.NetworkConnection[nic_id].set('IpAddress', ip_address)
-    #         response['changed'] = True
-
-    #     if response['changed']:
-    #         # TODO: power_on
-    #         power_off_task = vm.power_off()
-    #         self.execute_task(power_off_task)
-    #         update_nic_task = self.client.put_resource(vm.resource.get('href') + '/networkConnectionSection',
-    #                                                    nics, EntityType.NETWORK_CONNECTION_SECTION.value)
-
-    #         self.execute_task(update_nic_task)
-    #         response['msg'] = 'Vapp VM nic has been updated.'
-
-    #     return response
-
-    def read_nics(self):
-        vm = self.get_vm()
-        response = dict()
-        response['msg'] = defaultdict(dict)
-        response['changed'] = False
-
-        nics = self.client.get_resource(
-            vm.resource.get('href') + '/networkConnectionSection')
-
-        for nic in nics.NetworkConnection:
-            meta = defaultdict(dict)
-            nic_id = str(nic.NetworkConnectionIndex)
-            for element in nic.iterchildren():
-                meta['nic_id'] = nic_id
-                if 'AllocationMode' in element.tag:
-                    meta['IpAddressAllocationMode'] = element.text
-                    continue
-
-                if 'IpAddress' in element.tag:
-                    meta['ip_address'] = element.text
-                    continue
-
-                if 'IsConnected' in element.tag:
-                    meta['IsConnected'] = element.text
-                    continue
-
-                if 'MACAddress' in element.tag:
-                    meta['MACAddress'] = element.text
-                    continue
-
-                if 'NetworkAdapterType' in element.tag:
-                    meta['NetworkAdapterType'] = element.text
-                    continue
-
-            response['msg'][nic_id] = meta
 
         return response
 
