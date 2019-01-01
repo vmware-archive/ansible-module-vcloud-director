@@ -348,9 +348,10 @@ class VappVM(VcdAnsibleModule):
                 'network': network,
                 'cust_script': cust_script
             }
-            if storage_profile!='':
-                spec['storage_profile'] = self.get_storage_profile(storage_profile)
+
             spec = {k: v for k, v in spec.items() if v}
+            if storage_profile != '':
+                spec['storage_profile'] = self.get_storage_profile(storage_profile)
             source_vm = self.vapp.to_sourced_item(spec)
 
             # Check the source vm if we need to inject OVF properties.
