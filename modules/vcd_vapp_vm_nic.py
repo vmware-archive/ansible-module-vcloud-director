@@ -182,6 +182,7 @@ class VappVMNIC(VcdAnsibleModule):
 
     def get_vm_nics(self):
         vm = self.get_vm()
+
         return self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
 
     def add_nic(self):
@@ -189,7 +190,6 @@ class VappVMNIC(VcdAnsibleModule):
             Error - More than 10 Nics are not permissible in vCD
         '''
         vm = self.get_vm()
-        vm_name = self.params.get('vm_name')
         network = self.params.get('network')
         ip_address = self.params.get('ip_address')
         ip_allocation_mode = self.params.get('ip_allocation_mode')
@@ -230,7 +230,7 @@ class VappVMNIC(VcdAnsibleModule):
         add_nic_task = self.client.put_resource(uri, nics, EntityType.NETWORK_CONNECTION_SECTION.value)
         self.execute_task(add_nic_task)
         response['msg'] = {
-            'nic_id': new_nic_id, 
+            'nic_id': new_nic_id,
             'ip_allocation_mode': ip_allocation_mode,
             'ip_address': ip_address
         }
@@ -242,7 +242,7 @@ class VappVMNIC(VcdAnsibleModule):
         '''
             Following update scenarios are covered
             1. MANUAL mode to DHCP
-            2. Update IP address in MANUAL mode 
+            2. Update IP address in MANUAL mode
         '''
         vm = self.get_vm()
         nic_id = self.params.get('nic_id')
@@ -260,7 +260,7 @@ class VappVMNIC(VcdAnsibleModule):
         nic_to_update = nic_indexs.index(nic_id)
 
         if network:
-            nics.NetworkConnection[nic_to_update].network = network
+            nics.NetworkConnection[nic_to_update].set('network', network)
             response['changed'] = True
 
         if ip_allocation_mode:
@@ -280,7 +280,6 @@ class VappVMNIC(VcdAnsibleModule):
         return response
 
     def read_nics(self):
-        vm = self.get_vm()
         response = defaultdict(dict)
         response['changed'] = False
 

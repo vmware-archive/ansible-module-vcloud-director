@@ -47,7 +47,59 @@
     vapp: "web2"
     vdc: "ACME_PAYG"
     nic_id: 3
+    network: "test_network"
+    operation: "update"
+  register: output
+
+- name: update nic output
+  debug:
+    msg: '{{ output }}'
+
+- name: read vapp vm nics
+  vcd_vapp_vm_nic:
+     vm_name: "Tiny Linux template"
+     vapp: "web2"
+     vdc: "ACME_PAYG"
+     operation: "read"
+  register: output
+
+- name: read vapp vm nics output
+  debug:
+    msg: '{{ output }}'
+
+- name: update nic
+  vcd_vapp_vm_nic:
+    vm_name: "Tiny Linux template"
+    vapp: "web2"
+    vdc: "ACME_PAYG"
+    nic_id: 3
     ip_allocation_mode: "DHCP"
+    operation: "update"
+  register: output
+
+- name: update nic output
+  debug:
+    msg: '{{ output }}'
+
+- name: read vapp vm nics
+  vcd_vapp_vm_nic:
+     vm_name: "Tiny Linux template"
+     vapp: "web2"
+     vdc: "ACME_PAYG"
+     operation: "read"
+  register: output
+
+- name: read vapp vm nics output
+  debug:
+    msg: '{{ output }}'
+
+- name: update nic
+  vcd_vapp_vm_nic:
+    vm_name: "Tiny Linux template"
+    vapp: "web2"
+    vdc: "ACME_PAYG"
+    nic_id: 3
+    network: "172.16.1.0"
     operation: "update"
   register: output
 
