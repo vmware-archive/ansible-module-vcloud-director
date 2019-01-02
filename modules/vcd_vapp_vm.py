@@ -304,7 +304,8 @@ class VappVM(VcdAnsibleModule):
     def get_storage_profile(self, profile_name):
         target_vdc = self.params.get('target_vdc')
         org_resource = Org(self.client, resource=self.client.get_org())
-        vdc_resource = VDC(self.client, resource=org_resource.get_vdc(target_vdc))
+        vdc_resource = VDC(
+            self.client, resource=org_resource.get_vdc(target_vdc))
 
         return vdc_resource.get_storage_profile(profile_name)
 
@@ -351,7 +352,8 @@ class VappVM(VcdAnsibleModule):
 
             spec = {k: v for k, v in spec.items() if v}
             if storage_profile != '':
-                spec['storage_profile'] = self.get_storage_profile(storage_profile)
+                spec['storage_profile'] = self.get_storage_profile(
+                    storage_profile)
             source_vm = self.vapp.to_sourced_item(spec)
 
             # Check the source vm if we need to inject OVF properties.
@@ -360,17 +362,20 @@ class VappVM(VcdAnsibleModule):
             productsection = vm.find('ovf:ProductSection', NSMAP)
             if productsection is not None:
                 for prop in productsection.iterfind('ovf:Property', NSMAP):
-                    if properties and prop.get('{'+NSMAP['ovf']+'}key') in properties:
+                    if properties and prop.get('{' + NSMAP['ovf'] + '}key') in properties:
                         val = prop.find('ovf:Value', NSMAP)
                         if val:
                             prop.remove(val)
                         val = E_OVF.Value()
-                        val.set('{'+NSMAP['ovf']+'}value', properties[prop.get('{'+NSMAP['ovf']+'}key')])
+                        val.set(
+                            '{' + NSMAP['ovf'] + '}value', properties[prop.get('{' + NSMAP['ovf'] + '}key')])
                         prop.append(val)
                 source_vm.InstantiationParams.append(productsection)
-                source_vm.VmGeneralParams.NeedsCustomization = E.NeedsCustomization('true')
+                source_vm.VmGeneralParams.NeedsCustomization = E.NeedsCustomization(
+                    'true')
 
-            params = E.RecomposeVAppParams(deploy='true' if deploy else 'false', powerOn='true' if power_on else 'false')
+            params = E.RecomposeVAppParams(
+                deploy='true' if deploy else 'false', powerOn='true' if power_on else 'false')
             params.append(source_vm)
             if all_eulas_accepted is not None:
                 params.append(E.AllEULAsAccepted(all_eulas_accepted))
@@ -379,11 +384,11 @@ class VappVM(VcdAnsibleModule):
                 self.get_target_resource(), RelationType.RECOMPOSE,
                 EntityType.RECOMPOSE_VAPP_PARAMS.value, params)
             self.execute_task(add_vms_task)
-            response['msg'] = 'Vapp VM {} has been created.'.format(
+            response['msg'] = 'VM {} has been created.'.format(
                 target_vm_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'Vapp VM {} is already present.'.format(
+            response['warnings'] = 'VM {} is already present.'.format(
                 target_vm_name)
 
         return response
@@ -396,12 +401,12 @@ class VappVM(VcdAnsibleModule):
         try:
             self.get_vm()
         except EntityNotFoundException:
-            response['warnings'] = 'Vapp VM {} is not present.'.format(vm_name)
+            response['warnings'] = 'VM {} is not present.'.format(vm_name)
         else:
             self.undeploy_vm()
             delete_vms_task = self.vapp.delete_vms([vm_name])
             self.execute_task(delete_vms_task)
-            response['msg'] = 'Vapp VM {} has been deleted.'.format(vm_name)
+            response['msg'] = 'VM {} has been deleted.'.format(vm_name)
             response['changed'] = True
 
         return response
@@ -419,7 +424,7 @@ class VappVM(VcdAnsibleModule):
             self.update_vm_memory()
             response['changed'] = True
 
-        response['msg'] = 'Vapp VM {} has been updated.'.format(vm_name)
+        response['msg'] = 'VM {} has been updated.'.format(vm_name)
 
         return response
 
@@ -445,15 +450,14 @@ class VappVM(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        try:
-            vm = self.get_vm()
+        vm = self.get_vm()
+        if not vm.is_powered_on():
             power_on_task = vm.power_on()
             self.execute_task(power_on_task)
-            response['msg'] = 'Vapp VM {} has been powered on.'.format(vm_name)
+            response['msg'] = 'VM {} has been powered on.'.format(vm_name)
             response['changed'] = True
-        except OperationNotSupportedException:
-            response['warnings'] = 'Vapp VM {} is already powered on.'.format(
-                vm_name)
+        else:
+            response['warnings'] = 'VM {} is powered on.'.format(vm_name)
 
         return response
 
@@ -462,16 +466,14 @@ class VappVM(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        try:
-            vm = self.get_vm()
+        vm = self.get_vm()
+        if not vm.is_powered_off():
             power_off_task = vm.power_off()
             self.execute_task(power_off_task)
-            response['msg'] = 'Vapp VM {} has been powered off.'.format(
-                vm_name)
+            response['msg'] = 'VM {} has been powered off.'.format(vm_name)
             response['changed'] = True
-        except OperationNotSupportedException:
-            response['warnings'] = 'Vapp VM {} is already powered off.'.format(
-                vm_name)
+        else:
+            response['warnings'] = 'VM {} is powered off.'.format(vm_name)
 
         return response
 
@@ -482,7 +484,7 @@ class VappVM(VcdAnsibleModule):
 
         vm = self.get_vm()
         vm.reload()
-        response['msg'] = 'Vapp VM {} has been reloaded.'.format(vm_name)
+        response['msg'] = 'VM {} has been reloaded.'.format(vm_name)
         response['changed'] = True
 
         return response
@@ -492,15 +494,14 @@ class VappVM(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        try:
-            vm = self.get_vm()
+        vm = self.get_vm()
+        if not vm.is_deployed():
             deploy_vm_task = vm.deploy()
             self.execute_task(deploy_vm_task)
-            response['msg'] = 'Vapp VM {} has been deployed.'.format(vm_name)
+            response['msg'] = 'VM {} has been deployed.'.format(vm_name)
             response['changed'] = True
-        except OperationNotSupportedException:
-            response['warnings'] = 'Vapp VM {} is already deployed.'.format(
-                vm_name)
+        else:
+            response['warnings'] = 'VM {} is already deployed.'.format(vm_name)
 
         return response
 
@@ -509,14 +510,14 @@ class VappVM(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        try:
-            vm = self.get_vm()
+        vm = self.get_vm()
+        if vm.is_deployed():
             undeploy_vm_task = vm.undeploy()
             self.execute_task(undeploy_vm_task)
-            response['msg'] = 'Vapp VM {} has been undeployed.'.format(vm_name)
+            response['msg'] = 'VM {} has been undeployed.'.format(vm_name)
             response['changed'] = True
-        except OperationNotSupportedException:
-            response['warnings'] = 'Vapp VM {} is already undeployed.'.format(
+        else:
+            response['warnings'] = 'VM {} is already undeployed.'.format(
                 vm_name)
 
         return response
@@ -527,14 +528,15 @@ class VappVM(VcdAnsibleModule):
         response['msg'] = []
 
         vm = self.get_vm()
-        disks = self.client.get_resource(vm.resource.get('href') + '/virtualHardwareSection/disks')
+        disks = self.client.get_resource(vm.resource.get(
+            'href') + '/virtualHardwareSection/disks')
         for disk in disks.Item:
-            if disk['{'+NSMAP['rasd']+'}ResourceType'] == 17:
+            if disk['{' + NSMAP['rasd'] + '}ResourceType'] == 17:
                 response['msg'].append({
-                    'id': disk['{'+NSMAP['rasd']+'}InstanceID'].text,
-                    'name': disk['{'+NSMAP['rasd']+'}ElementName'].text,
-                    'description': disk['{'+NSMAP['rasd']+'}Description'].text,
-                    'size': disk['{'+NSMAP['rasd']+'}HostResource'].get('{'+NSMAP['vcloud']+'}capacity')
+                    'id': disk['{' + NSMAP['rasd'] + '}InstanceID'].text,
+                    'name': disk['{' + NSMAP['rasd'] + '}ElementName'].text,
+                    'description': disk['{' + NSMAP['rasd'] + '}Description'].text,
+                    'size': disk['{' + NSMAP['rasd'] + '}HostResource'].get('{' + NSMAP['vcloud'] + '}capacity')
                 })
 
         return response
@@ -545,7 +547,8 @@ class VappVM(VcdAnsibleModule):
         response['msg'] = []
 
         vm = self.get_vm()
-        nics = self.client.get_resource(vm.resource.get('href') + '/networkConnectionSection')
+        nics = self.client.get_resource(
+            vm.resource.get('href') + '/networkConnectionSection')
         for nic in nics.NetworkConnection:
             response['msg'].append({
                 'index': nic.NetworkConnectionIndex.text,
