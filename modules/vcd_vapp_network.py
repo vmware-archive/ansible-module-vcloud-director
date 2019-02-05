@@ -93,16 +93,16 @@ msg: success/failure message corresponding to vapp network state
 changed: true if resource has been changed else false
 '''
 
-from ipaddress import ip_network
 from lxml import etree
+from ipaddress import ip_network
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
-from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import E
-from pyvcloud.vcd.client import E_OVF
-from pyvcloud.vcd.client import EntityType
-from pyvcloud.vcd.client import FenceMode
+from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import NSMAP
+from pyvcloud.vcd.client import E_OVF
+from pyvcloud.vcd.client import FenceMode
+from pyvcloud.vcd.client import EntityType
 from pyvcloud.vcd.client import RelationType
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
@@ -176,7 +176,7 @@ class VappNetwork(VcdAnsibleModule):
             self.execute_task(delete_network_task)
             response['msg'] = 'Vapp Network {} has been deleted.'.format(network_name)
             response['changed'] = True
-            
+
         return response
 
     def add_network(self):

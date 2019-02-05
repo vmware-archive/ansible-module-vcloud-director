@@ -99,6 +99,8 @@
     vapp: "web2"
     vdc: "ACME_PAYG"
     nic_id: 3
+    ip_allocation_mode: "MANUAL"
+    ip_address: "172.16.1.122"
     network: "172.16.1.0"
     operation: "update"
   register: output

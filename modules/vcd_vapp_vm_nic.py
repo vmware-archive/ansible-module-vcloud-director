@@ -243,6 +243,7 @@ class VappVMNIC(VcdAnsibleModule):
             Following update scenarios are covered
             1. MANUAL mode to DHCP
             2. Update IP address in MANUAL mode
+            3. DHCP to MANUAL mode
         '''
         vm = self.get_vm()
         nic_id = self.params.get('nic_id')
@@ -269,8 +270,17 @@ class VappVMNIC(VcdAnsibleModule):
             response['changed'] = True
 
         if ip_address:
-            nics.NetworkConnection[nic_to_update].IpAddress = E.IpAddress(ip_address)
             response['changed'] = True
+            if hasattr(nics.NetworkConnection[nic_to_update], 'IpAddress'):
+                nics.NetworkConnection[nic_to_update].IpAddress = E.IpAddress(ip_address)
+            else:
+                network = nics.NetworkConnection[nic_to_update].get('network')
+                nics.NetworkConnection[nic_to_update] = E.NetworkConnection(
+                    E.NetworkConnectionIndex(nic_id),
+                    E.IpAddress(ip_address),
+                    E.IsConnected(True),
+                    E.IpAddressAllocationMode(ip_allocation_mode),
+                    network=network)
 
         if response['changed']:
             update_nic_task = self.client.put_resource(uri, nics, EntityType.NETWORK_CONNECTION_SECTION.value)
