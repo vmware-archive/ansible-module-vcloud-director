@@ -1,4 +1,4 @@
-required: false# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
 # SPDX-License-Identifier: BSD-2-Clause
 
 # !/usr/bin/python
@@ -164,7 +164,7 @@ options:
         type: list
     resource_guaranteed_memory:
         description:
-            - Percentage of allocated CPU resources guaranteed to vApps
+            - Percentage of allocated memory resources guaranteed to vApps
               deployed in this vDC. Value defaults to 1.0 if the element is
               empty
         required: false
@@ -172,7 +172,7 @@ options:
         default: 1.0
     resource_guaranteed_cpu:
         description:
-            - Percentage of allocated memory resources guaranteed to vApps
+            - Percentage of allocated CPU resources guaranteed to vApps
               deployed in this vDC. Value defaults to 1.0 if the element is
               empty
         required: false
