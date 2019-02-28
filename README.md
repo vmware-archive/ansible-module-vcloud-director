@@ -10,7 +10,7 @@ ansible-module-vcloud-director is a set of ansible modules that manage a VMware 
 ### Prerequisites
 
 * The [pyvcloud](https://github.com/vmware/pyvcloud) module is required. 
-* vCD Ansible modules require Python 3.
+* vCD Ansible modules require Python 3.6 or above.
 
 ### Build & Run
 
