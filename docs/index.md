@@ -20,12 +20,12 @@ layout: default
 	env_host: VCD_URL            ## VCD Instance URL
 	env_org: VCD_ORG             ## VCD ORG to login
 	env_api_version: PYVCLOUD_API_VERSION
-	env_verify_ssl_certs: False
+	env_verify_ssl_certs: false
 
 </code>
 </pre>
 <p>
-VCD Ansible Modules prefer following two ways to set login variables for vCloud Director instance. 
+VCD Ansible Modules prefer following two ways to set login variables for vCloud Director instance.
 </p>
 <ol>
 <li>
@@ -43,7 +43,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </p>
 <li>
 <h3>Response</h3>
-<p>VCD Ansible Modules provide a unanimous response. The response shall contain following properties,</p>
+<p>VCD Ansible Modules provide sort of a unanimous response across all operations. The response shall contain atleast following properties,</p>
 <ul>
 <li>msg - the success/failure string corresponding to the resource</li>
 <li>changed - "true" if resource has been modified at the infrastrucutre else "false"
@@ -81,9 +81,9 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>catalog_name - (Required) Name of the catalog</li>
-<li>description - (Required) Description Text for the catalog</li>
+<li>description - (Required) Description text for the catalog</li>
 <li>state == "present" (Required) to create catalog</li>
 </ul>
 <li>
@@ -93,8 +93,8 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <code>
  - name: update catalog name and description
    vcd_catalog:
-	catalog_name: "test_catalog" 
-	new_catalog_name: "new_test_catalog" 
+	catalog_name: "test_catalog"
+	new_catalog_name: "new_test_catalog"
 	description: "test_description"
 	state: "update"
  </code>
@@ -106,7 +106,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>catalog_name - (Required) Old name of the catalog</li>
  <li>new_catalog_name - (Required) New name of the catalog</li>
  <li>description - (Required) New description text for the catalog</li>
@@ -130,7 +130,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>catalog_name - (Required) Name of the catalog</li>
  <li>state == "absent" (Required) to delete catalog</li>
  </ul>
@@ -145,7 +145,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
  <code>
  - name: share/unshare catalog
    vcd_catalog:
-	catalog_name: "test_catalog" 
+	catalog_name: "test_catalog"
 	shared: "true"
 	operation: "shared"
  </code>
@@ -157,10 +157,10 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>catalog_name - (Required) Name of the catalog</li>
- <li>shared - (Optional) True/False to share/unshare the catalog. The default value is True for the argument</li>
- <li>state == "operation" (Required) to share/unshare catalog</li>
+ <li>shared - (Optional) true/false to share/unshare the catalog. The default value is true for the argument</li>
+ <li>operation == "shared" (Required) to share/unshare catalog</li>
 </ul>
 </li>
 <li>
@@ -180,7 +180,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>catalog_name - (Required) Name of the catalog</li>
  <li>operation == "list_items" (Required) to list catalog items</li>
 </ul>
@@ -202,44 +202,29 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>
 <h5>Upload Catalog Media/Ova</h5>
 </li>
-<pre> 
+<pre>
 <code>
  - name: upload media
    vcd_catalog_item:
 	catalog_name: "test_catalog"
 	item_name: "test_item_media"
-	file_name: "test_item_media.ova"
+	file_name: "test_item_media.iso"
 	chunk_size: 1048576
 	description: "test_description"
 	state: "present"
 
 </code>
-</pre> 
-<h5>Argument Reference</h5>
-<ul>
-<li>user - (Optional) - vCloud Director user name</li>
-<li>password - (Optional) - vCloud Director password</li>
-<li>org - (Optional) - vCloud Director org name to log into</li>
-<li>host - (Optional) - vCloud Director host name</li>
-<li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
-<li>catalog_name - (Required) Name of the catalog</li>
-<li>item_name - (Required) Name for the catalog media/ova</li>
-<li>file_name - (Required) Path of the catalog media/ova file</li>
-<li>chunk_size - (Optional) Size of chunks in which the file will be uploaded to the catalog</li>
-<li>description - (Optional) catalog item description</li>
-<li>state == "present" (Required) to upload catalog media/ova</li> 
-</ul>
-<li>
-<h5>Delete Catalog Media/Ova</h5>
-</li>
+</pre>
 <pre>
 <code>
- - name: delete media
+ - name: upload ova
    vcd_catalog_item:
-	catalog_name: "test_catalog"
-	item_name: "test_item"
-	state: "absent"
+    catalog_name: "test_catalog"
+    item_name: "test_item_ova"
+    file_name: "test_item_ova.ova"
+    chunk_size: 1048576
+    description: "test_description"
+    state: "present"
 
 </code>
 </pre>
@@ -250,10 +235,48 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>catalog_name - (Required) Name of the catalog</li>
 <li>item_name - (Required) Name for the catalog media/ova</li>
-<li>state == "absent" (Required) to delete catalog media/ova</li> 
+<li>file_name - (Required) Path of the catalog media/ova file</li>
+<li>chunk_size - (Optional) Size of chunks in which the file will be uploaded to the catalog</li>
+<li>description - (Optional) catalog item description</li>
+<li>state == "present" (Required) to upload catalog media/ova</li>
+</ul>
+<li>
+<h5>Delete Catalog Media/Ova</h5>
+</li>
+<pre>
+<code>
+ - name: delete media
+   vcd_catalog_item:
+	catalog_name: "test_catalog"
+	item_name: "test_media_item"
+	state: "absent"
+
+</code>
+</pre>
+<pre>
+<code>
+ - name: delete ova
+   vcd_catalog_item:
+    catalog_name: "test_catalog"
+    item_name: "test_ova_item"
+    state: "absent"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>catalog_name - (Required) Name of the catalog</li>
+<li>item_name - (Required) Name for the catalog media/ova</li>
+<li>state == "absent" (Required) to delete catalog media/ova</li>
 </ul>
 </ul>
 </li>
@@ -284,15 +307,15 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>catalog_name - (Required) Name of the catalog</li>
-<li>item_name - (Required) Name of the catalog media/ova</li>
+<li>item_name - (Required) Name of the catalog media/ova inside a catalog</li>
 <li>vapp_name - (Required) Name of the vApp to capture</li>
 <li>vdc_name - (Required) Name of the vdc</li>
 <li>description - (Optional) Description of the catalog item</li>
-<li>customize_on_instantiate - (Optional) Flag indicating if the vApp to be instantiated from this vApp template can be customized. The default value is False.</li>
-<li>overwrite - (Optional) Flag indicating if the item in the catalog has to be overwritten if it already exists. If it doesn't exist, this flag is not used. The default value is False</li>
-<li>operation == "capturevapp" (Required) to capture vApp as a template into a catalog</li> 
+<li>customize_on_instantiate - (Optional) true/false, Flag indicating if the vApp to be instantiated from this vApp template can be customized. The default value is false.</li>
+<li>overwrite - (Optional) true/false, Flag indicating if the item in the catalog has to be overwritten if it already exists. If it doesn't exist, this flag is not used. The default value is false</li>
+<li>operation == "capturevapp" (Required) to capture vApp as a template into a catalog</li>
 </ul>
 </li>
 <li>
@@ -303,7 +326,6 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
     vcd_catalog_item:
         catalog_name: "test_catalog"
         item_name: "test_item"
-        vdc_name: "test_vdc"
         description: "test_description"
         operation: "list_vms"
 
@@ -316,10 +338,9 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>catalog_name - (Required) Name of the catalog</li>
 <li>item_name - (Required) Name of the catalog media/ova</li>
-<li>vdc_name - (Required) Name of the vdc</li>
 <li>description - (Optional) Description of the catalog item</li>
 <li>operation == "list_vms" (Required) to list catalog item vms</li>
 </ul>
@@ -371,27 +392,33 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>vapp_name - (Required) name of the new vApp</li> 
-<li>vdc - (Required) name of the vdc</li> 
-<li>catalog_name - (Required) name of the catalog</li> 
-<li>template_name - (Required) name of the vApp template</li> 
-<li>description - (Optional) description of the new vApp. The default value is None.</li> 
-<li>network - (Optional) name of a vdc network. When provided, connects the vm to the network. The default value is None.</li> 
-<li>fence_mode - (Optional) fence mode. Possible values are pyvcloud.vcd.client.FenceMode.BRIDGED.value and pyvcloud.vcd.client.FenceMode.NAT_ROUTED.value. The default value is pyvcloud.vcd.client.FenceMode.BRIDGED.value.</li> 
-<li>ip_allocation_mode - (Optional) ip allocation mode. Acceptable values are 'pool', 'dhcp' and 'manual'. The default value is 'dhcp'.</li> 
-<li>deploy - (Optional) if True deploy the vApp after instantiation. The default value is True.</li> 
-<li>power_on - (Optional) if True, power on the vApp after instantiation. The default value is True.</li> 
-<li>accept_all_eulas - (Optional) True, confirms acceptance of all EULAs in a vApp template. The default value is False.</li> 
-<li>memory - (Optional) max memory that can allocated. The default value is None.</li> 
-<li>cpu - (Optional) max cpu that can be allocated. The default value is None.</li> 
-<li>disk_size - size of the disk(Optional). The default value is None.</li> 
-<li>vmpassword - (Optional) the administrator password of vm. The default value is None.</li> 
-<li>cust_script - (Optional) script to run on guest customization. The default value is None.</li> 
-<li>vm_name - (Optional) when provided, sets the name of the vm. The default value is None.</li> 
-<li>ip_address - (Optional) when provided, sets the ip_address of the vm. The default value is None.</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vapp_name - (Required) name of the new vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>catalog_name - (Optional) name of the catalog</li>
+<li>template_name - (Optional) name of the vApp template</li>
+<li>description - (Optional) description of the new vApp. The default value is None.</li>
+<li>network - (Optional) name of a vdc network. When provided, connects the vm to the network. The default value is None.</li>
+<li>fence_mode - (Optional) fence mode. Possible values are pyvcloud.vcd.client.FenceMode.BRIDGED.value and pyvcloud.vcd.client.FenceMode.NAT_ROUTED.value. The default value is pyvcloud.vcd.client.FenceMode.BRIDGED.value.</li>
+<li>ip_allocation_mode - (Optional) ip allocation mode. Acceptable values are 'pool', 'dhcp' and 'manual'. The default value is 'dhcp'.</li>
+<li>deploy - (Optional) if true deploy the vApp after instantiation. The default value is true.</li>
+<li>power_on - (Optional) if true, power on the vApp after instantiation. The default value is true.</li>
+<li>accept_all_eulas - (Optional) true, confirms acceptance of all EULAs in a vApp template. The default value is false.</li>
+<li>memory - (Optional) max memory that can allocated. The default value is None.</li>
+<li>cpu - (Optional) max cpu that can be allocated. The default value is None.</li>
+<li>disk_size - size of the disk(Optional). The default value is None.</li>
+<li>vmpassword - (Optional) the administrator password of vm. The default value is None.</li>
+<li>cust_script - (Optional) script to run on guest customization. The default value is None.</li>
+<li>vm_name - (Optional) when provided, sets the name of the vm. The default value is None.</li>
+<li>ip_address - (Optional) when provided, sets the ip_address of the vm. The default value is None.</li>
 <li>hostname - (Optional) when provided, sets the hostname of the guest OS. The default value is None.</li>
-<li>storage_profile - (Optional) name of the storage profile. The default value is None.</li> 
-<li>network_adapter_type - (Optional) One of the values in pyvcloud.vcd.client.NetworkAdapterType. The default value is None.</li> 
+<li>storage_profile - (Optional) name of the storage profile. The default value is None.</li>
+<li>network_adapter_type - (Optional) One of the values in pyvcloud.vcd.client.NetworkAdapterType. The default value is None.</li>
 <li>state == "present" (Required) to create vapp</li>
 </ul>
 <li>
@@ -410,9 +437,15 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>vapp_name - (Required) name of the vApp to be deleted</li> 
-<li>vdc - (Required) name of the vdc</li> 
-<li>force - (Optional) default False. If True, will instruct vcd to force delete the vapp</li>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vapp_name - (Required) name of the vApp to be deleted</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>force - (Optional) default false. If true, will instruct vcd to force delete the vapp</li>
 <li>state == "absent" (Required) to delete vapp</li>
 </ul>
 </ul>
@@ -420,24 +453,6 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>
 <h3>Vapp Operations</h3>
 <ul>
-<li>
-<h5>Create vapp</h5>
-<pre>
-<code>
- - name: create vapp
-   vcd_vapp:
-        vapp_name: "test_vapp"
-        vdc: "test_vdc"
-        state: "present"
-
-</code>
-</pre>
-<ul>
-<li>vapp_name - (Required) name of the vApp to be deploy</li>
-<li>vdc - (Required) name of the vdc</li>
-<li>state == "present" (Required) to create vapp</li>
-</ul>
-</li>
 <li>
 <h5>Power on vapp</h5>
 <pre>
@@ -452,9 +467,15 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
- <li>vapp_name - (Required) name of the vApp to be powered on</li> 
- <li>vdc - (Required) name of the vdc</li> 
-<li>operation == "poweron" (Required) to power on vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vapp_name - (Required) name of the vApp to be powered on</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>operation == "poweron" (Required) to power on vapp</li>
 </ul>
 </li>
 <li>
@@ -471,9 +492,15 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>vapp_name - (Required) name of the vApp to be powered off</li> 
-<li>vdc - (Required) name of the vdc</li> 
-<li>operation == "poweroff" (Required) to power off vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vapp_name - (Required) name of the vApp to be powered off</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>operation == "poweroff" (Required) to power off vapp</li>
 </ul>
 </li>
 <li>
@@ -490,9 +517,15 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>vapp_name - (Required) name of the vApp to be undeploy</li> 
-<li>vdc - (Required) name of the vdc</li> 
-<li>operation == "undeploy" (Required) to undeploy vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vapp_name - (Required) name of the vApp to be undeploy</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>operation == "undeploy" (Required) to undeploy vapp</li>
 </ul>
 </li>
 <li>
@@ -508,9 +541,15 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </code>
 </pre>
 <ul>
-<li>vapp_name - (Required) name of the vApp to be deploy</li> 
-<li>vdc - (Required) name of the vdc</li> 
-<li>operation == "deploy" (Required) to deploy vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vapp_name - (Required) name of the vApp to be deploy</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>operation == "deploy" (Required) to deploy vapp</li>
 </ul>
 </li>
 <li>
@@ -527,6 +566,12 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vapp_name - (Required) name of the vApp to get a list of vms from</li>
 <li>vdc - (Required) name of the vdc</li>
 <li>operation == "list_vms" (Required) get list of vms</li>
@@ -546,6 +591,12 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vapp_name - (Required) name of the vApp to get a list of networks from</li>
 <li>vdc - (Required) name of the vdc</li>
 <li>operation == "list_networks" (Required) get list of networks</li>
@@ -557,7 +608,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </div>
 <!--				  -->
 <!-- vApp VM Use Case -->
-<div class="vapp-vam-usage col-12" id="vapp-vm-usage">
+<div class="vapp-vm-usage col-12" id="vapp-vm-usage">
 <h2>Vapp VM Example Usage</h2>
 <hr />
 <ol>
@@ -582,7 +633,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 	source_template_name: "centos7"
 	source_vm_name: "CentOS7"
 	hostname: "vcdcell"
-	vmpassword: "rootpass" 
+	vmpassword: "rootpass"
 	vmpassword_auto: "false"
 	vmpassword_reset: "false"
 	ip_allocation_mode: "DHCP"
@@ -598,24 +649,30 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Optional) target vm name</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
-<li>source_vdc - (Required) name of the source vdc</li> 
-<li>target_vdc - (Required) name of the target vdc</li> 
-<li>source_catalog_name - (Required) name of the sorce catalog</li> 
-<li>source_template_name - (Required) name of the source template</li> 
-<li>source_vm_name - (Required) source vm name</li> 
-<li>hostname - (Optional) target guest hostname</li> 
-<li>vmpassword - (Optional) the administrator password of the vm</li> 
-<li>vmpassword_auto - (Optional) if true, auto generate administrator password</li> 
-<li>vmpassword_reset - (Optional) True, if the administrator password for this vm must be reset after first use</li> 
-<li>ip_allocation_mode - (Optional) Name of the ip ip allocation mode. The default value is 'DHCP'.</li> 
-<li>power_on - (Optional) True if the vApp should be powered-on at instantiation. The default value is True.</li> 
-<li>all_eulas_accepted - (Optional) True confirms acceptance of all EULAs in the vApp.  The default value is None.</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Optional) target vm name</li>
+<li>target_vapp - (Required) name of the target vapp</li>
+<li>source_vdc - (Required) name of the source vdc</li>
+<li>target_vdc - (Required) name of the target vdc</li>
+<li>source_catalog_name - (Required) name of the sorce catalog</li>
+<li>source_template_name - (Required) name of the source template</li>
+<li>source_vm_name - (Required) source vm name</li>
+<li>hostname - (Optional) target guest hostname</li>
+<li>vmpassword - (Optional) the administrator password of the vm</li>
+<li>vmpassword_auto - (Optional) if true, auto generate administrator password</li>
+<li>vmpassword_reset - (Optional) true, if the administrator password for this vm must be reset after first use</li>
+<li>ip_allocation_mode - (Optional) Name of the ip ip allocation mode. The default value is 'DHCP'.</li>
+<li>power_on - (Optional) true if the vApp should be powered-on at instantiation. The default value is true.</li>
+<li>all_eulas_accepted - (Optional) true confirms acceptance of all EULAs in the vApp.  The default value is None.</li>
 <li>storage_profile - (Optional) name of the storage profile. The default value is None.</li>
 <li>network - (Optional) name of the vApp network to connect. If omitted, the vm won't be connected to any network</li>
-<li>cust_script - (Optional) script to run on guest customization</li> 
-<li>deploy - (Optional) True, if the vApp should be deployed at instantiation.  The default value is True.</li>
+<li>cust_script - (Optional) script to run on guest customization</li>
+<li>deploy - (Optional) true, if the vApp should be deployed at instantiation.  The default value is true.</li>
 <li>state == "present" (Required) to create vapp vm</li>
 </ul>
 <li>
@@ -632,7 +689,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 	source_vapp: "web"
 	source_vm_name: "CentOS7"
 	hostname: "vcdcell"
-	vmpassword: "rootpass" 
+	vmpassword: "rootpass"
 	vmpassword_auto: "false"
 	vmpassword_reset: "false"
 	ip_allocation_mode: "DHCP"
@@ -648,23 +705,29 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Optional) target vm name</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
-<li>source_vdc - (Required) name of the source vdc</li> 
-<li>target_vdc - (Required) name of the target vdc</li> 
-<li>source_vapp - (Required) name of the sorce vapp</li> 
-<li>source_vm_name - (Required) source vm name</li> 
-<li>hostname - (Optional) target guest hostname</li> 
-<li>vmpassword - (Optional) the administrator password of the vm</li> 
-<li>vmpassword_auto - (Optional) if True, auto generate administrator password</li> 
-<li>vmpassword_reset - (Optional) True, if the administrator password for this vm must be reset after first use</li> 
-<li>ip_allocation_mode - (Optional) Name of the ip ip allocation mode. The default value is 'DHCP'.</li> 
-<li>power_on - (Optional) True if the vApp should be powered-on at instantiation. The default value is True.</li> 
-<li>all_eulas_accepted - (Optional) True confirms acceptance of all EULAs in the vApp. The default value is None.</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Optional) target vm name</li>
+<li>target_vapp - (Required) name of the target vapp</li>
+<li>source_vdc - (Required) name of the source vdc</li>
+<li>target_vdc - (Required) name of the target vdc</li>
+<li>source_vapp - (Required) name of the sorce vapp</li>
+<li>source_vm_name - (Required) source vm name</li>
+<li>hostname - (Optional) target guest hostname</li>
+<li>vmpassword - (Optional) the administrator password of the vm</li>
+<li>vmpassword_auto - (Optional) if true, auto generate administrator password</li>
+<li>vmpassword_reset - (Optional) true, if the administrator password for this vm must be reset after first use</li>
+<li>ip_allocation_mode - (Optional) Name of the ip ip allocation mode. The default value is 'DHCP'.</li>
+<li>power_on - (Optional) true if the vApp should be powered-on at instantiation. The default value is true.</li>
+<li>all_eulas_accepted - (Optional) true confirms acceptance of all EULAs in the vApp. The default value is None.</li>
 <li>storage_profile - (Optional) name of the storage profile. The default value is None.</li>
 <li>network - (Optional) name of the vApp network to connect. If omitted, the vm won't be connected to any network</li>
-<li>cust_script - (Optional) script to run on guest customization</li> 
-<li>deploy - (Optional) True, if the vApp should be deployed at instantiation. The default value is True.</li>
+<li>cust_script - (Optional) script to run on guest customization</li>
+<li>deploy - (Optional) true, if the vApp should be deployed at instantiation. The default value is true.</li>
 <li>state == "present" (Required) to create vapp vm</li>
 </ul>
 </ul>
@@ -688,13 +751,19 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </code>
 </pre>
 <h5>Argument Reference</h5>
-<ul> 
-<li>target_vm_name - (Required) name of the target vm</li> 
-<li>target_vapp - (Required) name of the target vapp</li>  
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
 <li>virtual_cpus - (Required) number of virtual CPUs to configure on the vm</li>
 <li>cores_per_socket - (Optional) number of cores per socket</li>
-<li>state == "update" (Required) to update vapp vm memory</li> 
+<li>state == "update" (Required) to update vapp vm cpu & cpu cores</li>
 </ul>
 <li>
 <h5>Update memory</h5>
@@ -713,11 +782,17 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Required) name of the target vm</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
 <li>memory - (Required) number of MB of memory to configure on the vm</li>
-<li>state == "update" (Required) to update vapp vm memory</li> 
+<li>state == "update" (Required) to update vapp vm memory</li>
 </ul>
 </ul>
 <li>
@@ -736,10 +811,16 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Required) name of the target vm</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
-<li>state == "absent" (Required) to delete vapp vm</li> 
+<li>state == "absent" (Required) to delete vapp vm</li>
 </ul>
 </li>
 </li>
@@ -763,10 +844,16 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Required) name of the target vm</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
-<li>operation == "poweron" (Required) to power on vapp vm</li> 
+<li>operation == "poweron" (Required) to power on vapp vm</li>
 </ul>
 </li>
 <li>
@@ -784,10 +871,16 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Required) name of the target vm</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
-<li>operation == "poweroff" (Required) to power off vapp vm</li> 
+<li>operation == "poweroff" (Required) to power off vapp vm</li>
 </ul>
 </li>
 <li>
@@ -805,10 +898,16 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Required) name of the target vm</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
-<li>operation == "reloadvm" (Required) to reload vapp vm</li> 
+<li>operation == "reloadvm" (Required) to reload vapp vm</li>
 </ul>
 </li>
 <li>
@@ -826,10 +925,16 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Required) name of the target vm</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
-<li>operation == "undeploy" (Required) to undeploy vapp vm</li> 
+<li>operation == "undeploy" (Required) to undeploy vapp vm</li>
 </ul>
 </li>
 <li>
@@ -847,10 +952,16 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>target_vm_name - (Required) name of the target vm</li> 
-<li>target_vapp - (Required) name of the target vapp</li> 
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
-<li>operation == "deploy" (Required) to deploy vapp vm</li> 
+<li>operation == "deploy" (Required) to deploy vapp vm</li>
 </ul>
 </li>
 <li>
@@ -863,10 +974,17 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
     target_vapp: "web2"
     target_vdc: "test_vdc"
     operation: "list_disks"
+
 </code>
 </pre>
 <h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>target_vm_name - (Required) name of the target vm</li>
 <li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
@@ -883,10 +1001,17 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
     target_vapp: "web2"
     target_vdc: "test_vdc"
     operation: "list_nics"
+
 </code>
 </pre>
 <h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>target_vm_name - (Required) name of the target vm</li>
 <li>target_vapp - (Required) name of the target vapp</li>
 <li>target_vdc - (Required) name of the target vdc</li>
@@ -918,6 +1043,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
      vdc: "test_vdc"
      size: "10240"
      state: "present"
+
 </code>
 </pre>
 <h4>
@@ -926,11 +1052,53 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </h4>
 <h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vm_name - (Required) name of the VM</li>
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
 <li>size - (Required) size in MB of the new disk</li>
 <li>state == "present" (Required) to create disk</li>
+</ul>
+<li>
+<h5>Update vapp vm disk</h5>
+</li>
+<pre>
+<code>
+ - name: update disk
+   vcd_vapp_vm_disk:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      disk_name: "Hard disk 3"
+      size: "10240"
+      state: "update"
+
+</code>
+</pre>
+<h4>
+    Note: There are few things to take care before trying to update existing hard disks such as,<br />
+    a) Fast-provisioned hard drives can not be resized. <br />
+    b) Hard drives part of the VM snapshot may not be able to resize.
+</h4>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>disk_name - (Required) name of the disk to be updated</li>
+<li>size - new size of the disk</li>
+<li>state == "update" (Required) to update disk</li>
 </ul>
 <li>
 <h5>Delete Vapp VM Disk</h5>
@@ -942,16 +1110,25 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
       vm_name: "test_vm"
       vapp: "test_vapp"
       vdc: "test_vdc"
-      disk_name: "Hard disk 3"
+      disks:
+        - 'Hard disk 3'
+        - 'Hard disk 4'
       state: "absent"
+
 </code>
 </pre>
 <h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vm_name - (Required) name of the VM</li>
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
-<li>disk_name - (Required) name of the disk to be deleted</li>
+<li>disks - (Required) list of the disk names to be deleted</li>
 <li>state == "absent" (Required) to delete disk</li>
 </ul>
 </ul>
@@ -959,32 +1136,6 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>
 <h3>Vapp VM Disk Operations</h3>
 <ul>
-<li>
-<h5>Update vapp vm disk</h5>
-<pre>
-<code>
- - name: update disk
-   vcd_vapp_vm_disk:
-      vm_name: "test_vm"
-      vapp: "test_vapp"
-      vdc: "test_vdc"
-      disk_name: "Hard disk 3"
-      size: "10240"
-      operation: "update"
-</code>
-</pre>
-<h4>
-	Note: There are few things to take care before trying to update existing hard disks such as,<br />
-	a) Fast-provisioned hard drives can not be resized. <br />
-	b) Hard drives part of the VM snapshot may not be able to resize.
-</h4>
-<ul>
-<li>vm_name - (Required) name of the VM</li>
-<li>vapp - (Required) name of the vApp</li>
-<li>vdc - (Required) name of the vdc</li>
-<li>disk_name - (Required) name of the disk to be updated</li>
-<li>size - new size of the disk</li>
-<li>operation == "update" (Required) to update disk</li>
 <li>
 <h5>Read vapp vm disk</h5>
 <pre>
@@ -995,9 +1146,16 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
       vapp: "test_vapp"
       vdc: "test_vdc"
       operation: "read"
+
 </code>
 </pre>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vm_name - (Required) name of the VM</li>
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
@@ -1029,10 +1187,17 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
      vdc: "test_vdc"
      network: "web2Network"
      state: "present"
+
 </code>
 </pre>
 <h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vm_name - (Required) name of the VM</li>
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
@@ -1040,6 +1205,39 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>ip_allocation_mode - (Optional) Set Ip Allocation Mode (DHCP/MANUAL/POOL) for newly added Nic</li>
 <li>ip_address - (Optional) Set Ip Address of newly added Nic</li>
 <li>state == "present" (Required) to create nic</li>
+</ul>
+<li>
+<h5>Update vapp vm nic</h5>
+<pre>
+<code>
+ - name: update nic
+   vcd_vapp_vm_nic:
+      vm_name: "test_vm"
+      vapp: "test_vapp"
+      vdc: "test_vdc"
+      nic_id: 1
+      network: "web2Network"
+      ip_allocation_mode: "MANUAL"
+      ip_address: "172.16.1.122"
+      state: "update"
+
+</code>
+</pre>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vm_name - (Required) name of the VM</li>
+<li>vapp - (Required) name of the vApp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>nic_id - (Required) connection index of the nic</li>
+<li>network - (Optional) name of the vApp network to connect</li>
+<li>ip_allocation_mode - (Optional) Set Ip Allocation Mode (DHCP/MANUAL/POOL) for newly added Nic</li>
+<li>ip_address - (Optional) Set Ip Address of newly added Nic</li>
+<li>state == "update" (Required) to update nic</li>
 </ul>
 <li>
 <h5>Delete Vapp VM NIC</h5>
@@ -1051,18 +1249,25 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
       vm_name: "test_vm"
       vapp: "test_vapp"
       vdc: "test_vdc"
-      nic_id: "1"
+      nic_id:
+        - 1
       state: "absent"
+
 </code>
 </pre>
 <h5>Argument Reference</h5>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vm_name - (Required) name of the VM</li>
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
-<li>nic_id - (Required) connection index of the nic</li>
+<li>nic_id - (Required) list of nic ids to be deleted</li>
 <li>state == "absent" (Required) to delete nic</li>
-</ul>
 </ul>
 </li>
 <li>
@@ -1071,42 +1276,27 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <h5>Read vapp vm nics</h5>
 <pre>
 <code>
- - name: update nic
+ - name: read nics
    vcd_vapp_vm_nic:
       vm_name: "test_vm"
       vapp: "test_vapp"
       vdc: "test_vdc"
       operation: "read"
+
 </code>
 </pre>
 <ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vm_name - (Required) name of the VM</li>
 <li>vapp - (Required) name of the vApp</li>
 <li>vdc - (Required) name of the vdc</li>
 <li>operation == "read" (Required) to read available Nics</li>
 </ul>
-</li>
-<li>
-<h5>Update vapp vm nic</h5>
-<pre>
-<code>
- - name: update nic
-   vcd_vapp_vm_nic:
-      vm_name: "test_vm"
-      vapp: "test_vapp"
-      vdc: "test_vdc"
-      nic_id: "1"
-      network: "web2Network"
-      operation: "update"
-</code>
-</pre>
-<ul>
-<li>vm_name - (Required) name of the VM</li>
-<li>vapp - (Required) name of the vApp</li>
-<li>vdc - (Required) name of the vdc</li>
-<li>nic_id - (Required) connection index of the nic</li>
-<li>network - name of the vApp network to connect</li>
-<li>operation == "update" (Required) to update nic</li>
 </ul>
 </li>
 </ul>
@@ -1123,7 +1313,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <h3>Vapp Network States</h3>
 <ul>
 <li>
-<h5>Create Vapp Network connected to VDC network</h5>
+<h5>Create Vapp Network</h5>
 </li>
 <pre>
 <code>
@@ -1139,37 +1329,21 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>network: - (Required) name of the network</li>
-<li>target_vapp - (Required) name of the vapp</li>
-<li>source_vdc - (Required) name of the vdc</li>
-<li>parent_network - (Required) name of the vdc network to connect.
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>network - (Required) name of the network</li>
+<li>vapp - (Required) name of the vapp</li>
+<li>vdc - (Required) name of the vdc</li>
+<li>parent_network - (Optional) name of the parent vdc network to connect.</li>
+<li>ip_scope - (Optional) IP scope (gateway-address/bits) in case to create internal network.</li>
 <li>state == "present" (Required) to create vapp network</li>
 </ul>
-</li>
-<li>
-<h5>Create internal Vapp Network</h5>
-</li>
-<pre>
-<code>
- - name: create internal vapp network
-   vcd_vapp_network:
-     network: "web2Network"
-     vapp: "web2"
-     vdc: "test_vdc"
-     ip_scope: "192.168.4.1/24"
-     state: "present"
-
-</code>
-</pre>
-<h5>Argument Reference</h5>
+</ul>
 <ul>
-<li>network: - (Required) name of the network</li>
-<li>target_vapp - (Required) name of the vapp</li>
-<li>source_vdc - (Required) name of the vdc</li>
-<li>ip_scope - (Required) ip scope of the network (gateway-address/bits).
-<li>state == "present" (Required) to create vapp network</li>
-</ul>
-</li>
 <li>
 <h5>Delete Vapp Network</h5>
 </li>
@@ -1186,12 +1360,17 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </pre>
 <h5>Argument Reference</h5>
 <ul>
-<li>network: - (Required) name of the network</li>
-<li>target_vapp - (Required) name of the vapp</li>
-<li>source_vdc - (Required) name of the vdc</li>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>network - (Required) name of the network</li>
+<li>vapp - (Required) name of the vapp</li>
+<li>vdc - (Required) name of the vdc</li>
 <li>state == "absent" (Required) to delete vapp network</li>
 </ul>
-</li>
 </ul>
 </li>
 </ol>
@@ -1228,14 +1407,14 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>disk_name - (Required) name of the new disk</li>
 <li>description - (Optional) description of the new disk</li>
 <li>size - (Required) size of the disk in bytes</li>
 <li>vdc - (Required) name of the virutal data center</li>
 <li>bus_type - (Optional) bus type of the disk</li>
 <li>bus_sub_type - (Optional) bus subtype of the disk</li>
-<li>storage_profile_name - (Optional) name of an existing storage profile to be used by the new disk</li>
+<li>storage_profile - (Optional) name of an existing storage profile to be used by the new disk</li>
 <li>iops - (Optional) iops requirement of the disk</li>
 <li>state == "present" (Required) to create org</li>
 </ul>
@@ -1261,14 +1440,14 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>disk_name - (Required) name of the existing disk</li>
 <li>vdc - (Required) name of the virtual data center</li>
 <li>disk_id - (Optional) id of the existing disk</li>
 <li>new_disk_name - (Optional) new name of the disk</li>
 <li>new_size - (Optional) new size of the disk</li>
 <li>new_description - (Optional) new description of the disk</li>
-<li>new_storage_profile_name - (Optional) new storage profile that the disk will be moved to</li>
+<li>new_storage_profile - (Optional) new storage profile that the disk will be moved to</li>
 <li>new_iops - (Optional) new iops requirement of the disk</li>
 <li>state == "update" (Required) to update org</li>
 </ul>
@@ -1292,7 +1471,7 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>disk_name - (Required) name of the disk to delete</li>
 <li>disk_id - (Optional) id of the disk to delete</li>
 <li>vdc - (Required) name of the virtual datacenter</li>
@@ -1331,10 +1510,10 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>org_name - (Required) name of the organization</li>
 <li>full_name - (Required) full name of the organization</li>
-<li>is_enabled - (Optional) enable organization if True. The default value is False</li>
+<li>is_enabled - (Optional) enable organization if true. The default value is false</li>
 <li>state == "present" (Required) to create org</li>
 </ul>
 <li>
@@ -1357,9 +1536,9 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>org_name - (Required) name of the organization</li>
-<li>is_enabled - (Optional) enable organization if True. The default value is False</li>
+<li>is_enabled - (Required) enable organization if true. The default value is false</li>
 <li>state == "update" (Required) to update org</li>
 </ul>
 <li>
@@ -1383,11 +1562,11 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>org_name - (Required) name of the organization</li>
-<li>force - (Optional) force=True along with recursive=True to remove
+<li>force - (Optional) force=true along with recursive=true to remove
 an organization and any objects it contains, regardless of their state. The default value is None</li>
-<li>recursive - (Optional) recursive=True to remove an organization
+<li>recursive - (Optional) recursive=true to remove an organization
 and any objects it contains that are in a state that normally allows removal. The default value is None</li>
 <li>state == "absent" (Required) to delete org</li>
 </ul>
@@ -1415,7 +1594,7 @@ and any objects it contains that are in a state that normally allows removal. Th
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>org_name - (Required) name of the organization</li>
 <li>operation == "read" (Required) to read organization</li>
 </ul>
@@ -1443,7 +1622,7 @@ and any objects it contains that are in a state that normally allows removal. Th
 	description: "test vdc description"
 	allocation_model: "AllocationVApp"
 	is_enabled: "false"
-	storage_profiles: 
+	storage_profiles:
 	- name: "Performance"
           enabled: true
           units: "MB"
@@ -1452,13 +1631,13 @@ and any objects it contains that are in a state that normally allows removal. Th
 	cpu_units : "MHz"
 	cpu_allocated : 0
 	cpu_limit : 0
-	mem_units : 'MB' 
+	mem_units : 'MB'
 	mem_allocated : 0
-	mem_limit : 0 
-	nic_quota : 0 
-	network_quota : 0  
+	mem_limit : 0
+	nic_quota : 0
+	network_quota : 0
 	vm_quota : 0
-	resource_guaranteed_memory : 1.0 
+	resource_guaranteed_memory : 1.0
 	resource_guaranteed_cpu : 1.0
 	vcpu_in_mhz : 1024
 	is_thin_provision : true
@@ -1477,7 +1656,7 @@ and any objects it contains that are in a state that normally allows removal. Th
 <li>org - (Optional) - vCloud Director org name to log into</li>
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
-<li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vdc_name - (Required) name of the new org vdc</li>
 <li>provider_vdc_name - (Required) The name of an existing provider vdc</li>
 <li>description - (Optional) description of the new org vdc</li>
@@ -1494,10 +1673,10 @@ and any objects it contains that are in a state that normally allows removal. Th
 <li>storage_profiles - (Optional) list of provider vdc storage profiles to add to this vdc. Each item is a dictionary that should include the following elements:</li>
 	    <ul>
             <li>name - name of the PVDC storage profile</li>
-            <li>enabled - True if the storage profile is enabled for this vdc</li>
+            <li>enabled - true/false, true if the storage profile is enabled for this vdc else false</li>
             <li>units - Units used to define limit. One of MB or GB</li>
             <li>limit - Max number of units allocated for this storage profile</li>
-            <li>default - True if this is default storage profile for this vdc</li>
+            <li>default - true/false, true if this is default storage profile for this vdc else false</li>
 	    </ul>
 <li>resource_guaranteed_memory - (Optional) percentage of allocated CPU
             resources guaranteed to vApps deployed in this vdc. Value defaults
@@ -1507,18 +1686,18 @@ and any objects it contains that are in a state that normally allows removal. Th
             to 1.0 if the element is empty</li>
 <li>vcpu_in_mhz - (Optional) specifies the clock frequency, in MegaHertz,
             for any virtual CPU that is allocated to a VM</li>
-<li>is_thin_provision - (Optional) True to request thin provisioning</li>
+<li>is_thin_provision - (Optional) true/false, true to request thin provisioning else false</li>
 <li>network_pool_name - (Optional) name to a network pool in the provider
             vdc that this org vdc should use</li>
-<li>uses_fast_provisioning - (Optional) True to request fast provisioning</li>
-<li>over_commit_allowed - (Optional) False to disallow creation of the VDC
+<li>uses_fast_provisioning - (Optional) true/false, true to request fast provisioning else false</li>
+<li>over_commit_allowed - (Optional) true/false, false to disallow creation of the VDC
             if the AllocationModel is AllocationPool or ReservationPool and the
             ComputeCapacity specified is greater than what the backing provider
-            VDC can supply. Defaults to True, if empty or missing</li>
-<li>vm_discovery_enabled - (Optional) True, if discovery of vCenter VMs
-            is enabled for resource pools backing this vdc</li>
-<li>is_enabled - (Optional) True, if this vdc is enabled for use by the
-            organization users. The default value is True</li>
+            VDC can supply. Defaults to true, if empty or missing</li>
+<li>vm_discovery_enabled - (Optional) true/false, true if discovery of vCenter VMs
+            is enabled for resource pools backing this vdc else false</li>
+<li>is_enabled - (Optional) true/false, true if this vdc is enabled for use by the
+            organization users else false. The default value is true</li>
  <li>state == "present" (Required) to create org vdc</li>
  </ul>
  <li>
@@ -1540,9 +1719,9 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>vdc_name - (Required) Name of the vdc</li>
- <li>is_enabled - (Required) To enable/disable the vdc. The default value is True.</li>
+ <li>is_enabled - (Required) To enable/disable the vdc. The default value is true.</li>
  <li>state == "update" (Required) to update vdc</li>
  </ul>
  <li>
@@ -1563,7 +1742,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>vdc_name - (Required) Name of the vdc</li>
  <li>state == "absent" (Required) to delete vdc</li>
  </ul>
@@ -1615,7 +1794,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>username - (Required) The username of the user</li>
  <li>userpassword - (Required) The password of the user (must be at least 6
  characters long)</li>
@@ -1625,13 +1804,13 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>email - (Optional) The email of the user</li>
  <li>telephone - (Optional) The telephone of the user</li>
  <li>im - (Optional) The im address of the user</li>
- <li>is_enabled - (Optional) True/False Enable user. The default value is False.</li>
+ <li>is_enabled - (Optional) true/false Enable user. The default value is false.</li>
  <li>stored_vm_quota - (Optional) The quota of vApps that this user can store. The default value is 0.</li>
  <li>deployed_vm_quota - (Optional) The quota of vApps that this user can deploy concurrently. The default value is 0.</li>
- <li>is_alert_enabled - (Optional) True/False The alert email address. The default value is False.</li>
- <li>is_external - (Optional) True/False Indicates if user is imported from an external source. The default value is False.</li>
- <li>is_default_cached - (Optional) True/False Indicates if user should be cached. The default value is False.</li>
- <li>is_group_role - (Optional) True/False Indicates if the user has a group role. The default value is False.</li>
+ <li>is_alert_enabled - (Optional) true/false The alert email address. The default value is false.</li>
+ <li>is_external - (Optional) true/false Indicates if user is imported from an external source. The default value is false.</li>
+ <li>is_default_cached - (Optional) true/false Indicates if user should be cached. The default value is false.</li>
+ <li>is_group_role - (Optional) true/false Indicates if the user has a group role. The default value is false.</li>
  <li>alert_email_prefix - (Optional) The string to prepend to the alert message subject line</li>
  <li>alert_email - (Optional) The alert email address</li>
  <li>state == "present" (Required) to create user</li>
@@ -1655,9 +1834,9 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>username - (Required) username of the user</li>
- <li>is_enabled - (Required) True/False enable/disable the user</li>
+ <li>is_enabled - (Required) true/false enable/disable the user</li>
  <li>state == "update" (Required) to update user</li>
 </ul>
 <li>
@@ -1678,7 +1857,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>org - (Optional) - vCloud Director org name to log into</li>
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
- <li>verify_ssl_certs - (Optional) - True to enforce to verify ssl certificate for each requests else False</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>username - (Required) username of the user</li>
  <li>state == "absent" (Required) to update user</li>
 </ul>

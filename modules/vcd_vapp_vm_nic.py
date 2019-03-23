@@ -124,8 +124,8 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 
-VAPP_VM_NIC_STATES = ['present', 'absent']
-VAPP_VM_NIC_OPERATIONS = ['update', 'read']
+VAPP_VM_NIC_STATES = ['present', 'absent', 'update']
+VAPP_VM_NIC_OPERATIONS = ['read']
 
 
 def vapp_vm_nic_argument_spec():
@@ -154,13 +154,14 @@ class VappVMNIC(VcdAnsibleModule):
         if state == "present":
             return self.add_nic()
 
+        if state == "update":
+            return self.update_nic()
+
         if state == "absent":
             return self.delete_nic()
 
     def manage_operations(self):
         operation = self.params.get('operation')
-        if operation == "update":
-            return self.update_nic()
 
         if operation == "read":
             return self.read_nics()

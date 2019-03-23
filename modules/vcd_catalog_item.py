@@ -155,6 +155,7 @@ class CatalogItem(VcdAnsibleModule):
         operation = self.params.get('operation')
         if operation == "capturevapp":
             return self.capture_vapp()
+
         if operation == "list_vms":
             return self.list_vms()
 

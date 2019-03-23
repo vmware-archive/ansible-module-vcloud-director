@@ -33,7 +33,7 @@
 #     vdc: "ACME_PAYG"
 #     disk_name: "Hard disk 3"
 #     size: "13000"
-#     operation: "update"
+#     state: "update"
 #   register: output
 
 # - name: update disk output

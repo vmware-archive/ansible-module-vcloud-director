@@ -11,3 +11,4 @@ docs/404.html
 *.todo
 .ipynb_checkpoints/
 *.ipynb
+_site
