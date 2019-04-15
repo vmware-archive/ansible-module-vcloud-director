@@ -133,7 +133,7 @@ options:
         required: false
     operation:
         description:
-            - operation on vApp (poweron/poweroff/deploy/undeploy/list_vms/list_networks).
+            - operation on vApp (poweron/poweroff/deploy/undeploy/undeploy_action/list_vms/list_networks).
             - One from state or operation has to be provided.
         required: false
 
@@ -177,8 +177,8 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy', 'list_vms', 'list_networks']
-
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy', 'undeploy_action', 'list_vms', 'list_networks']
+VAPP_VM_UNDEPLOY_ACTIONS = ['poweroff', 'suspend', 'shutdown', 'force']
 VM_STATUSES = {'3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF'}
 
 
@@ -208,6 +208,7 @@ def vapp_argument_spec():
         force=dict(type='bool', required=False, default=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
+        undeploy_action=dict(choices=VAPP_VM_UNDEPLOY_ACTIONS, required=False),
     )
 
 
@@ -240,6 +241,9 @@ class Vapp(VcdAnsibleModule):
 
         if state == "undeploy":
             return self.undeploy()
+
+        if state == "undeploy_action":
+            return self.undeploy_action(self.params.get('undeploy_action'))
 
         if state == "list_vms":
             return self.list_vms()
@@ -436,6 +440,42 @@ class Vapp(VcdAnsibleModule):
             response['changed'] = True
         else:
             response['warnings'] = 'Vapp {} is already undeployed.'.format(vapp_name)
+
+        return response
+
+    def undeploy_action(self,action):
+        vapp_name = self.params.get('vapp_name')
+        response = dict()
+        response['changed'] = False
+        isCorrect = False
+        vapp = self.get_vapp()
+
+        if (action=="poweroff"):
+            isCorrect=vapp.is_powered_on()
+            response['msg'] = 'Vapp {} has been undeployed and powered off.'.format(vapp_name)
+            response['changed'] = True
+        elif (action=="suspend"):
+            isCorrect= not vapp.is_suspended()
+            response['msg'] = 'Vapp {} has been undeployed and suspended.'.format(vapp_name)
+            response['changed'] = True
+        elif (action=="shutdown"):
+            isCorrect=vapp.is_powered_on()
+            response['msg'] = 'Vapp {} has been undeployed and shutted down.'.format(vapp_name)
+            response['changed'] = True
+        elif (action=="force"):
+            isCorrect=vapp.is_powered_on()
+            response['msg'] = 'Vapp {} has been undeployed and powered off.'.format(vapp_name)
+            response['changed'] = True
+        else:
+            isCorrect=false
+
+        if isCorrect:
+            vapp_resource = self.vdc.get_vapp(vapp_name)
+            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+            undeploy_vapp_task = vapp.undeploy(action=action)
+            self.execute_task(undeploy_vapp_task)
+        else:
+            response['warnings'] = 'Vapp {} is powered off.'.format(vapp_name)
 
         return response
 
