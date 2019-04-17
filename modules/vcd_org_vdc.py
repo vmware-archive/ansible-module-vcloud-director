@@ -49,6 +49,11 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         type: bool
+    tenant_org_name:
+        description:
+            - The name of the tenant org within which to create the VDC
+        required: true
+        type: str
     vdc_name:
         description:
             - The name of the new vdc
@@ -278,6 +283,7 @@ ORG_VDC_STATES = ['present', 'absent', 'update']
 
 def org_vdc_argument_spec():
     return dict(
+        tenant_org_name=dict(type='str', required=True),
         vdc_name=dict(type='str', required=True),
         provider_vdc_name=dict(type='str', required=False),
         description=dict(type='str', required=False, default=''),
@@ -314,7 +320,8 @@ class Vdc(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(Vdc, self).__init__(**kwargs)
         logged_in_org = self.client.get_org()
-        self.org = Org(self.client, resource=logged_in_org)
+        tenant_org = self.client.get_org_by_name(self.params.get('tenant_org_name'))
+        self.org = Org(self.client, resource=tenant_org)
 
     def manage_states(self):
         state = self.params.get('state')
