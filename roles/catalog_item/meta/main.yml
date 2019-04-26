@@ -1,6 +1,6 @@
 # Copyright © 2018 VMware, Inc. All Rights Reserved.
-# SPDX-License-Identifier: BSD-2-Clause
-
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+---
 galaxy_info:
   author: your name
   description: your description
@@ -17,7 +17,7 @@ galaxy_info:
   # - GPLv3
   # - Apache
   # - CC-BY
-  license: license (GPLv2, CC-BY, etc)
+  license: license (BSD, GPLv3)
 
   min_ansible_version: 1.2
 
