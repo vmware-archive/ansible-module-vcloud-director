@@ -1,5 +1,7 @@
-# ---
-# # tasks file for roles/user
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+---
+# tasks file for roles/user
 
 - name: create user
   no_log: False

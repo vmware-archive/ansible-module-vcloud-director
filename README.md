@@ -27,4 +27,4 @@ ansible-module-vcloud-director is a set of ansible modules that manage a VMware 
 The ansible-module-vcloud-director project team welcomes contributions from the community. Before you start working with ansible-module-vcloud-director, please read our [Developer Certificate of Origin](https://cla.vmware.com/dco). All contributions to this repository must be signed as described on that page. Your signature certifies that you wrote the patch or have the right to pass it on as an open-source patch. For more detailed information, refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
-[BSD-2 License](LICENSE.txt)
+[BSD-2 License or GPLv3](LICENSE.txt)
