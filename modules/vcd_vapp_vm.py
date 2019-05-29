@@ -139,7 +139,7 @@ options:
         required: false
     operation:
         description:
-            - operations performed over new vapp (poweron/poweroff/modifycpu/modifymemory/reloadvm/list_disks/list_nics).One from state or operation has to be provided.
+            - operations performed over new vapp (poweron/poweroff/modifycpu/modifymemory/reloadvm/list_disks/list_nics/list_password).One from state or operation has to be provided.
         required: false
 author:
     - mtaneja@vmware.com
@@ -192,7 +192,7 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupport
 
 VAPP_VM_STATES = ['present', 'absent', 'update']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
-                      'deploy', 'undeploy', 'list_disks', 'list_nics']
+                      'deploy', 'undeploy', 'list_disks', 'list_nics', 'list_password']
 
 
 def vapp_vm_argument_spec():
@@ -264,6 +264,9 @@ class VappVM(VcdAnsibleModule):
 
         if operation == "list_nics":
             return self.list_nics()
+
+        if operation == "list_password":
+            return self.list_password()
 
     def get_source_resource(self):
         source_catalog_name = self.params.get('source_catalog_name')
@@ -557,6 +560,19 @@ class VappVM(VcdAnsibleModule):
 
         return response
 
+    def list_password(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = []
+
+        vm = self.get_vm()
+        guestCustomization = self.client.get_resource(
+            vm.resource.get('href') + '/guestCustomizationSection')
+        response['msg'].append({
+            'password': guestCustomization.AdminPassword.text
+        })
+
+        return response
 
 def main():
     argument_spec = vapp_vm_argument_spec()
