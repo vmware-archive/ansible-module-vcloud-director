@@ -68,12 +68,12 @@ options:
         required: false
     state:
         description:
-            - state of disk ('present'/'absent').
+            - state of disk ('present'/'absent'/'update').
             - One from state or operation has to be provided.
         required: true
     operation:
         description:
-            - operation on Disk ('update'/'read').
+            - operation on Disk ('read').
             - One from state or operation has to be provided.
         required: false
 author:
