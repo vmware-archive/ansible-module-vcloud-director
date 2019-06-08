@@ -1598,6 +1598,106 @@ and any objects it contains that are in a state that normally allows removal. Th
 <li>org_name - (Required) name of the organization</li>
 <li>operation == "read" (Required) to read organization</li>
 </ul>
+<li>
+<h5>Add Rights</h5>
+</li>
+<pre>
+<code>
+ - name: add rights to org
+   vcd_org:
+	org_name: "test_org"
+	org_rights:
+	  - test_right_1
+	  - test_right_2
+	operation: "add_rights"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>org_name - (Required) name of the organization</li>
+<li>org_rights - (Required) list of rights to be added to an organization</li>
+<li>operation == "add_rights" (Required) to add rights to the organization</li>
+</ul>
+<li>
+<h5>Remove Rights</h5>
+</li>
+<pre>
+<code>
+ - name: remove rights from org
+   vcd_org:
+	org_name: "test_org"
+	org_rights:
+	  - test_right_1
+	  - test_right_2
+	operation: "remove_rights"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>org_name - (Required) name of the organization</li>
+<li>org_rights - (Required) list of rights to be remove to an organization</li>
+<li>operation == "remove_rights" (Required) to remove rights from the organization</li>
+</ul>
+<li>
+<h5>List Rights</h5>
+</li>
+<pre>
+<code>
+ - name: list org rights
+   vcd_org:
+	org_name: "test_org"
+	operation: "list_rights"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>org_name - (Required) name of the organization</li>
+<li>operation == "list_rights" (Required) to list available rights of the organization</li>
+</ul>
+<li>
+<h5>List Roles</h5>
+</li>
+<pre>
+<code>
+ - name: list org roles
+   vcd_org:
+	org_name: "test_org"
+	operation: "list_roles"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>org_name - (Required) name of the organization</li>
+<li>operation == "list_roles" (Required) to list available roles of the organization</li>
+</ul>
 </ul>
 </ol>
 </div>

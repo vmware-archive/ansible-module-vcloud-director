@@ -68,7 +68,7 @@ options:
         required: false
     operation:
         description:
-            - operation which should be performed over org (read)
+            - operation which should be performed over org
             - One from state or operation has to be provided.
         required: false
 author:
@@ -103,7 +103,7 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, BadRequestException
 
 VCD_ORG_STATES = ['present', 'absent', 'update']
-VCD_ORG_OPERATIONS = ['read']
+VCD_ORG_OPERATIONS = ['read', 'add_rights', 'remove_rights', 'list_rights', 'list_roles']
 
 
 def org_argument_spec():
@@ -113,6 +113,7 @@ def org_argument_spec():
         is_enabled=dict(type='bool', required=False, default=False),
         force=dict(type='bool', required=False, default=None),
         recursive=dict(type='bool', required=False, default=None),
+        org_rights=dict(type='list', required=False),
         state=dict(choices=VCD_ORG_STATES, required=False),
         operation=dict(choices=VCD_ORG_OPERATIONS, required=False),
     )
@@ -121,8 +122,6 @@ def org_argument_spec():
 class VCDOrg(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VCDOrg, self).__init__(**kwargs)
-        sys_admin = self.client.get_admin()
-        self.system = System(self.client, admin_resource=sys_admin)
 
     def manage_states(self):
         state = self.params.get('state')
@@ -140,6 +139,18 @@ class VCDOrg(VcdAnsibleModule):
         if operation == "read":
             return self.read()
 
+        if operation == "add_rights":
+            return self.add_rights()
+
+        if operation == "remove_rights":
+            return self.remove_rights()
+
+        if operation == "list_rights":
+            return self.list_rights()
+
+        if operation == "list_roles":
+            return self.list_roles()
+
     def create(self):
         org_name = self.params.get('org_name')
         full_name = self.params.get('full_name')
@@ -148,6 +159,8 @@ class VCDOrg(VcdAnsibleModule):
         response['changed'] = False
 
         try:
+            sys_admin = self.client.get_admin()
+            self.system = System(self.client, admin_resource=sys_admin)
             self.system.create_org(org_name, full_name, is_enabled)
             response['msg'] = 'Org {} has been created.'.format(org_name)
             response['changed'] = True
@@ -194,12 +207,64 @@ class VCDOrg(VcdAnsibleModule):
         response['changed'] = False
 
         try:
+            sys_admin = self.client.get_admin()
+            self.system = System(self.client, admin_resource=sys_admin)
             delete_org_task = self.system.delete_org(org_name, force, recursive)
             self.execute_task(delete_org_task)
             response['msg'] = "Org {} has been deleted.".format(org_name)
             response['changed'] = True
         except EntityNotFoundException:
             response['warnings'] = "Org {} is not present.".format(org_name)
+
+        return response
+
+    def add_rights(self):
+        org_name = self.params.get('org_name')
+        org_rights = self.params.get('org_rights')
+        response = dict()
+        response['changed'] = False
+
+        resource = self.client.get_org_by_name(org_name)
+        org = Org(self.client, resource=resource)
+        org.add_rights(org_rights)
+        response['msg'] = "Rights has been added to org successfully."
+        response['changed'] = True
+
+        return response
+
+    def remove_rights(self):
+        org_name = self.params.get('org_name')
+        org_rights = self.params.get('org_rights')
+        response = dict()
+        response['changed'] = False
+
+        resource = self.client.get_org_by_name(org_name)
+        org = Org(self.client, resource=resource)
+        org.remove_rights(org_rights)
+        response['msg'] = "Rights has been removed to org successfully."
+        response['changed'] = True
+
+        return response
+
+    def list_rights(self):
+        org_name = self.params.get('org_name')
+        response = dict()
+        response['changed'] = False
+
+        resource = self.client.get_org_by_name(org_name)
+        org = Org(self.client, resource=resource)
+        response['msg'] = org.list_rights_of_org()
+
+        return response
+
+    def list_roles(self):
+        org_name = self.params.get('org_name')
+        response = dict()
+        response['changed'] = False
+
+        resource = self.client.get_org_by_name(org_name)
+        org = Org(self.client, resource=resource)
+        response['msg'] = org.list_roles()
 
         return response
 
@@ -217,7 +282,7 @@ def main():
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('One of from state/operation should be provided.')
+            raise Exception('Please provide state or operation for the module')
 
     except Exception as error:
         response['msg'] = error
