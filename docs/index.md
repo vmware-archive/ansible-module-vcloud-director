@@ -1617,18 +1617,19 @@ and any objects it contains that are in a state that normally allows removal. Th
 <code>
  - name: create vdc
    vcd_org_vdc:
-	vdc_name: "test_vdc"
-	provider_vdc_name: "test_provider_vdc"
-	description: "test vdc description"
-	allocation_model: "AllocationVApp"
-	is_enabled: "false"
+	vdc_name: test_vdc
+	vdc_org_name: test_org
+	provider_vdc_name: test_provider_vdc
+	description: test vdc description
+	allocation_model: AllocationVApp
+	is_enabled: false
 	storage_profiles:
-	- name: "Performance"
+	- name: Performance
           enabled: true
           units: "MB"
           limit: 50000
           default: true
-	cpu_units : "MHz"
+	cpu_units : MHz
 	cpu_allocated : 0
 	cpu_limit : 0
 	mem_units : 'MB'
@@ -1641,7 +1642,7 @@ and any objects it contains that are in a state that normally allows removal. Th
 	resource_guaranteed_cpu : 1.0
 	vcpu_in_mhz : 1024
 	is_thin_provision : true
-	network_pool_name : "test_network_pool"
+	network_pool_name : test_network_pool
 	uses_fast_provisioning : false
 	over_commit_allowed : false
 	vm_discovery_enabled : true
@@ -1657,20 +1658,21 @@ and any objects it contains that are in a state that normally allows removal. Th
 <li>host - (Optional) - vCloud Director host name</li>
 <li>api_version - (Optional) - Pyvcloud API version</li>
 <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
-<li>vdc_name - (Required) name of the new org vdc</li>
-<li>provider_vdc_name - (Required) The name of an existing provider vdc</li>
-<li>description - (Optional) description of the new org vdc</li>
-<li>allocation_model - (Optional) allocation model used by this vdc. Accepted values are 'AllocationVApp', 'AllocationPool' or 'ReservationPool'</li>
-<li>cpu_units - (Optional) unit for compute capacity allocated to this vdc. Accepted values are 'MHz' or 'GHz'</li>
-<li>cpu_allocated - (Optional) capacity that is committed to be available</li>
-<li>cpu_limit - (Optional) capacity limit relative to the value specified for allocation</li>
-<li>mem_units - (Optional) unit for memory capacity allocated to this vdc. Acceptable values are 'MB' or 'GB'</li>
-<li>mem_allocated - (Optional) memory capacity that is committed to be available</li>
-<li>mem_limit - (Optional) memory capacity limit relative to the value specified for allocation</li>
-<li>nic_quota - (Optional) maximum number of virtual NICs allowed in this vdc. Defaults to 0, which specifies an unlimited number</li>
-<li>network_quota - (Optional) maximum number of network objects that can be deployed in this vdc. Defaults to 0, which means no networks can be deployed</li>
-<li>vm_quota - (Optional) maximum number of VMs that can be created in this vdc. Defaults to 0, which specifies an unlimited number</li>
-<li>storage_profiles - (Optional) list of provider vdc storage profiles to add to this vdc. Each item is a dictionary that should include the following elements:</li>
+<li>vdc_name - name of the new org vdc</li>
+<li>vdc_org_name - name of the organization the new vdc associated with</li> 
+<li>provider_vdc_name - The name of an existing provider vdc</li>
+<li>description - description of the new org vdc</li>
+<li>allocation_model - allocation model used by this vdc. Accepted values are 'AllocationVApp', 'AllocationPool' or 'ReservationPool'</li>
+<li>cpu_units - unit for compute capacity allocated to this vdc. Accepted values are 'MHz' or 'GHz'</li>
+<li>cpu_allocated - capacity that is committed to be available</li>
+<li>cpu_limit - capacity limit relative to the value specified for allocation</li>
+<li>mem_units - unit for memory capacity allocated to this vdc. Acceptable values are 'MB' or 'GB'</li>
+<li>mem_allocated - memory capacity that is committed to be available</li>
+<li>mem_limit - memory capacity limit relative to the value specified for allocation</li>
+<li>nic_quota - maximum number of virtual NICs allowed in this vdc. Defaults to 0, which specifies an unlimited number</li>
+<li>network_quota - maximum number of network objects that can be deployed in this vdc. Defaults to 0, which means no networks can be deployed</li>
+<li>vm_quota - maximum number of VMs that can be created in this vdc. Defaults to 0, which specifies an unlimited number</li>
+<li>storage_profiles - list of provider vdc storage profiles to add to this vdc. Each item is a dictionary that should include the following elements:</li>
 	    <ul>
             <li>name - name of the PVDC storage profile</li>
             <li>enabled - true/false, true if the storage profile is enabled for this vdc else false</li>
@@ -1678,27 +1680,27 @@ and any objects it contains that are in a state that normally allows removal. Th
             <li>limit - Max number of units allocated for this storage profile</li>
             <li>default - true/false, true if this is default storage profile for this vdc else false</li>
 	    </ul>
-<li>resource_guaranteed_memory - (Optional) percentage of allocated CPU
+<li>resource_guaranteed_memory - percentage of allocated CPU
             resources guaranteed to vApps deployed in this vdc. Value defaults
             to 1.0 if the element is empty</li>
-<li>resource_guaranteed_cpu - (Optional) percentage of allocated memory
+<li>resource_guaranteed_cpu - percentage of allocated memory
             resources guaranteed to vApps deployed in this vdc. Value defaults
             to 1.0 if the element is empty</li>
-<li>vcpu_in_mhz - (Optional) specifies the clock frequency, in MegaHertz,
+<li>vcpu_in_mhz - specifies the clock frequency, in MegaHertz,
             for any virtual CPU that is allocated to a VM</li>
-<li>is_thin_provision - (Optional) true/false, true to request thin provisioning else false</li>
-<li>network_pool_name - (Optional) name to a network pool in the provider
+<li>is_thin_provision - true/false, true to request thin provisioning else false</li>
+<li>network_pool_name - name to a network pool in the provider
             vdc that this org vdc should use</li>
-<li>uses_fast_provisioning - (Optional) true/false, true to request fast provisioning else false</li>
-<li>over_commit_allowed - (Optional) true/false, false to disallow creation of the VDC
+<li>uses_fast_provisioning - true/false, true to request fast provisioning else false</li>
+<li>over_commit_allowed - true/false, false to disallow creation of the VDC
             if the AllocationModel is AllocationPool or ReservationPool and the
             ComputeCapacity specified is greater than what the backing provider
             VDC can supply. Defaults to true, if empty or missing</li>
-<li>vm_discovery_enabled - (Optional) true/false, true if discovery of vCenter VMs
+<li>vm_discovery_enabled - true/false, true if discovery of vCenter VMs
             is enabled for resource pools backing this vdc else false</li>
-<li>is_enabled - (Optional) true/false, true if this vdc is enabled for use by the
+<li>is_enabled - true/false, true if this vdc is enabled for use by the
             organization users else false. The default value is true</li>
- <li>state == "present" (Required) to create org vdc</li>
+ <li>state == "present" to create org vdc</li>
  </ul>
  <li>
  <h5>Update Org VDC</h5>
@@ -1720,8 +1722,8 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
  <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
- <li>vdc_name - (Required) Name of the vdc</li>
- <li>is_enabled - (Required) To enable/disable the vdc. The default value is true.</li>
+ <li>vdc_name - Name of the vdc</li>
+ <li>is_enabled - To enable/disable the vdc. The default value is true.</li>
  <li>state == "update" (Required) to update vdc</li>
  </ul>
  <li>
@@ -1743,9 +1745,34 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>host - (Optional) - vCloud Director host name</li>
  <li>api_version - (Optional) - Pyvcloud API version</li>
  <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
- <li>vdc_name - (Required) Name of the vdc</li>
+ <li>vdc_name - Name of the vdc</li>
  <li>state == "absent" (Required) to delete vdc</li>
  </ul>
+ </ul>
+ </li>
+ <li>
+ <h3>Org VDC Operations</h3>
+ <ul>
+ <li>
+ <h5>List Org VDC(s)</h5>
+ </li>
+ <pre>
+ <code>
+ - name: list_vdcs
+   vcd_org_vdc:
+   	operation: list_vdcs
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>operation == "list_vdcs" (Required) to list org vdc(s)</li>
+</ul>
 </ul>
 </li>
 </ol>
@@ -1859,8 +1886,145 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>api_version - (Optional) - Pyvcloud API version</li>
  <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>username - (Required) username of the user</li>
- <li>state == "absent" (Required) to update user</li>
+ <li>state == "absent" (Required) to delete user</li>
 </ul>
 </ul>
 </ol>
 </div>
+<!--				  -->
+<!-- Role Use Case -->
+<div class="role-usage col-12" id="role-usage">
+<h2>Role Example Usage</h2>
+ <hr />
+ <ol>
+ <li>
+ <h3>Role States</h3>
+ </li>
+ <ul>
+ <li>
+ <h5>Create Role</h5>
+ </li>
+ <pre>
+ <code>
+ - name: create role
+   vcd_role:
+   	role_name: test_role
+   	role_description: test role description
+   	role_rights:
+   	 - test_right_01
+   	 - test_right_02
+   	state: present
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>role_name - Name of the new role</li>
+ <li>role_description - Description of new role</li>
+ <li>role_rights - list of rights attached with role</li>
+ <li>state - (Required) "present" to create role</li>
+</ul>
+<li>
+ <h5>Update Role</h5>
+ </li>
+ <pre>
+ <code>
+ - name: update role
+   vcd_role:
+   	role_name: test_role
+   	role_description: test role description
+   	role_rights:
+   	 - test_right_01
+   	 - test_right_02
+   	state: update
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>role_name - Name of the role needs to be updated</li>
+ <li>role_description - Updated description of role</li>
+ <li>role_rights - Updated list of rights attached with role</li>
+ <li>state - (Required) "update" to update role</li>
+</ul>
+<li>
+ <h5>Delete Role</h5>
+ </li>
+ <pre>
+ <code>
+ - name: delete role
+   vcd_role:
+   	role_name: test_role
+   	state: absent
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>role_name - Name of role needs to be deleted</li>
+ <li>state - (Required) "absent" to delete role</li>
+</ul>
+</ul>
+<li>
+<h3>Role Operations</h3>
+</li>
+<ul>
+ <li>
+ <h5>List Roles</h5>
+ </li>
+ <pre>
+ <code>
+ - name: list roles
+   vcd_roles:
+   	operation: list_roles
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>operation - (Required) "list_roles" to list all available roles inside logged in organization</li>
+</ul>
+ <li>
+ <h5>List Rights</h5>
+ </li>
+ <pre>
+ <code>
+ - name: list rights
+   vcd_roles:
+   	operation: list_rights
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>operation - (Required) "list_rights" to list all available rights of the logged in organization</li>
+</ul>
+</ul>
+</ol>
+</div>
+
