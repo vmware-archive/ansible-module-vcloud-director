@@ -1759,16 +1759,16 @@ and any objects it contains that are in a state that normally allows removal. Th
 <li>api_version - (Optional) - Pyvcloud API version</li>
 <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
 <li>vdc_name - name of the new org vdc</li>
-<li>vdc_org_name - name of the organization the new vdc associated with</li> 
+<li>vdc_org_name - associated organization name with the new vdc</li> 
 <li>provider_vdc_name - The name of an existing provider vdc</li>
 <li>description - description of the new org vdc</li>
 <li>allocation_model - allocation model used by this vdc. Accepted values are 'AllocationVApp', 'AllocationPool' or 'ReservationPool'</li>
-<li>cpu_units - unit for compute capacity allocated to this vdc. Accepted values are 'MHz' or 'GHz'</li>
-<li>cpu_allocated - capacity that is committed to be available</li>
-<li>cpu_limit - capacity limit relative to the value specified for allocation</li>
-<li>mem_units - unit for memory capacity allocated to this vdc. Acceptable values are 'MB' or 'GB'</li>
-<li>mem_allocated - memory capacity that is committed to be available</li>
-<li>mem_limit - memory capacity limit relative to the value specified for allocation</li>
+<li>cpu_units - unit for compute capacity allocated to this vdc. Accepted values are 'MHz' or 'GHz'. Default value is 'MHz'</li>
+<li>cpu_allocated - capacity that is committed to be available. Default value is 1</li>
+<li>cpu_limit - capacity limit relative to the value specified for allocation. Default value is 1</li>
+<li>mem_units - unit for memory capacity allocated to this vdc. Acceptable values are 'MB' or 'GB'. Default value is 'MB'</li>
+<li>mem_allocated - memory capacity that is committed to be available.. Default value is 1</li>
+<li>mem_limit - memory capacity limit relative to the value specified for allocation. Default value is 1</li>
 <li>nic_quota - maximum number of virtual NICs allowed in this vdc. Defaults to 0, which specifies an unlimited number</li>
 <li>network_quota - maximum number of network objects that can be deployed in this vdc. Defaults to 0, which means no networks can be deployed</li>
 <li>vm_quota - maximum number of VMs that can be created in this vdc. Defaults to 0, which specifies an unlimited number</li>
@@ -1810,6 +1810,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  - name: update vdc
    vcd_org_vdc:
 	vdc_name: "test_vdc"
+	vdc_org_name: test_org
 	is_enabled: "true"
 	state: "update"
  </code>
@@ -1823,6 +1824,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>api_version - (Optional) - Pyvcloud API version</li>
  <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>vdc_name - Name of the vdc</li>
+ <li>vdc_org_name - associated organization with vdc</li> 
  <li>is_enabled - To enable/disable the vdc. The default value is true.</li>
  <li>state == "update" (Required) to update vdc</li>
  </ul>
@@ -1834,6 +1836,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  - name: delete Vdc
    vcd_org_vdc:
 	vdc_name: "test_vdc"
+	vdc_org_name: test_org
 	state: "absent"
  </code>
  </pre>
@@ -1846,6 +1849,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  <li>api_version - (Optional) - Pyvcloud API version</li>
  <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
  <li>vdc_name - Name of the vdc</li>
+ <li>vdc_org_name - associated organization with vdc</li> 
  <li>state == "absent" (Required) to delete vdc</li>
  </ul>
  </ul>
