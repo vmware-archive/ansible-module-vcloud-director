@@ -4,7 +4,12 @@
 # ---
 # tasks file for roles/org
 
-# # ############################################ Create Org ##############################################################
+# # ########################################### Get the Organization Status #############################################
+- name: Get Organisation State
+  set_fact:
+    org_state: "{{ state }}"
+
+# # ############################################ Create/Update Org ##############################################################
 - name: create org
   vcd_org:
     user: XXXXXXXXXX
@@ -14,57 +19,11 @@
     org_name: "{{ org_name }}"
     full_name: "{{ org_full_name }}"
     is_enabled : "{{ is_enabled }}"
-    state: "present"
+    state: {{ org_state }}
   register: output
+  when: state == "present" or state == "update"
 
-- name: create org output
-  debug:
-    msg: '{{ output }}'
-
-# # ############################################ Read Org ##############################################################
-- name: read org
-  vcd_org:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
-    org_name: "{{ org_name }}"
-    operation: "read"
-  register: output
-
-- name: read org output
-  debug:
-    msg: '{{ output }}'
-
-# # ############################################ Disable Org ##############################################################
-- name: disable org
-  vcd_org:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
-    org_name: "{{ org_name }}"
-    is_enabled: "false"
-    state: "update"
-  register: output
-
-- name: disable org output
-  debug:
-    msg: '{{ output }}'
-
-# # # ############################################ Enable Org ##############################################################
-- name: enable org
-  vcd_org:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
-    org_name: "{{ org_name }}"
-    is_enabled: "true"
-    state: "update"
-  register: output
-
-- name: enable org output
+- name: delete org output
   debug:
     msg: '{{ output }}'
 
@@ -78,9 +37,11 @@
     org_name: "{{ org_name }}"
     force: "{{ force }}"
     recursive: "{{ recursive }}"
-    state: "absent"
+    state: {{ org_state }}
   register: output
+  when: state == "absent"
 
 - name: delete org output
   debug:
     msg: '{{ output }}'
+

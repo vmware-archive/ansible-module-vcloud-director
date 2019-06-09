@@ -6,7 +6,10 @@
 org_name: "test_org_100"
 org_full_name: "test_org_full_name_100"
 
-#org enabled
+#Org State: present, update or absent
+state: present 
+
+#org enabled: true or false
 is_enabled: True
 
 #Force delete org
