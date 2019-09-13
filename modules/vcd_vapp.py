@@ -430,7 +430,7 @@ class Vapp(VcdAnsibleModule):
         if vapp.is_deployed():
             vapp_resource = self.vdc.get_vapp(vapp_name)
             vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-            undeploy_vapp_task = vapp.undeploy()
+            undeploy_vapp_task = vapp.undeploy(action="powerOff")
             self.execute_task(undeploy_vapp_task)
             response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
             response['changed'] = True
