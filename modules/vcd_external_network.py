@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_external_network
-short_description: Ansible module to manage (create) external networks in vCloud Director.
+short_description: Ansible module to manage (create/update/delete) external networks in vCloud Director.
 version_added: "2.4"
 description:
-    - "Ansible module to manage (create) external networks in vCloud Director."
+    - "Ansible module to manage (create/update/delete) external networks in vCloud Director."
 
 options:
     user:
