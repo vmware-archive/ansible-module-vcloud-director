@@ -246,10 +246,10 @@ class VappVMDisk(VcdAnsibleModule):
         disk_size = int(disks.Item[index]['{' + NSMAP['rasd'] + '}VirtualQuantity'])
         if disk_size == (size * 1024 * 1024):
             msg = 'Vapp VM disk with name {0} already has target size {1}.'
-            response['msg'] = msg.format(disk_name,self.convert_bytes_to_gb(size * 1024 * 1024))
+            response['msg'] = msg.format(disk_name, self.convert_bytes_to_gb(size * 1024 * 1024))
         elif disk_size > (size * 1024 * 1024):
             msg = 'Vapp VM disk with name {0} may only be increased, not decreased: current size {1}.'
-            response['msg'] = msg.format(disk_name,self.convert_bytes_to_gb(disk_size))
+            response['msg'] = msg.format(disk_name, self.convert_bytes_to_gb(disk_size))
             response['failed'] = True
         else:
             disks.Item[index]['{' + NSMAP['rasd'] + '}VirtualQuantity'] = size * 1024 * 1024

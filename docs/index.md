@@ -2131,4 +2131,335 @@ and any objects it contains that are in a state that normally allows removal. Th
 </ul>
 </ol>
 </div>
+<!--                  -->
+<!-- vCD External Network Use Case -->
+<div class="external-network-usage col-12" id="external-network-usage">
+<h2>vCD External Network Example Usage</h2>
+ <hr />
+ <ol>
+ <li>
+ <h3>vCD External Network States</h3>
+ </li>
+ <ul>
+ <li>
+ <h5>Create vCD External Network</h5>
+ </li>
+ <pre>
+ <code>
+ - name: create vCD external network
+   vcd_external_network:
+    vc_name: vc.0
+    port_group_names:
+        - VM Network
+    network_name: external-network
+    gateway_ip: 10.176.3.253
+    netmask: 255.255.0.0
+    ip_ranges:
+        - 10.176.7.68-10.176.7.69
+    state: "present"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>vc_name - Name of the underlying vCenter</li>
+ <li>port_group_names - list of vCenter port groups external network needs to be attached with</li>
+ <li>network_name - Name of the new vCD External Network</li>
+ <li>gateway_ip - IP address of the gateway</li>
+ <li>netmask - Netmask of the gateway</li>
+ <li>ip_ranges - list of IP ranges used for static pool allocation in the network</li>
+ <li>description - (Optional) Description for vCD External Network</li>
+ <li>primary_dns_ip - (Optional) IP address of primary DNS server</li>
+ <li>secondary_dns_ip - (Optional) IP address of secondary DNS Server</li>
+ <li>dns_suffix - (Optional) DNS suffix</li>
+ <li>state - (Required) "present" to create vCD External Network</li>
+</ul>
+<li>
+ <h5>Update vCD external network</h5>
+ </li>
+ <pre>
+ <code>
+ - name: update vCD external network
+   vcd_external_network:
+    network_name: external-network
+    description: new-network-description
+    new_network_name: new-network
+    state: update
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>network_name - Name of the exisiting External Network</li>
+ <li>new_network_name - New name of the network</li>
+ <li>description - Updated description of network</li>
+ <li>state - (Required) "update" to update vCD External Network</li>
+</ul>
+<li>
+ <h5>Delete vCD external network</h5>
+ </li>
+ <pre>
+ <code>
+ - name: delete vCD external network
+   vcd_external_network:
+    network_name: test_role
+    state: absent
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>network_name - Name of network to be deleted</li>
+ <li>force_delete - (Optional) boolean flag to delete network forcefully</li>
+ <li>state - (Required) "absent" to delete role</li>
+</ul>
+</ul>
+<li>
+<h3>vCD External Network Operations</h3>
+</li>
+<ul>
+ <li>
+ <h5>List External Networks</h5>
+ </li>
+ <pre>
+ <code>
+ - name: list vCD External Networks
+   vcd_external_network:
+    operation: list_networks
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>operation - (Required) "list_networks" to list all available External Networks</li>
+</ul>
+ <li>
+ <h5>Add new Subnet</h5>
+ </li>
+ <pre>
+ <code>
+ - name: add subnet to vCD External Network
+   vcd_external_network:
+    network_name: new-name
+    gateway_ip: 10.196.10.253
+    netmask: 255.255.0.0
+    ip_ranges:
+        - 10.196.7.68-10.196.7.69
+    operation: add_subnet
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>network_name - Name of the external network</li>
+ <li>gateway_ip - IP address of the gateway</li>
+ <li>netmask - Netmask of the gateway</li>
+ <li>ip_ranges - list of IP ranges used for static pool allocation in the network</li>
+ <li>operation - (Required) "add_subnet" to add new subnet to the network</li>
+</ul>
+ <li>
+ <h5>Add new IP Ranges</h5>
+ </li>
+ <pre>
+ <code>
+ - name: add new ip ranges to vCD External Network subnet
+   vcd_external_network:
+    network_name: new-name
+    gateway_ip: 10.196.10.253
+    ip_ranges:
+        - 10.196.7.68-10.196.7.69
+    operation: add_ip_ranges
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>network_name - Name of the external network</li>
+ <li>gateway_ip - IP address of the gateway</li>
+ <li>ip_ranges - list of IP ranges used for static pool allocation in the network</li>
+ <li>operation - (Required) "add_ip_ranges" to add new ip ranges to the subnet</li>
+</ul>
+<li>
+ <h5>Modify IP Ranges</h5>
+ </li>
+ <pre>
+ <code>
+ - name: modify existing ip ranges inside vCD External Network subnet
+   vcd_external_network:
+    network_name: new-name
+    gateway_ip: 10.196.10.253
+    ip_ranges:
+        - 10.196.7.68-10.196.7.69
+    new_ip_ranges:
+        - 10.196.8.68-10.196.8.69
+    operation: modify_ip_ranges
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>network_name - Name of the external network</li>
+ <li>gateway_ip - IP address of the gateway</li>
+ <li>ip_ranges - list of old IP ranges needs to be removed</li>
+ <li>new_ip_ranges - list of new IP ranges needs to be added</li>
+ <li>operation - (Required) "modify_ip_ranges" to modify ip ranges inside subnet</li>
+</ul>
+<li>
+ <h5>Delete IP Ranges</h5>
+ </li>
+ <pre>
+ <code>
+ - name: delete existing ip ranges inside vCD External Network subnet
+   vcd_external_network:
+    network_name: new-name
+    gateway_ip: 10.196.10.253
+    ip_ranges:
+        - 10.196.8.68-10.196.8.69
+    operation: delete_ip_ranges
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>network_name - Name of the external network</li>
+ <li>gateway_ip - IP address of the gateway</li>
+ <li>ip_ranges - list of IP ranges needs to be removed</li>
+ <li>operation - (Required) "delete_ip_ranges" to delete ip ranges inside subnet</li>
+</ul>   
+ <li>
+ <h5>Enable/Disable vCD External Network Subnet</h5>
+ </li>
+ <pre>
+ <code>
+ - name: enable vCD External Network subnet
+   vcd_external_network:
+    network_name: new-name
+    gateway_ip: 10.196.10.253
+    enable_subnet: True
+    operation: enable_subnet
+ </code>
+ </pre>
+ <pre>
+ <code>
+ - name: disable vCD External Network subnet
+   vcd_external_network:
+    network_name: new-name
+    gateway_ip: 10.196.10.253
+    enable_subnet: False
+    operation: enable_subnet
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>network_name - Name of the external network</li>
+ <li>gateway_ip - IP address of the gateway</li>
+ <li>enable_subnet - boolean flag to enable/disable external network subnet</li>
+ <li>operation - (Required) "enable_subnet" to enable/disable external network subnet</li>
+</ul>    
+ <li>
+ <h5>Attach vCenter Port Group to vCD External Network</h5>
+ </li>
+ <pre>
+ <code>
+ - name: attach port group to vCD External Network
+   vcd_external_network:
+    vc_name: vc.0
+    port_group_names:
+        - VM Network
+    network_name: new-name
+    operation: attach_port_group
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>vc_name - Name of the underlying vCenter</li>
+ <li>port_group_names - list of vCenter port groups external network needs to be attached with</li>
+ <li>network_name - Name of the external network</li>
+ <li>operation - (Required) "attach_port_group" to attach a port group to the external network</li>
+</ul>
+<li>
+<h5>Detach vCenter Port Group to vCD External Network</h5>
+</li>
+ <pre>
+ <code>
+ - name: detach port group to vCD External Network
+   vcd_external_network:
+    vc_name: vc.0
+    port_group_names:
+        - VM Network
+    network_name: new-name
+    operation: detach_port_group
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>vc_name - Name of the underlying vCenter</li>
+ <li>port_group_names - list of vCenter port groups external network needs to be detached with</li>
+ <li>network_name - Name of the external network</li>
+ <li>operation - (Required) "detach_port_group" to detach a port group to the external network</li>
+</ul>
+</ul>
+</ol>
+</div>
+<br />
+<hr />
+<h5 class="text-center">Hope Docs helped!</h5>
 
