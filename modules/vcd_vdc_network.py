@@ -241,11 +241,11 @@ class OrgVdcNetwork(VcdAnsibleModule):
         isolated = self.params.get('isolated')
         routed = self.params.get('routed')
         if direct:
-            return self.create_direct_network()
+            return self.create_org_vdc_direct_network()
         elif isolated:
-            return self.create_isolated_network()
+            return self.create_org_vdc_isolated_network()
         elif routed:
-            return self.create_routed_network()
+            return self.create_org_vdc_routed_network()
         else:
             raise ValueError("Bool 'direct', 'isolated' or 'routed' is missing")
 
