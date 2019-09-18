@@ -249,7 +249,7 @@ class OrgVdcNetwork(VcdAnsibleModule):
         else:
             raise ValueError("Bool 'direct', 'isolated' or 'routed' is missing")
 
-    def create_direct_network(self):
+    def create_org_vdc_direct_network(self):
         response = dict()
         response['changed'] = False
         network_name = self.params.get('network_name')
@@ -270,7 +270,7 @@ class OrgVdcNetwork(VcdAnsibleModule):
 
         return response
 
-    def create_isolated_network(self):
+    def create_org_vdc_isolated_network(self):
         response = dict()
         response['changed'] = False
         network_name = self.params.get('network_name')
@@ -306,7 +306,7 @@ class OrgVdcNetwork(VcdAnsibleModule):
 
         return response
 
-    def create_routed_network(self):
+    def create_org_vdc_routed_network(self):
         response = dict()
         response['changed'] = False
         network_name = self.params.get('network_name')
