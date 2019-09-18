@@ -63,15 +63,6 @@ options:
             - The name of the new gateway.
         type: str
         required: true
-    gateway_ip:
-        description:
-            - The IP for the new network required with Isolated network type.
-        type: str
-    netmask:
-        description:
-            - The netmask for the new network required with Isolated network
-              type.
-        type: str
     parent_network_name:
         description:
             - The name of the external network that the new network will be
@@ -120,11 +111,12 @@ EXAMPLES = '''
     org: "{{system_org}}"
     org_name: "{{customer_org}}"
     vdc_name: "{{vdc_name}}"
-    gateway_name: "{{gateway_name}}"
     network_name: "my direct network"
     description: "directly connected network"
     parent_network_name: "CLOUDLAB EXTERNAL NETWORK"
+    shared: True
     direct: True
+    state: "{{state}}"
 
 - name: create vdc network | ROUTED
   vcd_vdc_network:
@@ -140,16 +132,15 @@ EXAMPLES = '''
     network_name: "my ROUTED network"
     description: "ROUTED network"
     parent_network_name: "CLOUDLAB EXTERNAL NETWORK"
-    gateway_ip: "10.10.99.1"
-    netmask: "255.255.255.0"
     primary_dns_ip: 1.1.1.1
+    network_cidr: 10.20.99.1/24
     secondary_dns_ip: 2.2.2.2
     dns_suffix: routed.com
     ip_range_start: 10.10.99.2
     ip_range_end: 10.10.99.20
-    state: "{{state}}"
     shared: True
     routed: True
+    state: "{{state}}"
 
 - name: create vdc network | ISOLATED
   vcd_vdc_network:
@@ -161,10 +152,8 @@ EXAMPLES = '''
     org: "{{system_org}}"
     org_name: "{{customer_org}}"
     vdc_name: "{{vdc_name}}"
-    gateway_name: "{{gw_name}}"
     network_name: "my ISOLATED network"
     description: "directly ISOLATED network"
-    state: "{{state}}"
     network_cidr: 10.20.99.1/24
     primary_dns_ip: 8.8.8.8
     secondary_dns_ip: 9.9.9.9
@@ -178,6 +167,7 @@ EXAMPLES = '''
     dhcp_ip_range_end: 10.10.10.60
     shared: True
     isolated: True
+    state: "{{state}}"
 '''
 
 
@@ -187,245 +177,246 @@ changed: true if resource has been changed else false
 '''
 
 
-from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
+from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
-VAPP_NETWORK_STATES = ['present', 'absent']
+ORG_VDC_NETWORK_STATES = ['present', 'absent']
 
 
-def vdc_gw_argument_spec():
-    return dict(org_name=dict(type='str', required=True),
-                vdc_name=dict(type='str', required=True),
-                gateway_name=dict(type='str', required=True),
-                network_name=dict(type='str', required=True),
-                description=dict(type='str', required=False),
-                parent_network_name=dict(type='str', required=False),
-                shared=dict(type='bool', required=False, default=False),
-                gateway_ip=dict(type='str', required=False),
-                netmask=dict(type='str', required=False),
-                network_cidr=dict(type='str', required=False),
-                primary_dns_ip=dict(type='str', required=False),
-                secondary_dns_ip=dict(type='str', required=False),
-                dns_suffix=dict(type='str', required=False),
-                ip_range_start=dict(type='str', required=False),
-                ip_range_end=dict(type='str', required=False),
-                dhcp_enabled=dict(type='bool', required=False, default=False),
-                default_lease_time=dict(type='int', required=False),
-                max_lease_time=dict(type='int', required=False),
-                dhcp_ip_range_start=dict(type='str', required=False),
-                dhcp_ip_range_end=dict(type='str', required=False),
-                force=dict(type='bool', required=False, default=False),
-                state=dict(choices=VAPP_NETWORK_STATES, required=False,
-                           default='present'),
-                direct=dict(type='bool', required=False),
-                isolated=dict(type='bool', required=False),
-                routed=dict(type='bool', required=False),
-                guest_vlan_allowed=dict(type='bool', required=False),
-                sub_interface=dict(type='bool', required=False),
-                distributed_interface=dict(type='bool', required=False),
-                retain_net_info_across_deployments=dict(type='bool',
-                                                        required=False))
+def org_vdc_network_argument_spec():
+    return dict(
+        org_name=dict(type='str', required=True),
+        vdc_name=dict(type='str', required=True),
+        network_name=dict(type='str', required=True),
+        description=dict(type='str', required=False, default=None),
+        gateway_name=dict(type='str', required=False),
+        parent_network_name=dict(type='str', required=False),
+        shared=dict(type='bool', required=False, default=False),
+        network_cidr=dict(type='str', required=False),
+        primary_dns_ip=dict(type='str', required=False, default=None),
+        secondary_dns_ip=dict(type='str', required=False, default=None),
+        dns_suffix=dict(type='str', required=False, default=None),
+        ip_range_start=dict(type='str', required=False, default=None),
+        ip_range_end=dict(type='str', required=False, default=None),
+        dhcp_enabled=dict(type='bool', required=False, default=False),
+        default_lease_time=dict(type='int', required=False, default=None),
+        max_lease_time=dict(type='int', required=False, default=None),
+        dhcp_ip_range_start=dict(type='str', required=False, default=None),
+        dhcp_ip_range_end=dict(type='str', required=False, default=None),
+        force=dict(type='bool', required=False, default=False),
+        direct=dict(type='bool', required=False, default=None),
+        isolated=dict(type='bool', required=False, default=None),
+        routed=dict(type='bool', required=False, default=None),
+        guest_vlan_allowed=dict(type='bool', required=False),
+        sub_interface=dict(type='bool', required=False),
+        distributed_interface=dict(type='bool', required=False),
+        retain_net_info_across_deployments=dict(type='bool', required=False),
+        state=dict(choices=ORG_VDC_NETWORK_STATES, required=True)
+    )
 
 
-class VdcNet(VcdAnsibleModule):
+class OrgVdcNetwork(VcdAnsibleModule):
     def __init__(self, **kwargs):
-        super(VdcNet, self).__init__(**kwargs)
+        super(OrgVdcNetwork, self).__init__(**kwargs)
         self.vdc_name = self.params.get('vdc_name')
         self.org_name = self.params.get('org_name')
-        self.gateway_name = self.params.get('gateway_name')
-        self.network_name = self.params.get('network_name')
-        self.description = self.params.get('description')
-        self.parent_network_name = self.params.get('parent_network_name')
-        self.shared = self.params.get('shared')
-        self.gateway_ip = self.params.get('gateway_ip')
-        self.netmask = self.params.get('netmask')
-        self.network_cidr = self.params.get('network_cidr')
-        self.primary_dns_ip = self.params.get('primary_dns_ip')
-        self.secondary_dns_ip = self.params.get('secondary_dns_ip')
-        self.dns_suffix = self.params.get('dns_suffix')
-        self.ip_range_start = self.params.get('ip_range_start')
-        self.ip_range_end = self.params.get('ip_range_end')
-        self.dhcp_enabled = self.params.get('dhcp_enabled')
-        self.default_lease_time = self.params.get('default_lease_time')
-        self.max_lease_time = self.params.get('max_lease_time')
-        self.dhcp_ip_range_start = self.params.get('dhcp_ip_range_start')
-        self.dhcp_ip_range_end = self.params.get('dhcp_ip_range_end')
-        self.force = self.params.get('force')
-        self.state = self.params.get('state')
-        self.direct = self.params.get('direct')
-        self.isolated = self.params.get('isolated')
-        self.routed = self.params.get('routed')
-        self.guest_vlan_allowed = self.params.get('guest_vlan_allowed')
-        self.sub_interface = self.params.get('sub_interface')
-        self.distributed_interface = self.params.get('distributed_interface')
-        self.retain_net_info_across_deployments = self.params.get(
-            'retain_net_info_across_deployments')
-
         org_resource = self.client.get_org_by_name(self.org_name)
         self.org = Org(self.client, resource=org_resource)
         vdc_resource = self.org.get_vdc(self.vdc_name)
         self.vdc = VDC(self.client, name=self.vdc_name, resource=vdc_resource)
 
-
     def manage_states(self):
         state = self.params.get('state')
         if state == "present":
-            if self.direct:
-                return self.create_direct_network()
-            elif self.isolated:
-                return self.create_isolated_network()
-            elif self.routed:
-                return self.create_routed_network()
-            else:
-                raise Exception("Bool 'direct', 'isolated' or 'routed' is missing")
+            return self.create_org_vdc_network()
 
         if state == "absent":
-            return self.delete_network()
+            return self.delete_org_vdc_network()
 
+    def create_org_vdc_network(self):
+        direct = self.params.get('direct')
+        isolated = self.params.get('isolated')
+        routed = self.params.get('routed')
+        if direct:
+            return self.create_direct_network()
+        elif isolated:
+            return self.create_isolated_network()
+        elif routed:
+            return self.create_routed_network()
+        else:
+            raise ValueError("Bool 'direct', 'isolated' or 'routed' is missing")
 
     def create_direct_network(self):
         response = dict()
+        response['changed'] = False
+        network_name = self.params.get('network_name')
+        parent_network_name = self.params.get('parent_network_name')
+        description = self.params.get('description')
+        shared = self.params.get('shared')
 
         try:
-            self.vdc.get_direct_orgvdc_network(self.network_name)
-
+            self.vdc.get_direct_orgvdc_network(network_name)
         except EntityNotFoundException:
-            create = self.vdc.create_directly_connected_vdc_network(
-                self.network_name,
-                self.parent_network_name,
-                description=self.description,
-                is_shared=self.shared)
-
-            self.execute_task(create.Tasks.Task[0])
-
-            response['msg'] = 'Network {0} created'.format(self.network_name)
+            create_task = self.vdc.create_directly_connected_vdc_network(
+                network_name, parent_network_name, description=description, is_shared=shared)
+            self.execute_task(create_task.Tasks.Task[0])
+            response['msg'] = 'Org VDC Direct Network {0} has been created'.format(network_name)
             response['changed'] = True
-
         else:
-            response['warnings'] = 'Network {0} is already present.'.format(
-                self.network_name)
+            response['warnings'] = 'Org VDC Direct Network {0} is already present.'.format(network_name)
 
         return response
-
 
     def create_isolated_network(self):
         response = dict()
+        response['changed'] = False
+        network_name = self.params.get('network_name')
+        network_cidr = self.params.get('network_cidr')
+        description = self.params.get('description')
+        shared = self.params.get('shared')
+        primary_dns_ip = self.params.get('primary_dns_ip')
+        secondary_dns_ip = self.params.get('secondary_dns_ip')
+        dns_suffix = self.params.get('dns_suffix')
+        ip_range_start = self.params.get('ip_range_start')
+        ip_range_end = self.params.get('ip_range_end')
+        dhcp_enabled = self.params.get('dhcp_enabled')
+        default_lease_time = self.params.get('default_lease_time')
+        max_lease_time = self.params.get('max_lease_time')
+        dhcp_ip_range_start = self.params.get('dhcp_ip_range_start')
+        dhcp_ip_range_end = self.params.get('dhcp_ip_range_end')
 
         try:
-            self.vdc.get_isolated_orgvdc_network(self.network_name)
-
+            self.vdc.get_isolated_orgvdc_network(network_name)
         except EntityNotFoundException:
-            create = self.vdc.create_isolated_vdc_network(
-                self.network_name,
-                self.gateway_ip,
-                self.netmask,
-                description=self.description,
-                primary_dns_ip=self.primary_dns_ip,
-                secondary_dns_ip=self.secondary_dns_ip,
-                dns_suffix=self.dns_suffix,
-                ip_range_start=self.ip_range_start,
-                ip_range_end=self.ip_range_end,
-                is_dhcp_enabled=self.dhcp_enabled,
-                default_lease_time=self.default_lease_time,
-                max_lease_time=self.max_lease_time,
-                dhcp_ip_range_start=self.dhcp_ip_range_start,
-                dhcp_ip_range_end=self.dhcp_ip_range_end,
-                is_shared=self.shared)
-
-            self.execute_task(create.Tasks.Task[0])
-
-            response['msg'] = 'Network {0} created'.format(self.network_name)
+            create_task = self.vdc.create_isolated_vdc_network(
+                network_name, network_cidr, description=description, primary_dns_ip=primary_dns_ip,
+                secondary_dns_ip=secondary_dns_ip, dns_suffix=dns_suffix, ip_range_start=ip_range_start,
+                ip_range_end=ip_range_end, is_dhcp_enabled=dhcp_enabled, default_lease_time=default_lease_time,
+                max_lease_time=max_lease_time, dhcp_ip_range_start=dhcp_ip_range_start,
+                dhcp_ip_range_end=dhcp_ip_range_end, is_shared=shared)
+            self.execute_task(create_task.Tasks.Task[0])
+            response['msg'] = 'Org VDC Isolated Network {0} has been created'.format(network_name)
             response['changed'] = True
 
         else:
-            response['warnings'] = 'Network {0} is already present.'.format(
-                self.network_name)
+            response['warnings'] = 'Org VDC Isolated Network {0} is already present.'.format(network_name)
 
         return response
-
 
     def create_routed_network(self):
         response = dict()
+        response['changed'] = False
+        network_name = self.params.get('network_name')
+        gateway_name = self.params.get('gateway_name')
+        network_cidr = self.params.get('network_cidr')
+        description = self.params.get('description')
+        shared = self.params.get('shared')
+        primary_dns_ip = self.params.get('primary_dns_ip')
+        secondary_dns_ip = self.params.get('secondary_dns_ip')
+        dns_suffix = self.params.get('dns_suffix')
+        ip_range_start = self.params.get('ip_range_start')
+        ip_range_end = self.params.get('ip_range_end')
+        guest_vlan_allowed = self.params.get('guest_vlan_allowed')
+        sub_interface = self.params.get('sub_interface')
+        distributed_interface = self.params.get('distributed_interface')
+        retain_net_info_across_deployments = self.params.get('retain_net_info_across_deployments')
 
         try:
             self.vdc.get_routed_orgvdc_network(self.network_name)
-
         except EntityNotFoundException:
-            create = self.vdc.create_routed_vdc_network(
-                self.network_name,
-                self.gateway_name,
-                self.network_cidr,
-                description=self.description,
-                primary_dns_ip=self.primary_dns_ip,
-                secondary_dns_ip=self.secondary_dns_ip,
-                dns_suffix=self.dns_suffix,
-                ip_range_start=self.ip_range_start,
-                ip_range_end=self.ip_range_end,
-                is_shared=self.shared,
-                guest_vlan_allowed=self.guest_vlan_allowed,
-                sub_interface=self.sub_interface,
-                distributed_interface=self.distributed_interface,
-                retain_net_info_across_deployments=self.retain_net_info_across_deployments)
-
-            self.execute_task(create.Tasks.Task[0])
-
-            response['msg'] = 'Network {0} created'.format(self.network_name)
+            create_task = self.vdc.create_routed_vdc_network(
+                network_name, gateway_name, network_cidr, description=description,
+                primary_dns_ip=primary_dns_ip, secondary_dns_ip=secondary_dns_ip,
+                dns_suffix=dns_suffix, ip_range_start=ip_range_start, ip_range_end=ip_range_end,
+                is_shared=shared, guest_vlan_allowed=guest_vlan_allowed, sub_interface=sub_interface,
+                distributed_interface=distributed_interface,
+                retain_net_info_across_deployments=retain_net_info_across_deployments)
+            self.execute_task(create_task.Tasks.Task[0])
+            response['msg'] = 'Org VDC Routed Network {0} has been created'.format(network_name)
             response['changed'] = True
 
         else:
-            response['warnings'] = 'Network {0} is already present.'.format(
-                self.network_name)
+            response['warnings'] = 'Org VDC Routed Network {0} is already present.'.format(network_name)
 
         return response
 
-
-    def delete_network(self):
+    def delete_org_vdc_network(self):
         response = dict()
+        response['changed'] = False
+        direct = self.params.get('direct')
+        isolated = self.params.get('isolated')
+        routed = self.params.get('routed')
+        if direct:
+            return self.delete_org_vdc_direct_network()
+
+        if isolated:
+            return self.delete_org_vdc_isolated_network()
+
+        if routed:
+            return self.delete_org_vdc_routed_network()
+
+    def delete_org_vdc_direct_network(self):
+        response = dict()
+        response['changed'] = False
+        network_name = self.params.get('network_name')
+        force = self.params.get('force')
 
         try:
-            if self.direct:
-                self.vdc.get_direct_orgvdc_network(self.network_name)
-            elif self.isolated:
-                self.vdc.get_isolated_orgvdc_network(self.network_name)
-            elif self.routed:
-                self.vdc.get_routed_orgvdc_network(self.network_name)
-
+            self.vdc.get_direct_orgvdc_network(network_name)
         except EntityNotFoundException:
-            response['warnings'] = 'Network {} is not present.'.format(
-                self.network_name)
-
+            response['warnings'] = "Org VDC Direct Network {0} is not present".format(network_name)
         else:
-            if self.direct:
-                delete = self.vdc.delete_direct_orgvdc_network(
-                    self.network_name,
-                    force=self.force)
-            elif self.isolated:
-                delete = self.vdc.delete_isolated_orgvdc_network(
-                    self.network_name,
-                    force=self.force)
-            elif self.routed:
-                delete = self.vdc.delete_routed_orgvdc_network(
-                    self.network_name,
-                    force=self.force)
+            delete_task = self.vdc.delete_direct_orgvdc_network(network_name, force=force)
+            self.execute_task(delete_task)
+            response['msg'] = 'Org VDC Direct Network {} has been deleted.'.format(network_name)
+            response['changed'] = True
 
-            self.execute_task(delete)
-            response['msg'] = 'Network {} has been deleted.'.format(
-                self.network_name)
+        return response
+
+    def delete_org_vdc_isolated_network(self):
+        response = dict()
+        response['changed'] = False
+        network_name = self.params.get('network_name')
+        force = self.params.get('force')
+
+        try:
+            self.vdc.get_isolated_orgvdc_network(network_name)
+        except EntityNotFoundException:
+            response['warnings'] = "Org VDC Direct Network {0} is not present".format(network_name)
+        else:
+            delete_task = self.vdc.delete_isolated_orgvdc_network(network_name, force=force)
+            self.execute_task(delete_task)
+            response['msg'] = 'Org VDC Direct Network {} has been deleted.'.format(network_name)
+            response['changed'] = True
+
+        return response
+
+    def delete_org_vdc_routed_network(self):
+        response = dict()
+        response['changed'] = False
+        network_name = self.params.get('network_name')
+        force = self.params.get('force')
+
+        try:
+            self.vdc.get_routed_orgvdc_network(network_name)
+        except EntityNotFoundException:
+            response['warnings'] = "Org VDC Direct Network {0} is not present".format(network_name)
+        else:
+            delete_task = self.vdc.delete_routed_orgvdc_network(network_name, force=force)
+            self.execute_task(delete_task)
+            response['msg'] = 'Org VDC Direct Network {} has been deleted.'.format(network_name)
             response['changed'] = True
 
         return response
 
 
 def main():
-    argument_spec = vdc_gw_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
-    module = VdcNet(argument_spec=argument_spec, supports_check_mode=True)
-
+    argument_spec = org_vdc_network_argument_spec()
+    response = dict(msg=dict(type='str'))
+    module = OrgVdcNetwork(argument_spec=argument_spec, supports_check_mode=True)
     try:
         if not module.params.get('state'):
             raise Exception('Please provide the state for the resource.')
