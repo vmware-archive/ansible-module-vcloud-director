@@ -14,7 +14,7 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = '''
 module: vcd_vdc_gateway
-short_description: Ansible module to create/delete edge gateway in vCloud Director.
+short_description: Ansible module to create/update/delete edge gateway in vCloud Director.
 version_added: "2.7"
 description:
     - "Ansible module to create/delete edge gateway in vCloud Director."
@@ -69,6 +69,11 @@ options:
             - The name of the new gateway.
         type: str
         required: true
+    new_gateway_name:
+        description:
+            - The updated name of the existing gateway.
+        type: str
+        required: false
     external_networks:
         description:
             - list of external network's name to which gateway can connect.
@@ -164,7 +169,7 @@ options:
             - State of the Gateway.
         type: string
         required: true
-        choices: ['present','absent']
+        choices: ['present','absent', 'update']
 '''
 
 
@@ -214,11 +219,12 @@ changed: true if resource has been changed else false
 
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
+from pyvcloud.vcd.gateway import Gateway
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.exceptions import BadRequestException
+from pyvcloud.vcd.exceptions import BadRequestException, EntityNotFoundException
 
 
-EDGE_NETWORK_STATES = ['present', 'absent']
+EDGE_NETWORK_STATES = ['present', 'update', 'absent']
 EDGE_GW_TYPE = ['NSXV_BACKED', 'NSXT_BACKED', 'NSXT_IMPORTED']
 EDGE_GW_BACKING_CONF = ['compact', 'full', 'full4', 'x-large']
 
@@ -228,6 +234,7 @@ def vdc_gw_argument_spec():
         org_name=dict(type='str', required=True),
         vdc_name=dict(type='str', required=True),
         gateway_name=dict(type='str', required=True),
+        new_gateway_name=dict(type='str', required=False),
         description=dict(type='str', required=False),
         external_networks=dict(type='list', required=False),
         gateway_backing_config=dict(type='str', required=False, choices=EDGE_GW_BACKING_CONF),
@@ -264,17 +271,28 @@ class VdcGW(VcdAnsibleModule):
         if state == "present":
             return self.create_gw()
 
+        if state == "update":
+            return self.update_gw()
+
         if state == "absent":
             return self.delete_gw()
 
+    def get_gateway(self, gateway_name):
+        gateway = self.vdc.get_gateway(gateway_name)
+        if gateway is None:
+            raise EntityNotFoundException("Edge gateway {0} is not present".format(gateway_name))
+
+        return gateway
+
     def create_gw(self):
-        if self.client._api_version == "30.0":
+        api_version = self.client.get_api_version()
+        if api_version == "30.0":
             return self.create_gateway_api_version_30()
 
-        if self.client._api_version == "31.0":
+        if api_version == "31.0":
             return self.create_gateway_api_version_31()
 
-        if self.client._api_version == "32.0":
+        if api_version == "32.0":
             return self.create_gateway_api_version_32()
 
     def create_gateway_api_version_30(self):
@@ -292,16 +310,16 @@ class VdcGW(VcdAnsibleModule):
         create_as_advanced_gw = self.params.get('create_as_advanced_gw')
         dr_enabled = self.params.get('dr_enabled')
         configure_ip_settings = self.params.get('configure_ip_settings')
-        ext_net_to_participated_subnet_with_ip_settings = self.params.get('ext_net_to_participated_subnet_with_ip_settings')
         sub_allocate_ip_pools = self.params.get('sub_allocate_ip_pools')
-        ext_net_to_subnet_with_ip_range = self.params.get('ext_net_to_subnet_with_ip_range')
         ext_net_to_rate_limit = self.params.get('ext_net_to_rate_limit')
-
-        if self.vdc.get_gateway(gateway_name) is not None:
-            response['warnings'] = 'Edge Gateway {0} is already present'.format(gateway_name)
-            return response
+        ext_net_to_subnet_with_ip_range = self.params.get(
+            'ext_net_to_subnet_with_ip_range')
+        ext_net_to_participated_subnet_with_ip_settings = self.params.get(
+            'ext_net_to_participated_subnet_with_ip_settings')
 
         try:
+            self.get_gateway(gateway_name)
+        except EntityNotFoundException:
             create_task = self.vdc.create_gateway_api_version_30(
                 name=gateway_name,
                 external_networks=external_networks,
@@ -321,10 +339,10 @@ class VdcGW(VcdAnsibleModule):
                 ext_net_to_rate_limit=ext_net_to_rate_limit)
 
             self.execute_task(create_task.Tasks.Task[0])
-            response['msg'] = 'Edge Gateway {0} has been created'.format(gateway_name)
+            response['msg'] = "Edge Gateway {0} has been created".format(gateway_name)
             response['changed'] = True
-        except Exception as error:
-            response['msg'] = error
+        else:
+            response['warnings'] = "Edge Gateway {0} is already present".format(gateway_name)
 
         return response
 
@@ -343,17 +361,17 @@ class VdcGW(VcdAnsibleModule):
         create_as_advanced_gw = self.params.get('create_as_advanced_gw')
         dr_enabled = self.params.get('dr_enabled')
         configure_ip_settings = self.params.get('configure_ip_settings')
-        ext_net_to_participated_subnet_with_ip_settings = self.params.get('ext_net_to_participated_subnet_with_ip_settings')
         sub_allocate_ip_pools = self.params.get('sub_allocate_ip_pools')
-        ext_net_to_subnet_with_ip_range = self.params.get('ext_net_to_subnet_with_ip_range')
         ext_net_to_rate_limit = self.params.get('ext_net_to_rate_limit')
         flips_mode = self.params.get('flips_mode')
-
-        if self.vdc.get_gateway(gateway_name) is not None:
-            response['warnings'] = 'Edge Gateway {0} is already present'.format(gateway_name)
-            return response
+        ext_net_to_subnet_with_ip_range = self.params.get(
+            'ext_net_to_subnet_with_ip_range')
+        ext_net_to_participated_subnet_with_ip_settings = self.params.get(
+            'ext_net_to_participated_subnet_with_ip_settings')
 
         try:
+            self.get_gateway(gateway_name)
+        except EntityNotFoundException:
             create_task = self.vdc.create_gateway_api_version_31(
                 name=gateway_name,
                 external_networks=external_networks,
@@ -374,10 +392,10 @@ class VdcGW(VcdAnsibleModule):
                 is_flips_mode_enabled=flips_mode)
 
             self.execute_task(create_task.Tasks.Task[0])
-            response['msg'] = 'Edge Gateway {0} has been created'.format(gateway_name)
+            response['msg'] = "Edge Gateway {0} has been created".format(gateway_name)
             response['changed'] = True
-        except Exception as error:
-            response['msg'] = error
+        else:
+            response['warnings'] = "Edge Gateway {0} is already present".format(gateway_name)
 
         return response
 
@@ -396,18 +414,18 @@ class VdcGW(VcdAnsibleModule):
         create_as_advanced_gw = self.params.get('create_as_advanced_gw')
         dr_enabled = self.params.get('dr_enabled')
         configure_ip_settings = self.params.get('configure_ip_settings')
-        ext_net_to_participated_subnet_with_ip_settings = self.params.get('ext_net_to_participated_subnet_with_ip_settings')
         sub_allocate_ip_pools = self.params.get('sub_allocate_ip_pools')
-        ext_net_to_subnet_with_ip_range = self.params.get('ext_net_to_subnet_with_ip_range')
         ext_net_to_rate_limit = self.params.get('ext_net_to_rate_limit')
         edge_gateway_type = self.params.get('edge_gateway_type')
         flips_mode = self.params.get('flips_mode')
-
-        if self.vdc.get_gateway(gateway_name) is not None:
-            response['warnings'] = 'Edge Gateway {0} is already present'.format(gateway_name)
-            return response
+        ext_net_to_subnet_with_ip_range = self.params.get(
+            'ext_net_to_subnet_with_ip_range')
+        ext_net_to_participated_subnet_with_ip_settings = self.params.get(
+            'ext_net_to_participated_subnet_with_ip_settings')
 
         try:
+            self.get_gateway(gateway_name)
+        except EntityNotFoundException:
             create_task = self.vdc.create_gateway_api_version_32(
                 name=gateway_name,
                 external_networks=external_networks,
@@ -429,10 +447,36 @@ class VdcGW(VcdAnsibleModule):
                 edgeGatewayType=edge_gateway_type)
 
             self.execute_task(create_task.Tasks.Task[0])
-            response['msg'] = 'Edge Gateway {0} has been created'.format(gateway_name)
+            response['msg'] = "Edge Gateway {0} has been created".format(gateway_name)
             response['changed'] = True
-        except Exception as error:
-            response['msg'] = error
+        else:
+            response['warnings'] = "Edge Gateway {0} is already present".format(gateway_name)
+
+        return response
+
+    def update_gw(self):
+        response = dict()
+        response['changed'] = False
+        edge_gateway_href = None
+        gateway_name = self.params.get('gateway_name')
+        new_gateway_name = self.params.get('new_gateway_name')
+        description = self.params.get('description')
+        ha_enabled = self.params.get('ha_enabled')
+
+        try:
+            gateway = self.get_gateway(gateway_name)
+        except EntityNotFoundException:
+            msg = 'Edge Gateway {0} is not present'
+            response['warnings'] = msg.format(gateway_name)
+        else:
+            for key, value in gateway.items():
+                edge_gateway_href = value if key == "href" else edge_gateway_href
+
+            gateway = Gateway(self.client, name=gateway_name, href=edge_gateway_href)
+            update_task = gateway.edit_gateway(newname=new_gateway_name, desc=description, ha=ha_enabled)
+            self.execute_task(update_task)
+            response['msg'] = "Edge Gateway {0} has been updated with {1}".format(gateway_name, new_gateway_name)
+            response['changed'] = True
 
         return response
 
@@ -441,14 +485,15 @@ class VdcGW(VcdAnsibleModule):
         response['changed'] = False
         gateway_name = self.params.get('gateway_name')
 
-        if self.vdc.get_gateway(gateway_name) is None:
-            response['warnings'] = 'Edge Gateway {0} is not present.'.format(gateway_name)
-            return response
-
-        delete_task = self.vdc.delete_gateway(gateway_name)
-        self.execute_task(delete_task)
-        response['msg'] = 'Edge Gateway {0} has been deleted.'.format(gateway_name)
-        response['changed'] = True
+        try:
+            self.get_gateway(gateway_name)
+        except EntityNotFoundException:
+            response['warnings'] = "Edge Gateway {0} is not present".format(gateway_name)
+        else:
+            delete_task = self.vdc.delete_gateway(gateway_name)
+            self.execute_task(delete_task)
+            response['msg'] = "Edge Gateway {0} has been deleted".format(gateway_name)
+            response['changed'] = True
 
         return response
 
