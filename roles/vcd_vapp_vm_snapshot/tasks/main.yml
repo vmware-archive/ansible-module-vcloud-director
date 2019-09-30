@@ -1,0 +1,48 @@
+---
+# tasks file for vcd_vapp_vm_snapshot
+# 
+- name: create vm snapshot
+  vcd_vapp_vm_snapshot:
+    user: acmeadmin
+    org: Acme
+    password: VMware1!
+    vdc_name: ACME_PAYG
+    vapp_name: vApp_system_1
+    vm_name: Tiny Linux template
+    mem_snapshot: true
+    state: present
+  register: output
+
+- name: create vm snapshot output
+  debug:
+    msg: '{{ output }}'
+
+- name: revert vm snapshot
+  vcd_vapp_vm_snapshot:
+    user: acmeadmin
+    org: Acme
+    password: VMware1!
+    vdc_name: ACME_PAYG
+    vapp_name: vApp_system_1
+    vm_name: Tiny Linux template
+    operation: revert
+  register: output
+
+- name: revert vm snapshot output
+  debug:
+    msg: '{{ output }}'
+
+- name: delete vm snapshot
+  vcd_vapp_vm_snapshot:
+    user: acmeadmin
+    org: Acme
+    password: VMware1!
+    vdc_name: ACME_PAYG
+    vapp_name: vApp_system_1
+    vm_name: Tiny Linux template
+    state: absent
+  register: output
+
+- name: delete vm snapshot output
+  debug:
+    msg: '{{ output }}'

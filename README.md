@@ -19,6 +19,24 @@ ansible-module-vcloud-director is a set of ansible modules that manage a VMware 
 3. cd ansible-module-vcloud-director
 
 ## Documentation
+Refer [docs](https://github.com/vmware/ansible-module-vcloud-director/tree/master/docs) to know more about available modules's usage.
+
+1. vcd_catalog
+2. vcd_catalog_item
+3. vcd_disk
+4. vcd_external_network
+5. vcd_org
+6. vcd_org_vdc
+7. vcd_roles
+8. vcd_user
+9. vcd_vapp
+10. vcd_vapp_network
+11. vcd_vapp_vm
+12. vcd_vapp_vm_disk
+13. vcd_vapp_vm_nic
+14. vcd_vapp_vm_snapshot
+15. vcd_vdc_gateway
+16. vcd_vdc_network
 
 ## Releases & Major Branches
 
