@@ -418,7 +418,7 @@ def main():
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            response['warnings'] = "Missing state/operation from module arguments"
+            raise Exception("Missing state/operation from module arguments")
 
     except Exception as error:
         response['msg'] = error.__str__()

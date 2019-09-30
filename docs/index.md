@@ -2459,6 +2459,99 @@ and any objects it contains that are in a state that normally allows removal. Th
 </ul>
 </ol>
 </div>
+
+<!--                  -->
+<!-- vCD vAPP VM snapshot Use Case -->
+<div class="vapp-vm-snapshot-usage col-12" id="vapp-vm-snapshot-usage">
+<h2>vApp VM Snapshot Example Usage</h2>
+ <hr />
+ <ol>
+ <li>
+ <h3>vApp VM Snapshot States</h3>
+ </li>
+ <ul>
+ <li>
+ <h5>Create vApp VM Snapshot</h5>
+ </li>
+ <pre>
+ <code>
+ - name: create vApp VM Snapshot
+   vcd_vapp_vm_snapshot:
+    vdc_name: test_vdc
+    vapp_name: test_vapp
+    vm_name: test_vm
+    state: "present"
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>vdc_name - (Required) - vCloud Director ORG VDC Name</li>
+ <li>vapp_name - (Required) - vApp Name which VM is part of</li>
+ <li>vm_name - (Required) - Name of Virtual Machine</li>
+ <li>snapshot_name - (Optional) - Name of Virtual Machine's snapshot</li>
+ <li>mem_snapshot - (Optional) - boolean flag true if snapshot should include Virtual Machine's memory else false</li>
+ <li>vm_quiesce - (Optional) - boolean flag true if the file system of the Virtual Machine should be quiesced before the snapshot is created. Requires VMware tools to be installed on the vm else false</li>
+ <li>state - (Required) "present" to vCD vApp VM snapshot</li>
+</ul>
+<li>
+ <h5>Delete vApp VM Snapshot</h5>
+ </li>
+ <pre>
+ <code>
+ - name: delete vApp VM Snapshot
+   vcd_vapp_vm_snapshot:
+    vm_name: test_vm
+    state: absent
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>vm_name - (Required) - Name of Virtual Machine to delete snapshots of</li>
+<li>state - (Required) "absent" to delete vApp VM snapshot</li>
+</ul>
+<li>
+<h3>vApp VM Snapshot Operations</h3>
+</li>
+<ul>
+ <li>
+ <h5>Revert vApp VM snapshot</h5>
+ </li>
+ <pre>
+ <code>
+ - name: revert vApp VM snapshot
+   vcd_vapp_vm_snapshot:
+    vm_name: test_vm
+    operation: revert
+ </code>
+ </pre>
+ <h5>Argument Reference</h5>
+ <ul>
+ <li>user - (Optional) - vCloud Director user name</li>
+ <li>password - (Optional) - vCloud Director password</li>
+ <li>org - (Optional) - vCloud Director org name to log into</li>
+ <li>host - (Optional) - vCloud Director host name</li>
+ <li>api_version - (Optional) - Pyvcloud API version</li>
+ <li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+ <li>vm_name - (Required) - Name of Virtual Machine to revert to the current snapshot</li>
+<li>operation - (Required) "revert" to revert vApp VM snapshot</li>
+</ul>
+</ul>
+</ul>
+</ol>
+</div>
+
 <br />
 <hr />
 <h5 class="text-center">Hope Docs helped!</h5>
