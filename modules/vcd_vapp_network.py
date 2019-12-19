@@ -151,7 +151,7 @@ class VappNetwork(VcdAnsibleModule):
         network_name = self.params.get('network')
         networks = self.vapp.get_all_networks()
         for network in networks:
-            if network.get('{'+NSMAP['ovf']+'}name') == network_name:
+            if network.get('{' + NSMAP['ovf'] + '}name') == network_name:
                 return network
         raise EntityNotFoundException('Can\'t find the specified vApp network')
 
@@ -206,7 +206,7 @@ class VappNetwork(VcdAnsibleModule):
             elif ip_scope:
                 scope = E.IpScope(
                     E.IsInherited('false'),
-                    E.Gateway(str(ip_network(ip_scope, strict=False).network_address+1)),
+                    E.Gateway(str(ip_network(ip_scope, strict=False).network_address + 1)),
                     E.Netmask(str(ip_network(ip_scope, strict=False).netmask)))
                 config.append(E.IpScopes(scope))
             else:
