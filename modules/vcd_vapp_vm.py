@@ -511,7 +511,7 @@ class VappVM(VcdAnsibleModule):
         response['changed'] = False
 
         vm = self.get_vm()
-        if vm.is_deployed():
+        if vm.get_resource().get('deployed') == 'true':
             undeploy_vm_task = vm.undeploy()
             self.execute_task(undeploy_vm_task)
             response['msg'] = 'VM {} has been undeployed.'.format(vm_name)
