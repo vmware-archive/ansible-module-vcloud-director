@@ -65,4 +65,4 @@ class VcdAnsibleModule(AnsibleModule):
         if task_status != TaskStatus.SUCCESS.value:
             raise Exception(etree.tostring(task_state, pretty_print=True))
 
-        return 1
+        return task_state
