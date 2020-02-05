@@ -325,7 +325,7 @@ class OrgVdcNetwork(VcdAnsibleModule):
         retain_net_info_across_deployments = self.params.get('retain_net_info_across_deployments')
 
         try:
-            self.vdc.get_routed_orgvdc_network(self.network_name)
+            self.vdc.get_routed_orgvdc_network(network_name)
         except EntityNotFoundException:
             create_task = self.vdc.create_routed_vdc_network(
                 network_name, gateway_name, network_cidr, description=description,
