@@ -403,7 +403,7 @@ class VappVM(VcdAnsibleModule):
         except EntityNotFoundException:
             response['warnings'] = 'VM {} is not present.'.format(vm_name)
         else:
-            self.undeploy_vm()
+            self.undeploy_vm(action="powerOff")
             delete_vms_task = self.vapp.delete_vms([vm_name])
             self.execute_task(delete_vms_task)
             response['msg'] = 'VM {} has been deleted.'.format(vm_name)
@@ -452,8 +452,7 @@ class VappVM(VcdAnsibleModule):
 
         vm = self.get_vm()
         if not vm.is_powered_on():
-            power_on_task = vm.power_on()
-            self.execute_task(power_on_task)
+            self.deploy_vm()
             response['msg'] = 'VM {} has been powered on.'.format(vm_name)
             response['changed'] = True
         else:
@@ -468,8 +467,7 @@ class VappVM(VcdAnsibleModule):
 
         vm = self.get_vm()
         if not vm.is_powered_off():
-            power_off_task = vm.power_off()
-            self.execute_task(power_off_task)
+            self.undeploy_vm()
             response['msg'] = 'VM {} has been powered off.'.format(vm_name)
             response['changed'] = True
         else:
@@ -511,8 +509,8 @@ class VappVM(VcdAnsibleModule):
         response['changed'] = False
 
         vm = self.get_vm()
-        if vm.is_deployed():
-            undeploy_vm_task = vm.undeploy()
+        if not vm.is_deployed():
+            undeploy_vm_task = vm.undeploy(action="powerOff")
             self.execute_task(undeploy_vm_task)
             response['msg'] = 'VM {} has been undeployed.'.format(vm_name)
             response['changed'] = True
