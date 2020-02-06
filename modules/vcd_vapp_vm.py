@@ -399,11 +399,12 @@ class VappVM(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            self.get_vm()
+            vm = self.get_vm()
         except EntityNotFoundException:
             response['warnings'] = 'VM {} is not present.'.format(vm_name)
         else:
-            self.undeploy_vm(action="powerOff")
+            if not vm.is_powered_off():
+                self.undeploy_vm()
             delete_vms_task = self.vapp.delete_vms([vm_name])
             self.execute_task(delete_vms_task)
             response['msg'] = 'VM {} has been deleted.'.format(vm_name)
