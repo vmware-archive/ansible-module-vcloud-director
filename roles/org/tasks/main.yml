@@ -116,9 +116,9 @@
     org: XXXXXXXXXX
     org_name: "{{ org_name }}"
     metadata:
-    - state: 'present'
-      name: 'keyX'
-      value: 'valueY'
-      type: 'STRING'
-      visibility: 'READONLY'
+    - state: "present"
+      name: "keyX"
+      value: "valueY"
+      type: "STRING"
+      visibility: "READONLY"
     operation: "set_metadata"
