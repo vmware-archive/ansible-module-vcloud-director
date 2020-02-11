@@ -84,3 +84,41 @@
 - name: delete org output
   debug:
     msg: '{{ output }}'
+
+# # ############################################ List Org Users ##############################################################
+- name: "list users of organization {{ org_name }}"
+  vcd_org:
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
+    org_name: "{{ org_name }}"
+    operation: "list_users"
+  register: output
+
+# # ############################################ List Org Vdcs ##############################################################
+- name: "list vdcs of organization {{ org_name }}"
+  vcd_org:
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
+    org_name: "{{ org_name }}"
+    operation: "list_vdcs"
+  register: output
+
+# # ############################################ Set Org Metadata ##############################################################
+- name: "set metadata of organization {{ org_name }}"
+  vcd_org:
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
+    org_name: "{{ org_name }}"
+    metadata:
+    - state: 'present'
+      name: 'keyX'
+      value: 'valueY'
+      type: 'STRING'
+      visibility: 'READONLY'
+    operation: "set_metadata"

@@ -1698,6 +1698,84 @@ and any objects it contains that are in a state that normally allows removal. Th
 <li>org_name - (Required) name of the organization</li>
 <li>operation == "list_roles" (Required) to list available roles of the organization</li>
 </ul>
+<ul>
+<li>
+<h5>List Users</h5>
+</li>
+</ul>
+<pre>
+<code>
+ - name: list org users
+   vcd_org:
+	org_name: "test_org"
+	operation: "list_users"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>org_name - (Required) name of the organization</li>
+<li>operation == "list_users" (Required) to list users of the organization</li>
+<li>
+<h5>List Vdcs</h5>
+</li>
+</ul>
+<pre>
+<code>
+ - name: list org vdcs
+   vcd_org:
+	org_name: "test_org"
+	operation: "list_vdcs"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>org_name - (Required) name of the organization</li>
+<li>operation == "list_vdcs" (Required) to list vdcs of the organization</li>
+<li>
+<h5>Set Metadata</h5>
+</li>
+</ul>
+<pre>
+<code>
+ - name: set org metadata
+   vcd_org:
+	org_name: "test_org"
+	metadata:
+	- state: 'present'                   # optional, present (will also update value), absent, default: present
+	  name: 'keyX'                       # mandatory, unique name of metadata-entry
+	  value: 'valueY'                    # mandatory, if state present, else optional as it will be ignored
+	  type: 'STRING'                     # optional, STRING, NUMBER, BOOLEAN, DATA_TIME, default: STRING
+	  visibility: 'READONLY'             # optional, PRIVATE, READONLY, READ_WRITE, default: READONLY
+	operation: "set_metadata"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>org_name - (Required) name of the organization</li>
+<li>metadata - (Required) dictionary of metadata</li>
+<li>operation == "set_metadata" (Required) to set metadata of the organization</li>
+</ul>
 </ul>
 </ol>
 </div>
