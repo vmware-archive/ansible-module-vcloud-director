@@ -334,7 +334,7 @@ class VCDOrg(VcdAnsibleModule):
                 if type(md) is dict and md.get('state', 'present') == 'absent':
                     if md.get('visibility', 'READONLY').upper() == 'READWRITE':
                         domain = MetadataDomain.GENERAL
-                    self.metadata.remove_metadata()
+                    self.metadata.remove_metadata(md['name'], domain)
                 else:
                     if md.get('visibility', 'READONLY').upper() == 'PRIVATE':
                         visibility = MetadataVisibility.PRIVATE
