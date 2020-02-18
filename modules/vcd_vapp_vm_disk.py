@@ -199,6 +199,7 @@ class VappVMDisk(VcdAnsibleModule):
         response['changed'] = False
         response['disks'] = dict()
         disks = self.client.get_resource(vm.resource.get('href') + '/virtualHardwareSection/disks')
+
         for disk in disks.Item:
             if disk['{' + NSMAP['rasd'] + '}Description'] == "Hard disk":
                 disk_name = str(disk['{' + NSMAP['rasd'] + '}ElementName'])
@@ -208,17 +209,26 @@ class VappVMDisk(VcdAnsibleModule):
                 disk_capacity = int(disk_hostresource.get('{' + NSMAP['vcloud'] + '}capacity'))
                 response['disks'][disk_name] = {
                     'InstanceID': disk_instance,
-                    'VirtualQuantity': self.convert_bytes_to_gb(disk_size),
+                    'VirtualQuantity': self.get_formatted_disk_size(disk_size),
                     'HostResource': str(round(disk_capacity / 1024, 1)) + ' GB'
                 }
 
         return response
 
-    def convert_bytes_to_gb(self, disk_size):
+    def get_formatted_disk_size(self, disk_size):
+        '''
+            Convert disk byte size into GB or MB
+            MB = 1024 * 1024 ( 2 ** 20 )
+            GB = 1024 * 1024 * 1024 ( 2 ** 30 )
+
+            Note - only MB and GB are supported from vCD
+
+        '''
         log_value = int(math.floor(math.log(disk_size, 1024)))
         pow_value = math.pow(1024, log_value)
+        size_metric = ' MB' if log_value == 2 else ' GB'
 
-        return str(round(disk_size / pow_value, 1)) + ' GB'
+        return str(round(disk_size / pow_value, 1)) + size_metric
 
     def update_disk(self):
         vm = self.get_vm()
