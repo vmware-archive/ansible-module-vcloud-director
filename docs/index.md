@@ -1740,7 +1740,7 @@ and any objects it contains that are in a state that normally allows removal. Th
 	vm_quota : 0
 	resource_guaranteed_memory : 1.0
 	resource_guaranteed_cpu : 1.0
-	vcpu_in_mhz : 1024
+	vcpu_in_mhz : 1000
 	is_thin_provision : true
 	network_pool_name : test_network_pool
 	uses_fast_provisioning : false
