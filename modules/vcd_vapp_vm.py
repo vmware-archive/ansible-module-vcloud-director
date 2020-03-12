@@ -221,7 +221,8 @@ def vapp_vm_argument_spec():
         all_eulas_accepted=dict(type='bool', required=False, default=None),
         properties=dict(type='dict', required=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
-        operation=dict(choices=VAPP_VM_OPERATIONS, required=False)
+        operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
+        compute_policy_href=dict(type='str', required=False)
     )
 
 
@@ -331,6 +332,7 @@ class VappVM(VcdAnsibleModule):
         cust_script = params.get('cust_script')
         storage_profile = params.get('storage_profile')
         properties = params.get('properties')
+        compute_policy_href = params.get('compute_policy_href')
         response = dict()
         response['changed'] = False
 
@@ -425,6 +427,10 @@ class VappVM(VcdAnsibleModule):
             self.update_vm_memory()
             response['changed'] = True
 
+        if self.params.get('compute_policy_href'):
+            self.update_vm_compute_policy()
+            response['changed'] = True
+
         response['msg'] = 'VM {} has been updated.'.format(vm_name)
 
         return response
@@ -445,6 +451,14 @@ class VappVM(VcdAnsibleModule):
         update_memory_task = vm.modify_memory(memory)
 
         return self.execute_task(update_memory_task)
+
+    def update_vm_compute_policy(self):
+        compute_policy_href = self.params.get('compute_policy_href')
+
+        vm = self.get_vm()
+        update_compute_policy_task = vm.update_compute_policy(compute_policy_href)
+
+        return self.execute_task(update_compute_policy_task)
 
     def power_on_vm(self):
         vm_name = self.params.get('target_vm_name')
