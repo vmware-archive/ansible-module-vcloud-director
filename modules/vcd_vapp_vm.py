@@ -141,6 +141,10 @@ options:
         description:
             - operations performed over new vapp (poweron/poweroff/modifycpu/modifymemory/reloadvm/list_disks/list_nics).One from state or operation has to be provided.
         required: false
+    force_customization:
+        description:
+            - whether or not to force customization
+        required: false
 author:
     - mtaneja@vmware.com
 '''
@@ -222,6 +226,7 @@ def vapp_vm_argument_spec():
         properties=dict(type='dict', required=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False)
+        force_customization=dict(type='bool', required=False, default=False)
     )
 
 
@@ -490,12 +495,13 @@ class VappVM(VcdAnsibleModule):
 
     def deploy_vm(self):
         vm_name = self.params.get('target_vm_name')
+        force_customization = self.params.get('force_customization')
         response = dict()
         response['changed'] = False
 
         vm = self.get_vm()
         if not vm.is_deployed():
-            deploy_vm_task = vm.deploy()
+            deploy_vm_task = vm.deploy(force_customization=force_customization)
             self.execute_task(deploy_vm_task)
             response['msg'] = 'VM {} has been deployed.'.format(vm_name)
             response['changed'] = True
