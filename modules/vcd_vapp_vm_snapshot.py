@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_vapp_vm
-short_description: Ansible Module to manage (create/delete) VM snapshots in vApps in vCloud Director.
+short_description: Manage VM snapshots states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible Module to manage (create/delete) VM snapshots in vApps."
+    - Manage VM snapshots states/operations in vCloud Director
 
 options:
     user:
@@ -60,13 +60,12 @@ options:
         required: false
     mem_snapshot:
         description:
-            - boolean flag true if snapshot should include Virtual Machine's memory else false
+            - true/false if snapshot should include Virtual Machine's memory
         required: false
     vm_quiesce:
         description:
-            - boolean flag true if the file system of the Virtual Machine
-              should be quiesced before the snapshot is created. Requires VMware
-              tools to be installed on the vm else false
+            - true/false to quiesce before the snapshot is created
+            - Requires VMware tools to be installed on the vm if true
         required: false
     state:
         description:
@@ -119,7 +118,8 @@ class VMSnapShot(VcdAnsibleModule):
         vdc_name = self.params.get('vdc_name')
         vm_name = self.params.get('vm_name')
         org_resource = Org(self.client, resource=self.client.get_org())
-        vdc_resource = VDC(self.client, resource=org_resource.get_vdc(vdc_name))
+        vdc_resource = VDC(
+            self.client, resource=org_resource.get_vdc(vdc_name))
         vapp_resource = vdc_resource.get_vapp(vapp_name)
         vapp = VApp(self.client, resource=vapp_resource)
 
@@ -144,11 +144,14 @@ class VMSnapShot(VcdAnsibleModule):
         vm_name = self.params.get("vm_name")
         vm_quiesce = self.params.get('vm_quiesce')
         mem_snapshot = self.params.get('mem_snapshot')
-        snapshot_name = self.params.get("snapshot_name")
-        snapshot_name = snapshot_name if snapshot_name else "{0}_snapshot".format(vm_name)
-        create_task = self.vm.snapshot_create(memory=mem_snapshot, quiesce=vm_quiesce, name=snapshot_name)
+        snapshot_name = self.params.get(
+            "snapshot_name", "{0}_snapshot".format(vm_name))
+
+        create_task = self.vm.snapshot_create(
+            memory=mem_snapshot, quiesce=vm_quiesce, name=snapshot_name)
         self.execute_task(create_task)
-        response['msg'] = "Snapshot {0} has been created of VM {1}".format(snapshot_name, vm_name)
+        msg = "Snapshot {0} has been created of VM {1}"
+        response['msg'] = msg.format(snapshot_name, vm_name)
         response['changed'] = True
 
         return response
@@ -157,9 +160,11 @@ class VMSnapShot(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
         vm_name = self.params.get("vm_name")
+
         delete_task = self.vm.snapshot_remove_all()
         self.execute_task(delete_task)
-        response['msg'] = "All snapshots for VM {0} has been deleted".format(vm_name)
+        msg = "All snapshots for VM {0} has been deleted"
+        response['msg'] = msg.format(vm_name)
         response['changed'] = True
 
         return response
@@ -168,9 +173,11 @@ class VMSnapShot(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
         vm_name = self.params.get("vm_name")
+
         revert_task = self.vm.snapshot_revert_to_current()
         self.execute_task(revert_task)
-        response['msg'] = "VM {0} has been reverted to current snapshot successfully".format(vm_name)
+        msg = "VM {0} has been reverted to current snapshot successfully"
+        response['msg'] = msg.format(vm_name)
         response['changed'] = True
 
         return response

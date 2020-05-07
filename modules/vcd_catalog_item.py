@@ -13,10 +13,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_catalog_item
-short_description: Ansible Module to manage (create/update/delete) catalog items in vCloud Director.
+short_description: Manage catalog_item's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - Ansible Module to manage (create/update/delete) catalog items in vCloud Director.
+    - Manage catalog_item's states/operations in vCloud Director
 
 options:
     user:
@@ -72,10 +72,10 @@ options:
             - description of vapp capture
         required: false
     customize_on_instantiate:
-        description: true if you want to customise vapp on instantiation else false
+        description: true/false if needs to customise vapp on instantiation
         required: false
     overwrite:
-        description: true if the item in the catalog has to be overwritten if it already exists else false
+        description: true/false if the catalog_item has to be overwritten
         required: false
     state:
         description:
@@ -84,7 +84,7 @@ options:
         required: false
     operation:
         description:
-            - operation which should be performed over catalog (capturevapp/list_vms).
+            - operation to perform on catalog_item (capturevapp/list_vms).
             - One of operation/state has to be provided.
         required: false
 author:
@@ -126,11 +126,13 @@ def vcd_catalog_item_argument_spec():
         catalog_name=dict(type='str', required=True),
         item_name=dict(type='str', required=False, default=None),
         file_name=dict(type='str', required=False),
-        chunk_size=dict(type='int', required=False, default=DEFAULT_CHUNK_SIZE),
+        chunk_size=dict(
+            type='int', required=False, default=DEFAULT_CHUNK_SIZE),
         vapp_name=dict(type='str', required=False),
         vdc_name=dict(type='str', required=False),
         description=dict(type='str', required=False, default=''),
-        customize_on_instantiate=dict(type='bool', required=False, default=False),
+        customize_on_instantiate=dict(
+            type='bool', required=False, default=False),
         overwrite=dict(type='bool', required=False, default=False),
         state=dict(choices=VCD_CATALOG_ITEM_STATES, required=False),
         operation=dict(choices=VCD_CATALOG_ITEM_OPERATIONS, required=False)
@@ -172,11 +174,10 @@ class CatalogItem(VcdAnsibleModule):
         return True
 
     def upload(self):
-        params = self.params
-        catalog_name = params.get('catalog_name')
-        item_name = params.get('item_name')
-        file_name = params.get('file_name')
-        chunk_size = params.get('chunk_size')
+        catalog_name = self.params.get('catalog_name')
+        item_name = self.params.get('item_name')
+        file_name = self.params.get('file_name')
+        chunk_size = self.params.get('chunk_size')
         response = dict()
         response['changed'] = False
         item_details = {
@@ -187,14 +188,14 @@ class CatalogItem(VcdAnsibleModule):
         }
 
         if self.is_present():
-            response['warnings'] = "Catalog Item {} is already present.".format(item_name)
+            msg = "Catalog Item {} is already present."
+            response['warnings'] = msg.format(item_name)
             return response
 
         if file_name.endswith(".ova") or file_name.endswith(".ovf"):
             self.org.upload_ovf(**item_details)
             self.ova_check_resolved()
-
-        if not file_name.endswith(".ova"):
+        else:
             self.org.upload_media(**item_details)
 
         response['msg'] = "Catalog item {} is uploaded.".format(item_name)
@@ -203,14 +204,14 @@ class CatalogItem(VcdAnsibleModule):
         return response
 
     def delete(self):
-        params = self.params
-        catalog_name = params.get('catalog_name')
-        item_name = params.get('item_name')
+        catalog_name = self.params.get('catalog_name')
+        item_name = self.params.get('item_name')
         response = dict()
         response['changed'] = False
 
         if not self.is_present():
-            response['warnings'] = "Catalog Item {} is not present.".format(item_name)
+            msg = "Catalog Item {} is not present."
+            response['warnings'] = msg.format(item_name)
             return response
 
         self.org.delete_catalog_item(name=catalog_name, item_name=item_name)
@@ -220,27 +221,23 @@ class CatalogItem(VcdAnsibleModule):
         return response
 
     def capture_vapp(self):
-        params = self.params
-        vapp_name = params.get('vapp_name')
-        vdc_name = params.get('vdc_name')
-        catalog_name = params.get('catalog_name')
-        item_name = params.get('item_name')
-        desc = params.get('description')
-        customize_on_instantiate = params.get('customize_on_instantiate')
-        overwrite = params.get('overwrite')
-        client = self.client
+        vapp_name = self.params.get('vapp_name')
+        vdc_name = self.params.get('vdc_name')
+        catalog_name = self.params.get('catalog_name')
+        item_name = self.params.get('item_name')
+        desc = self.params.get('description')
+        customize_on_instantiate = self.params.get('customize_on_instantiate')
+        overwrite = self.params.get('overwrite')
         response = dict()
         response['changed'] = False
 
         v = self.org.get_vdc(vdc_name)
-        vdc = VDC(client, href=v.get('href'))
+        vdc = VDC(self.client, href=v.get('href'))
         vapp = vdc.get_vapp(vapp_name)
         catalog = self.org.get_catalog(catalog_name)
         self.org.capture_vapp(
-            catalog_resource=catalog,
-            vapp_href=vapp.get('href'),
-            catalog_item_name=item_name,
-            description=desc,
+            catalog_resource=catalog, vapp_href=vapp.get('href'),
+            catalog_item_name=item_name, description=desc,
             customize_on_instantiate=customize_on_instantiate,
             overwrite=overwrite)
         self.ova_check_resolved()
@@ -250,9 +247,8 @@ class CatalogItem(VcdAnsibleModule):
         return response
 
     def ova_check_resolved(self):
-        params = self.params
-        catalog_name = params.get('catalog_name')
-        item_name = params.get('item_name')
+        catalog_name = self.params.get('catalog_name')
+        item_name = self.params.get('item_name')
         response = False
 
         source_ova_item = self.org.get_catalog_item(catalog_name, item_name)
@@ -262,49 +258,42 @@ class CatalogItem(VcdAnsibleModule):
         return response
 
     def check_resolved(self, source_ova_item, catalog_name, item_name):
-        client = self.client
         item_id = source_ova_item.get('id')
 
         while True:
-            q = client.get_typed_query(
+            q = self.client.get_typed_query(
                 'catalogItem',
                 query_result_format=QueryResultFormat.ID_RECORDS,
                 qfilter='id==%s' % item_id
             )
             records = list(q.execute())
+            # TODO might have to check when status goes to other state than resolved
             if records[0].get('status') == 'RESOLVED':
                 break
             else:
                 time.sleep(5)
-                # TODO might have to check when status goes to other state than resolved
 
     def list_vms(self):
-        params = self.params
-        catalog_name = params.get('catalog_name')
-        item_name = params.get('item_name')
+        catalog_name = self.params.get('catalog_name')
+        item_name = self.params.get('item_name')
         response = dict()
-        result = list()
         response['changed'] = False
 
         catalog_item = self.org.get_catalog_item(catalog_name, item_name)
-        vapp_template_resource = self.client.get_resource(
-            catalog_item.Entity.get('href'))
-        vapp_template = VApp(self.client, name=item_name, resource=vapp_template_resource)
+        catalog_item_href = catalog_item.Entity.get('href')
+        vapp_template_resource = self.client.get_resource(catalog_item_href)
+        vapp_template = VApp(
+            self.client, name=item_name, resource=vapp_template_resource)
 
-        for vm in vapp_template.get_all_vms():
-            result.append(vm.get('name'))
-
-        response['msg'] = result
-        response['changed'] = False
+        response['msg'] = [vm.get('name')
+                           for vm in vapp_template.get_all_vms()]
 
         return response
 
 
 def main():
     argument_spec = vcd_catalog_item_argument_spec()
-    response = dict(
-        msg=dict(type='str'),
-    )
+    response = dict(msg=dict(type='str'))
     module = CatalogItem(argument_spec=argument_spec, supports_check_mode=True)
 
     try:

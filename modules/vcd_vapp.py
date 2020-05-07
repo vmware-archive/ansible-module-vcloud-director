@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_vapp
-short_description: Ansible Module to manage (create/update/delete) vApps in vCloud Director.
+short_description: Manage vApp's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible Module to manage (create/update/delete) vApps in vCloud Director."
+    - Manage vApp's states/operations in vCloud Director
 
 options:
     user:
@@ -133,7 +133,7 @@ options:
         required: false
     operation:
         description:
-            - operation on vApp (poweron/poweroff/deploy/undeploy/list_vms/list_networks).
+            - operation to perform on vApp.
             - One from state or operation has to be provided.
         required: false
 
@@ -171,13 +171,15 @@ from lxml import etree
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
-from pyvcloud.vcd.client import FenceMode
 from pyvcloud.vcd.client import NSMAP
+from pyvcloud.vcd.client import FenceMode
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
+
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy', 'list_vms', 'list_networks']
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy',
+                      'list_vms', 'list_networks']
 
 VM_STATUSES = {'3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF'}
 
@@ -190,7 +192,8 @@ def vapp_argument_spec():
         vdc=dict(type='str', required=True),
         description=dict(type='str', required=False, default=None),
         network=dict(type='str', required=False, default=None),
-        fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
+        fence_mode=dict(
+            type='str', required=False, default=FenceMode.BRIDGED.value),
         ip_allocation_mode=dict(type='str', required=False, default="dhcp"),
         deploy=dict(type='bool', required=False, default=True),
         power_on=dict(type='bool', required=False, default=True),
@@ -303,10 +306,12 @@ class Vapp(VcdAnsibleModule):
                 storage_profile=storage_profile,
                 network_adapter_type=network_adapter_type)
             self.execute_task(create_vapp_task.Tasks.Task[0])
-            response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
+            msg = 'Vapp {} has been created'
+            response['msg'] = msg.format(vapp_name)
             response['changed'] = True
         else:
-            response['warnings'] = "Vapp {} is already present.".format(vapp_name)
+            msg = "Vapp {} is already present"
+            response['warnings'] = msg.format(vapp_name)
 
         return response
 
@@ -336,10 +341,12 @@ class Vapp(VcdAnsibleModule):
                 fence_mode=fence_mode,
                 accept_all_eulas=accept_all_eulas)
             self.execute_task(create_vapp_task.Tasks.Task[0])
-            response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
+            msg = 'Vapp {} has been created'
+            response['msg'] = msg.format(vapp_name)
             response['changed'] = True
         else:
-            response['warnings'] = "Vapp {} is already present.".format(vapp_name)
+            msg = "Vapp {} is already present"
+            response['warnings'] = msg.format(vapp_name)
 
         return response
 
@@ -354,7 +361,8 @@ class Vapp(VcdAnsibleModule):
         except EntityNotFoundException:
             response['warnings'] = "Vapp {} is not present.".format(vapp_name)
         else:
-            delete_vapp_task = self.vdc.delete_vapp(name=vapp_name, force=force)
+            delete_vapp_task = self.vdc.delete_vapp(
+                name=vapp_name, force=force)
             self.execute_task(delete_vapp_task)
             response['msg'] = 'Vapp {} has been deleted.'.format(vapp_name)
             response['changed'] = True
@@ -367,18 +375,23 @@ class Vapp(VcdAnsibleModule):
         response['changed'] = False
 
         vapp = self.get_vapp()
+
+        if vapp.is_powered_on():
+            msg = 'Vapp {} is already powered on'
+            response['warnings'] = msg.format(vapp_name)
+            return response
+
         try:
-            if not vapp.is_powered_on():
-                vapp_resource = self.vdc.get_vapp(vapp_name)
-                vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-                power_on_vapp_task = vapp.power_on()
-                self.execute_task(power_on_vapp_task)
-                response['msg'] = 'Vapp {} has been powered on.'.format(vapp_name)
-                response['changed'] = True
-            else:
-                response['warnings'] = 'Vapp {} is already powered on.'.format(vapp_name)
+            vapp_resource = self.vdc.get_vapp(vapp_name)
+            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+            power_on_vapp_task = vapp.power_on()
+            self.execute_task(power_on_vapp_task)
+            msg = 'Vapp {} has been powered on'
+            response['msg'] = msg.format(vapp_name)
+            response['changed'] = True
         except OperationNotSupportedException:
-            response['warnings'] = 'Operation is not supported. You may have no VM(s) in {}'.format(vapp_name)
+            msg = 'Operation is not supported. You may have no VM(s) in {}'
+            response['warnings'] = msg.format(vapp_name)
 
         return response
 
@@ -388,18 +401,23 @@ class Vapp(VcdAnsibleModule):
         response['changed'] = False
 
         vapp = self.get_vapp()
+
+        if vapp.is_powered_off():
+            msg = 'Vapp {} is already powered off'
+            response['warnings'] = msg.format(vapp_name)
+            return response
+
         try:
-            if not vapp.is_powered_off():
-                vapp_resource = self.vdc.get_vapp(vapp_name)
-                vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-                power_off_vapp_task = vapp.power_off()
-                self.execute_task(power_off_vapp_task)
-                response['msg'] = 'Vapp {} has been powered off.'.format(vapp_name)
-                response['changed'] = True
-            else:
-                response['warnings'] = 'Vapp {} is already powered off.'.format(vapp_name)
+            vapp_resource = self.vdc.get_vapp(vapp_name)
+            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+            power_off_vapp_task = vapp.power_off()
+            self.execute_task(power_off_vapp_task)
+            msg = 'Vapp {} has been powered off'
+            response['msg'] = msg.format(vapp_name)
+            response['changed'] = True
         except OperationNotSupportedException:
-            response['warnings'] = 'Operation is not supported. You may have no VM(s) in {}'.format(vapp_name)
+            msg = 'Operation is not supported. You may have no VM(s) in {}'
+            response['warnings'] = msg.format(vapp_name)
 
         return response
 
@@ -409,15 +427,19 @@ class Vapp(VcdAnsibleModule):
         response['changed'] = False
 
         vapp = self.get_vapp()
-        if not vapp.is_deployed():
-            vapp_resource = self.vdc.get_vapp(vapp_name)
-            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-            deploy_vapp_task = vapp.deploy()
-            self.execute_task(deploy_vapp_task)
-            response['msg'] = 'Vapp {} has been deployed.'.format(vapp_name)
-            response['changed'] = True
-        else:
-            response['warnings'] = 'Vapp {} is already deployed.'.format(vapp_name)
+
+        if vapp.is_deployed():
+            msg = 'Vapp {} is already deployed'
+            response['warnings'] = msg.format(vapp_name)
+            return response
+
+        vapp_resource = self.vdc.get_vapp(vapp_name)
+        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+        deploy_vapp_task = vapp.deploy()
+        self.execute_task(deploy_vapp_task)
+        msg = 'Vapp {} has been deployed'
+        response['msg'] = msg.format(vapp_name)
+        response['changed'] = True
 
         return response
 
@@ -427,15 +449,18 @@ class Vapp(VcdAnsibleModule):
         response['changed'] = False
 
         vapp = self.get_vapp()
-        if vapp.is_deployed():
-            vapp_resource = self.vdc.get_vapp(vapp_name)
-            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-            undeploy_vapp_task = vapp.undeploy(action="powerOff")
-            self.execute_task(undeploy_vapp_task)
-            response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
-            response['changed'] = True
-        else:
-            response['warnings'] = 'Vapp {} is already undeployed.'.format(vapp_name)
+
+        if not vapp.is_deployed():
+            msg = 'Vapp {} is already undeployed'
+            response['warnings'] = msg.format(vapp_name)
+            return response
+
+        vapp_resource = self.vdc.get_vapp(vapp_name)
+        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
+        undeploy_vapp_task = vapp.undeploy(action="powerOff")
+        self.execute_task(undeploy_vapp_task)
+        response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
+        response['changed'] = True
 
         return response
 
@@ -445,36 +470,35 @@ class Vapp(VcdAnsibleModule):
         response['msg'] = list()
 
         for vm in vapp.get_all_vms():
-            vm_details = dict()
-            vm_details['name'] = vm.get('name')
-            vm_details['status'] = VM_STATUSES[vm.get('status')]
-            vm_details['deployed'] = vm.get('deployed') == 'true'
-
             try:
-                vm_details['ip_address'] = vapp.get_primary_ip(vm.get('name'))
+                ip = vapp.get_primary_ip(vm.get('name'))
             except Exception:
-                vm_details['ip_address'] = None
+                ip = None
+            finally:
+                vm_details = {"name": vm.get('name'),
+                              "status": VM_STATUSES[vm.get('status')],
+                              "deployed": vm.get('deployed') == 'true',
+                              "ip_address": ip
+                              }
 
-            response['msg'].append(vm_details)
+                response['msg'].append(vm_details)
 
         return response
 
     def list_networks(self):
         vapp = self.get_vapp()
         response = dict()
-        response['msg'] = list()
 
-        for network in vapp.get_all_networks():
-            response['msg'].append(network.get('{' + NSMAP['ovf'] + '}name'))
+        networks = vapp.get_all_networks()
+        response['msg'] = [network.get(
+            '{' + NSMAP['ovf'] + '}name') for network in networks]
 
         return response
 
 
 def main():
     argument_spec = vapp_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = Vapp(argument_spec=argument_spec, supports_check_mode=True)
 
     try:

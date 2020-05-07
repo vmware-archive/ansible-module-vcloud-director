@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_catalog
-short_description: Ansible module to manage (create/update/delete) catalogs in vCloud Director.
+short_description: Manage catalog's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible module to manage (create/update/delete) catalogs in vCloud Director."
+    - Manage catalog's states/operations in vCloud Director
 
 options:
     user:
@@ -65,7 +65,7 @@ options:
         required: false
     operation:
         description:
-            - operation which should be performed over catalog (read/shared/list_items).
+            - operation to perform on catalog (read/shared/list_items).
             - One from state or operation has to be provided.
         required: false
 
@@ -88,8 +88,8 @@ msg: success/failure message corresponding to catalog state/operation
 changed: true if resource has been changed else false
 '''
 
-from pyvcloud.vcd.client import NSMAP
 from pyvcloud.vcd.org import Org
+from pyvcloud.vcd.client import NSMAP
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
@@ -147,10 +147,12 @@ class Catalog(VcdAnsibleModule):
             self.org.get_catalog(name=catalog_name)
         except EntityNotFoundException:
             self.org.create_catalog(name=catalog_name, description=description)
-            response['msg'] = 'Catalog {} has been created.'.format(catalog_name)
+            msg = 'Catalog {} has been created.'
+            response['msg'] = msg.format(catalog_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'Catalog {} is already present.'.format(catalog_name)
+            msg = 'Catalog {} is already present.'
+            response['warnings'] = msg.format(catalog_name)
 
         return response
 
@@ -162,10 +164,12 @@ class Catalog(VcdAnsibleModule):
         try:
             self.org.get_catalog(name=catalog_name)
         except EntityNotFoundException:
-            response['warnings'] = 'Catalog {} is not present.'.format(catalog_name)
+            msg = 'Catalog {} is not present.'
+            response['warnings'] = msg.format(catalog_name)
         else:
             self.org.delete_catalog(catalog_name)
-            response['msg'] = 'Catalog {} has been deleted.'.format(catalog_name)
+            msg = 'Catalog {} has been deleted.'
+            response['msg'] = msg.format(catalog_name)
             response['changed'] = True
 
         return response
@@ -195,7 +199,8 @@ class Catalog(VcdAnsibleModule):
         response['changed'] = False
 
         self.org.share_catalog(name=catalog_name, share=shared)
-        response['msg'] = 'Catalog {} shared state has been updated to [shared={}].'.format(catalog_name, shared)
+        msg = 'Catalog {} shared state has been updated to [shared={}].'
+        response['msg'] = msg.format(catalog_name, shared)
         response['changed'] = True
 
         return response
@@ -211,7 +216,6 @@ class Catalog(VcdAnsibleModule):
         result['description'] = str(catalog.Description)
         result['shared'] = str(catalog.IsPublished)
         response['msg'] = result
-        response['changed'] = False
 
         return response
 
@@ -221,17 +225,15 @@ class Catalog(VcdAnsibleModule):
         response['changed'] = False
 
         catalog_items = self.org.list_catalog_items(catalog_name)
-        response['msg'] = [catalog_item['name'] for catalog_item in catalog_items]
-        response['changed'] = False
+        response['msg'] = [catalog_item['name']
+                           for catalog_item in catalog_items]
 
         return response
 
 
 def main():
     argument_spec = vcd_catalog_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = Catalog(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
@@ -240,7 +242,7 @@ def main():
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('One of the state/operation should be provided.')
+            raise Exception('One of the state/operation should be provided')
 
     except Exception as error:
         response['msg'] = error.__str__()

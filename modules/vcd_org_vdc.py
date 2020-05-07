@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_org_vdc
-short_description: Ansible module to manage virtual datacenters in vCloud Director.
+short_description: Manage ORG VDC's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible module to manage virtual datacenters in vCloud Director."
+    - Manage ORG VDC's states/operations in vCloud Director
 
 options:
     user:
@@ -257,10 +257,9 @@ def org_vdc_argument_spec():
         vdc_org_name=dict(type='str', required=False),
         provider_vdc_name=dict(type='str', required=False),
         description=dict(type='str', required=False, default=''),
-        allocation_model=dict(type='str', required=False,
-                              default='AllocationVApp', choices=['AllocationVApp',
-                                                                 'AllocationPool',
-                                                                 'ReservationPool']),
+        allocation_model=dict(
+            type='str', required=False, default='AllocationVApp',
+            choices=['AllocationVApp', 'AllocationPool', 'ReservationPool']),
         cpu_units=dict(type='str', required=False, default="MHz"),
         cpu_allocated=dict(type='int', required=False, default=0),
         cpu_limit=dict(type='int', required=False, default=0),
@@ -271,8 +270,10 @@ def org_vdc_argument_spec():
         network_quota=dict(type='int', required=False, default=0),
         vm_quota=dict(type='int', required=False, default=0),
         storage_profiles=dict(type='list', required=False, default=[]),
-        resource_guaranteed_memory=dict(type='float', required=False, default=1.0),
-        resource_guaranteed_cpu=dict(type='float', required=False, default=1.0),
+        resource_guaranteed_memory=dict(
+            type='float', required=False, default=1.0),
+        resource_guaranteed_cpu=dict(
+            type='float', required=False, default=1.0),
         vcpu_in_mhz=dict(type='int', required=False),
         is_thin_provision=dict(type='bool', required=False),
         network_pool_name=dict(type='str', required=False),
@@ -366,10 +367,10 @@ class Vdc(VcdAnsibleModule):
                 is_enabled=is_enabled)
 
             self.execute_task(create_vdc_task.Tasks.Task[0])
-            response['msg'] = 'VDC {} has been created.'.format(vdc_name)
+            response['msg'] = 'VDC {} has been created'.format(vdc_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'VDC {} is already present.'.format(vdc_name)
+            response['warnings'] = 'VDC {} is already present'.format(vdc_name)
 
         return response
 
@@ -380,16 +381,14 @@ class Vdc(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-
             vdc_resource = self.org.get_vdc(vdc_name, is_admin_operation=True)
             vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
             vdc.enable_vdc(enable=is_enabled)
-            response['msg'] = 'VDC {} has been updated.'.format(vdc_name)
+            response['msg'] = 'VDC {} has been updated'.format(vdc_name)
             response['changed'] = True
-
         except OperationNotSupportedException:
-            m = "VDC {} may already in {} state"
-            response['warnings'] = m.format(vdc_name, "enabled") if is_enabled else m.format(vdc_name, "disabled")
+            m = "VDC {} may already in desired state"
+            response['warnings'] = m.format(vdc_name)
 
         return response
 
@@ -399,15 +398,12 @@ class Vdc(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-
             vdc_resource = self.org.get_vdc(vdc_name, is_admin_operation=True)
             vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
             vdc.enable_vdc(enable=False)
-
         except EntityNotFoundException:
             response['warnings'] = 'VDC {} is not present.'.format(vdc_name)
             return
-
         except OperationNotSupportedException:
             pass
 
@@ -421,10 +417,7 @@ class Vdc(VcdAnsibleModule):
     def list_vdcs(self):
         response = dict()
         response['changed'] = False
-        response['msg'] = list()
-
-        for vdc in self.org.list_vdcs():
-            response['msg'].append(vdc.get('name'))
+        response['msg'] = [vdc.get('name') for vdc in self.org.list_vdcs()]
 
         return response
 
@@ -435,21 +428,18 @@ def main():
     module = Vdc(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-
         if module.params.get('state'):
             response = module.manage_states()
-
         elif module.params.get('operation'):
             response = module.manage_operations()
-
         else:
             raise Exception('Please provide state for the resource.')
-
-        module.exit_json(**response)
 
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
+
+    module.exit_json(**response)
 
 
 if __name__ == '__main__':

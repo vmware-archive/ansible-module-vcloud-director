@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_external_network
-short_description: Ansible module to manage (create/update/delete) external networks in vCloud Director.
+short_description: Manage external_network's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible module to manage (create/update/delete) external networks in vCloud Director."
+    - Manage external_network's states/operations in vCloud Director
 
 options:
     user:
@@ -48,7 +48,8 @@ options:
         required: false
     port_group_names:
         description:
-            - list of vCenter port groups external network needs to be attached with
+            - vCenter port groups external network may get attached with
+        type: list
         required: false
     network_name:
         description:
@@ -76,7 +77,8 @@ options:
         required: false
     new_ip_ranges:
         description:
-            - list of new IP ranges used for static pool allocation in the network
+            - IP ranges used for static pool allocation in the network
+        type: list
         required: false
     primary_dns_ip:
         description:
@@ -145,8 +147,10 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 VCD_EXTERNAL_NETWORKS_STATES = ['present', 'update', 'absent']
-VCD_EXTERNAL_NETWORKS_OPERATIONS = ['list_networks', 'add_subnet', 'add_ip_ranges', 'modify_ip_ranges',
-                                    'delete_ip_ranges', 'enable_subnet', 'attach_port_group', 'detach_port_group']
+VCD_EXTERNAL_NETWORKS_OPERATIONS = ['list_networks', 'add_subnet',
+                                    'add_ip_ranges', 'modify_ip_ranges',
+                                    'delete_ip_ranges', 'enable_subnet',
+                                    'attach_port_group', 'detach_port_group']
 
 
 def vcd_external_network_argument_spec():
@@ -229,13 +233,19 @@ class VcdExternalNetwork(VcdAnsibleModule):
         try:
             self.platform.get_external_network(network_name)
         except EntityNotFoundException:
-            self.platform.create_external_network(
-                network_name, vc_name, port_group_names, gateway_ip, netmask, ip_ranges, description, primary_dns_ip,
-                secondary_dns_ip, dns_suffix)
-            response['msg'] = "External Network {0} is created".format(network_name)
+            self.platform.create_external_network(network_name, vc_name,
+                                                  port_group_names, gateway_ip,
+                                                  netmask, ip_ranges,
+                                                  description,
+                                                  primary_dns_ip,
+                                                  secondary_dns_ip,
+                                                  dns_suffix)
+            msg = "External Network {0} is created"
+            response['msg'] = msg.format(network_name)
             response['changed'] = True
         else:
-            response['warnings'] = "External Network {0} is already present".format(network_name)
+            msg = "External Network {0} is already present"
+            response['warnings'] = msg.format(network_name)
 
         return response
 
@@ -248,11 +258,14 @@ class VcdExternalNetwork(VcdAnsibleModule):
 
         try:
             self.platform.get_external_network(network_name)
-            self.platform.update_external_network(network_name, new_network_name, description)
+            self.platform.update_external_network(
+                network_name, new_network_name, description)
         except EntityNotFoundException:
-            response['msg'] = "External Network {0} does not exists".format(network_name)
+            msg = "External Network {0} does not exists"
+            response['msg'] = msg.format(network_name)
         else:
-            response['msg'] = "External Network {0} has been updated with {1}".format(network_name, new_network_name)
+            msg = "External Network {0} has been updated with {1}"
+            response['msg'] = msg.format(network_name, new_network_name)
             response['changed'] = True
 
         return response
@@ -267,9 +280,11 @@ class VcdExternalNetwork(VcdAnsibleModule):
             t = self.platform.delete_external_network(network_name, force_delete)
             self.execute_task(t)
         except EntityNotFoundException:
-            response['msg'] = "External Network {0} does not exists".format(network_name)
+            msg = "External Network {0} does not exists"
+            response['msg'] = msg.format(network_name)
         else:
-            response['msg'] = "External Network {0} has been deleted".format(network_name)
+            msg = "External Network {0} has been deleted"
+            response['msg'] = msg.format(network_name)
             response['changed'] = True
 
         return response
@@ -278,9 +293,9 @@ class VcdExternalNetwork(VcdAnsibleModule):
         response = dict()
         response['msg'] = list()
         response['changed'] = False
-        for k, v in self.platform.list_external_networks().items():
-            if k == "name":
-                response['msg'].append(v)
+
+        networks = self.platform.list_external_networks()
+        response['msg'] = [v for k, v in networks.items() if k == "name"]
 
         return response
 
@@ -296,9 +311,10 @@ class VcdExternalNetwork(VcdAnsibleModule):
         response['changed'] = False
 
         network = self.get_network(network_name)
-        network.add_subnet(
-            network_name, gateway_ip, netmask, ip_ranges, primary_dns_ip, secondary_dns_ip, dns_suffix)
-        response['msg'] = "A new subnet has been added to network {0}".format(network_name)
+        network.add_subnet(network_name, gateway_ip, netmask, ip_ranges,
+                           primary_dns_ip, secondary_dns_ip, dns_suffix)
+        msg = "A new subnet has been added to network {0}"
+        response['msg'] = msg.format(network_name)
         response['changed'] = True
 
         return response
@@ -312,7 +328,8 @@ class VcdExternalNetwork(VcdAnsibleModule):
 
         network = self.get_network(network_name)
         network.add_ip_range(gateway_ip, ip_ranges)
-        response['msg'] = "A new ip ranges has been added to network {0}".format(network_name)
+        msg = "A new ip ranges has been added to network {0}"
+        response['msg'] = msg.format(network_name)
         response['changed'] = True
 
         return response
@@ -326,14 +343,15 @@ class VcdExternalNetwork(VcdAnsibleModule):
         response['changed'] = False
 
         if len(ip_ranges) != len(new_ip_ranges):
-            raise ValueError("ip_ranges and new_ip_ranges should have same length")
+            raise ValueError(
+                "ip_ranges and new_ip_ranges should have same length")
 
         network = self.get_network(network_name)
-
         for i in range(len(ip_ranges)):
             network.modify_ip_range(gateway_ip, ip_ranges[i], new_ip_ranges[i])
 
-        response['msg'] = "Ip ranges have been updated to network {0}".format(network_name)
+        msg = "Ip ranges have been updated to network {0}"
+        response['msg'] = msg.format(network_name)
         response['changed'] = True
 
         return response
@@ -347,7 +365,8 @@ class VcdExternalNetwork(VcdAnsibleModule):
 
         network = self.get_network(network_name)
         network.delete_ip_range(gateway_ip, ip_ranges)
-        response['msg'] = "Ip ranges have been deleted from network {0}".format(network_name)
+        msg = "Ip ranges have been deleted from network {0}"
+        response['msg'] = msg.format(network_name)
         response['changed'] = True
 
         return response
@@ -362,7 +381,8 @@ class VcdExternalNetwork(VcdAnsibleModule):
         network = self.get_network(network_name)
         network.enable_subnet(gateway_ip, enable_subnet)
         s = "has been enabled" if enable_subnet else "has been disabled"
-        response['msg'] = "subnet with gatway {0} {1} now in network {2}".format(gateway_ip, s, network_name)
+        msg = "subnet with gatway {0} {1} now in network {2}"
+        response['msg'] = msg.format(gateway_ip, s, network_name)
         response['changed'] = True
 
         return response
@@ -410,7 +430,8 @@ class VcdExternalNetwork(VcdAnsibleModule):
 def main():
     argument_spec = vcd_external_network_argument_spec()
     response = dict(msg=dict(type='str'))
-    module = VcdExternalNetwork(argument_spec=argument_spec, supports_check_mode=True)
+    module = VcdExternalNetwork(
+        argument_spec=argument_spec, supports_check_mode=True)
 
     try:
         if module.params.get('state'):
