@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_vapp_vm
-short_description: Ansible Module to manage (create/update/delete) VMs in vApps in vCloud Director.
+short_description: Manage VM's state/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible Module to manage (create/update/delete) VMs in vApps."
+    - Manage VM's state/operations in vCloud Director
 
 options:
     user:
@@ -88,7 +88,7 @@ options:
         required: false
     vmpassword_reset:
         description:
-            - true if the administrator password for this virtual machine must be reset after first use else false
+            - true/false to reset administrator password
         required: false
     cust_script:
         description:
@@ -96,7 +96,8 @@ options:
         required: false
     network:
         description:
-            - Name of the vApp network to connect. If omitted, the VM won't be connected to any network
+            - Name of the vApp network to connect
+            - If omitted, the VM won't be connected to any network
         required: false
     storage_profile:
         description:
@@ -135,11 +136,21 @@ options:
         required: false
     state:
         description:
-            - state of new virtual machines (present/absent).One from state or operation has to be provided.
+            - state of new virtual machines (present/absent)
+            - One from state or operation has to be provided
         required: false
     operation:
         description:
-            - operations performed over new vapp (poweron/poweroff/modifycpu/modifymemory/reloadvm/list_disks/list_nics).One from state or operation has to be provided.
+            - operation to perform on new vapp
+            - Available operations are
+                - poweron
+                - poweroff
+                - modifycpu
+                - modifymemory
+                - reloadvm
+                - list_disks
+                - list_nics
+            - One from state or operation has to be provided.
         required: false
     force_customization:
         description:
@@ -184,11 +195,11 @@ from lxml import etree
 from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
-from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import E
+from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import E_OVF
-from pyvcloud.vcd.client import EntityType
 from pyvcloud.vcd.client import NSMAP
+from pyvcloud.vcd.client import EntityType
 from pyvcloud.vcd.client import RelationType
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
@@ -225,7 +236,7 @@ def vapp_vm_argument_spec():
         all_eulas_accepted=dict(type='bool', required=False, default=None),
         properties=dict(type='dict', required=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
-        operation=dict(choices=VAPP_VM_OPERATIONS, required=False)
+        operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
         force_customization=dict(type='bool', required=False, default=False)
     )
 
@@ -503,10 +514,12 @@ class VappVM(VcdAnsibleModule):
         if not vm.is_deployed():
             deploy_vm_task = vm.deploy(force_customization=force_customization)
             self.execute_task(deploy_vm_task)
-            response['msg'] = 'VM {} has been deployed.'.format(vm_name)
+            msg = 'VM {} has been deployed'
+            response['msg'] = msg.format(vm_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'VM {} is already deployed.'.format(vm_name)
+            msg = 'VM {} is already deployed'
+            response['warnings'] = msg.format(vm_name)
 
         return response
 
@@ -519,11 +532,12 @@ class VappVM(VcdAnsibleModule):
         if not vm.is_deployed():
             undeploy_vm_task = vm.undeploy(action="powerOff")
             self.execute_task(undeploy_vm_task)
-            response['msg'] = 'VM {} has been undeployed.'.format(vm_name)
+            msg = 'VM {} has been undeployed'
+            response['msg'] = msg.format(vm_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'VM {} is already undeployed.'.format(
-                vm_name)
+            msg = 'VM {} is already undeployed'
+            response['warnings'] = msg.format(vm_name)
 
         return response
 
@@ -533,8 +547,9 @@ class VappVM(VcdAnsibleModule):
         response['msg'] = []
 
         vm = self.get_vm()
-        disks = self.client.get_resource(vm.resource.get(
-            'href') + '/virtualHardwareSection/disks')
+        disks = self.client.get_resource(
+            vm.resource.get('href') + '/virtualHardwareSection/disks')
+
         for disk in disks.Item:
             if disk['{' + NSMAP['rasd'] + '}ResourceType'] == 17:
                 response['msg'].append({
@@ -554,6 +569,7 @@ class VappVM(VcdAnsibleModule):
         vm = self.get_vm()
         nics = self.client.get_resource(
             vm.resource.get('href') + '/networkConnectionSection')
+
         for nic in nics.NetworkConnection:
             response['msg'].append({
                 'index': nic.NetworkConnectionIndex.text,
@@ -565,9 +581,7 @@ class VappVM(VcdAnsibleModule):
 
 def main():
     argument_spec = vapp_vm_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = VappVM(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
@@ -576,7 +590,7 @@ def main():
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('One of the state/operation should be provided.')
+            raise Exception('Please provide state/operation for resource')
 
     except Exception as error:
         response['msg'] = error
