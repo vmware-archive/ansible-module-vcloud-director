@@ -3,28 +3,96 @@
 ---
 # tasks file for roles/vappnetwork
 
-- name: create vapp network "{{ vapp_network }}"
-  no_log: False
+- name: add vapp network
   vcd_vapp_network:
-    network: "{{ vapp_network }}"
-    vapp: "web2"
-    vdc: "Terraform_VDC"
-    ip_scope: "192.168.0.5/24"
-    state: "present"
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vdc: ACME_PAYG
+    vapp: vApp_system_2
+    network: sample_2
+    network_cidr: 192.168.102.2/24
+    primary_dns_ip: 192.168.102.1
+    dns_suffix: dn
+    ip_ranges:
+      - 192.168.102.5-192.168.102.10
+    is_guest_vlan_allowed: False
+    state: present
   register: output
 
-- name: create vapp network output
+- name: add vapp network output
   debug:
     msg: "{{ output }}"
 
-- name: delete "{{ vapp_network }}" vapp network
+- name: read vapp networks
   vcd_vapp_network:
-    network: "{{ vapp_network }}"
-    vapp: "web2"
-    vdc: "Terraform_VDC"
-    state: "absent"
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vdc: ACME_PAYG
+    vapp: vApp_system_2
+    operation: read
+  register: output
+
+- name: read vapp networks output
+  debug:
+    msg: "{{ output }}"
+
+- name: update vapp network
+  vcd_vapp_network:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vdc: ACME_PAYG
+    vapp: vApp_system_2
+    network: sample_2
+    new_network: sample_3
+    state: update
+  register: output
+
+- name: update vapp network output
+  debug:
+    msg: "{{ output }}"
+
+- name: read vapp networks
+  vcd_vapp_network:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vdc: ACME_PAYG
+    vapp: vApp_system_2
+    operation: read
+  register: output
+
+- name: read vapp networks output
+  debug:
+    msg: "{{ output }}"
+
+- name: delete vapp network
+  vcd_vapp_network:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vdc: ACME_PAYG
+    vapp: vApp_system_2
+    network: sample_3
+    state: absent
   register: output
 
 - name: delete vapp network output
+  debug:
+    msg: "{{ output }}"
+
+- name: read vapp networks
+  vcd_vapp_network:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vdc: ACME_PAYG
+    vapp: vApp_system_2
+    operation: read
+  register: output
+
+- name: read vapp networks output
   debug:
     msg: "{{ output }}"
