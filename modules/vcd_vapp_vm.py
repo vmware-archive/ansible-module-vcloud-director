@@ -123,9 +123,6 @@ options:
         description:
             - memory size in MB
         required: false
-    properties:
-        description:
-            - custom properties
     deploy:
         description:
             - deploy VMs
@@ -234,7 +231,6 @@ def vapp_vm_argument_spec():
         deploy=dict(type='bool', required=False, default=True),
         power_on=dict(type='bool', required=False, default=True),
         all_eulas_accepted=dict(type='bool', required=False, default=None),
-        properties=dict(type='dict', required=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
         force_customization=dict(type='bool', required=False, default=False)
@@ -346,7 +342,6 @@ class VappVM(VcdAnsibleModule):
         ip_allocation_mode = params.get('ip_allocation_mode')
         cust_script = params.get('cust_script')
         storage_profile = params.get('storage_profile')
-        properties = params.get('properties')
         response = dict()
         response['changed'] = False
 
@@ -367,45 +362,22 @@ class VappVM(VcdAnsibleModule):
             }
 
             spec = {k: v for k, v in spec.items() if v}
-            if storage_profile != '':
-                spec['storage_profile'] = self.get_storage_profile(
-                    storage_profile)
-            source_vm = self.vapp.to_sourced_item(spec)
-
-            # Check the source vm if we need to inject OVF properties.
-            source_vapp = VApp(self.client, resource=source_vapp_resource)
-            vm = source_vapp.get_vm(source_vm_name)
-            productsection = vm.find('ovf:ProductSection', NSMAP)
-            if productsection is not None:
-                for prop in productsection.iterfind('ovf:Property', NSMAP):
-                    if properties and prop.get('{' + NSMAP['ovf'] + '}key') in properties:
-                        val = prop.find('ovf:Value', NSMAP)
-                        if val:
-                            prop.remove(val)
-                        val = E_OVF.Value()
-                        val.set(
-                            '{' + NSMAP['ovf'] + '}value', properties[prop.get('{' + NSMAP['ovf'] + '}key')])
-                        prop.append(val)
-                source_vm.InstantiationParams.append(productsection)
-                source_vm.VmGeneralParams.NeedsCustomization = E.NeedsCustomization(
-                    'true')
-
-            params = E.RecomposeVAppParams(
-                deploy='true' if deploy else 'false', powerOn='true' if power_on else 'false')
-            params.append(source_vm)
-            if all_eulas_accepted is not None:
-                params.append(E.AllEULAsAccepted(all_eulas_accepted))
-
-            add_vms_task = self.client.post_linked_resource(
-                self.get_target_resource(), RelationType.RECOMPOSE,
-                EntityType.RECOMPOSE_VAPP_PARAMS.value, params)
+            if storage_profile:
+                spec['storage_profile'] = self.get_storage_profile(storage_profile)
+            specs = [spec]
+            args = {
+                "specs": specs,
+                "deploy": deploy,
+                "power_on": power_on,
+                "all_eulas_accepted": all_eulas_accepted
+            }
+            add_vms_task = self.vapp.add_vms(**args)
             self.execute_task(add_vms_task)
-            response['msg'] = 'VM {} has been created.'.format(
-                target_vm_name)
+            response['msg'] = 'VM {} has been created.'.format(target_vm_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'VM {} is already present.'.format(
-                target_vm_name)
+            msg = 'VM {} is already present.'
+            response['warnings'] = msg.format(target_vm_name)
 
         return response
 
@@ -544,37 +516,21 @@ class VappVM(VcdAnsibleModule):
     def list_disks(self):
         response = dict()
         response['changed'] = False
-        response['msg'] = []
+        response['msg'] = list()
 
         vm = self.get_vm()
-        disks = self.client.get_resource(
-            vm.resource.get('href') + '/virtualHardwareSection/disks')
-
-        for disk in disks.Item:
-            if disk['{' + NSMAP['rasd'] + '}ResourceType'] == 17:
-                response['msg'].append({
-                    'id': disk['{' + NSMAP['rasd'] + '}InstanceID'].text,
-                    'name': disk['{' + NSMAP['rasd'] + '}ElementName'].text,
-                    'description': disk['{' + NSMAP['rasd'] + '}Description'].text,
-                    'size': disk['{' + NSMAP['rasd'] + '}HostResource'].get('{' + NSMAP['vcloud'] + '}capacity')
-                })
+        response['msg'] = vm.list_virtual_hardware_section(
+            is_cpu=False, is_memory=False, is_disk=True)
 
         return response
 
     def list_nics(self):
         response = dict()
         response['changed'] = False
-        response['msg'] = []
+        response['msg'] = list()
 
         vm = self.get_vm()
-        nics = self.client.get_resource(
-            vm.resource.get('href') + '/networkConnectionSection')
-
-        for nic in nics.NetworkConnection:
-            response['msg'].append({
-                'index': nic.NetworkConnectionIndex.text,
-                'network': nic.get('network')
-            })
+        response['msg'] = vm.list_nics()
 
         return response
 
