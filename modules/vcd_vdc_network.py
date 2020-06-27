@@ -3,9 +3,11 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'status': ['preview'],
+    'supported_by': 'community'
+}
 
 DOCUMENTATION = '''
 module: vcd_vdc_network
@@ -441,16 +443,21 @@ def main():
     module = OrgVdcNetwork(
         argument_spec=argument_spec, supports_check_mode=True)
     try:
-        if not module.params.get('state'):
-            raise Exception('Please provide the state for the resource.')
-
-        response = module.manage_states()
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
+            response = module.manage_states()
+        else:
+            raise Exception('Please provide the state for the resource')
 
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
-
-    module.exit_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':

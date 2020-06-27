@@ -428,18 +428,23 @@ def main():
     module = Vdc(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if module.params.get('state'):
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
             response = module.manage_states()
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide state for the resource.')
+            raise Exception('Please provide state/operation for resource')
 
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
-
-    module.exit_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':
