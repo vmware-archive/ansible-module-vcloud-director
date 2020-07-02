@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_org
-short_description: Ansible module to manage (create/update/delete) orgs in vCloud Director
+short_description: Manage org's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - Ansible module to manage (create/update/delete) orgs in vCloud Director
+    - Manage org's states/operations in vCloud Director
 
 options:
     user:
@@ -101,10 +101,9 @@ changed: true if resource has been changed else false
 '''
 
 
-from lxml import etree
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.system import System
-from pyvcloud.vcd.client import E, EntityType, RelationType, ResourceType, MetadataDomain, MetadataVisibility, MetadataValueType
+from pyvcloud.vcd.client import EntityType, RelationType, ResourceType, MetadataDomain, MetadataVisibility, MetadataValueType
 from pyvcloud.vcd.metadata import Metadata
 from pyvcloud.vcd.utils import to_dict
 from ansible.module_utils.vcd import VcdAnsibleModule
@@ -355,24 +354,28 @@ class VCDOrg(VcdAnsibleModule):
 
 def main():
     argument_spec = org_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = VCDOrg(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if module.params.get('state'):
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
             response = module.manage_states()
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide state or operation for the module')
+            raise Exception('Please provide state/operation for resource')
 
     except Exception as error:
         response['msg'] = error
         module.fail_json(**response)
 
-    module.exit_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':
