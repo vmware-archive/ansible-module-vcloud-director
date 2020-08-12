@@ -148,7 +148,7 @@ options:
         type: bool
         default: false
         required: false
-    ext_net_to_subnet_with_ip_range:
+    ext_net_subnet_allocated_ip_pool:
         description:
             - External network to sub allocated ip with ip ranges.
         type: dict
@@ -166,8 +166,14 @@ options:
         description:
             - State of the Gateway.
         type: string
-        required: true
+        required: false
         choices: ['present','absent', 'update']
+    operation:
+        description:
+            - Operation performed on the Gateway.
+        type: string
+        required: false
+        choices: ['update_ip_pool', 'update_network']
 '''
 
 
@@ -195,6 +201,9 @@ EXAMPLES = '''
     create_as_advanced_gw: True
     dr_enabled: True
     configure_ip_settings: True
+    ext_net_subnet_allocated_ip_pool: {
+        "network_name": "10.221.10.170-10.221.10.171"
+    }
     ext_net_to_participated_subnet_with_ip_settings: {
         "CLOUDLAB EXTERNAL NETWORK": {
             "10.221.10.161/27": "10.221.10.170"
@@ -222,7 +231,8 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import BadRequestException, EntityNotFoundException
 
 
-EDGE_NETWORK_STATES = ['present', 'update', 'absent']
+EDGE_GATEWAY_STATES = ['present', 'update', 'absent']
+EDGE_GATEWAY_OPERATIONS = ['update_ip_pool', 'add_network', 'remove_network']
 EDGE_GW_TYPE = ['NSXV_BACKED', 'NSXT_BACKED', 'NSXT_IMPORTED']
 EDGE_GW_BACKING_CONF = ['compact', 'full', 'full4', 'x-large']
 
@@ -246,15 +256,20 @@ def vdc_gw_argument_spec():
         create_as_advanced_gw=dict(type='bool', required=False, default=False),
         dr_enabled=dict(type='bool', required=False, default=False),
         configure_ip_settings=dict(type='bool', required=False, default=False),
+        ext_net_subnet_allocated_ip_pool=dict(
+            type='dict', required=False),
         ext_net_to_participated_subnet_with_ip_settings=dict(
             type='dict', required=False),
         sub_allocate_ip_pools=dict(type='bool', required=False, default=False),
         ext_net_to_subnet_with_ip_range=dict(type='dict', required=False),
         ext_net_to_rate_limit=dict(type='dict', required=False),
         flips_mode=dict(type='bool', required=False, default=False),
+        new_sub_allocated_ip_ranges=dict(
+            type='list', required=False, default=list()),
         edge_gateway_type=dict(
             type='str', required=False, choices=EDGE_GW_TYPE),
-        state=dict(choices=EDGE_NETWORK_STATES, required=True)
+        state=dict(choices=EDGE_GATEWAY_STATES, required=False),
+        operation=dict(choices=EDGE_GATEWAY_OPERATIONS, required=False)
     )
 
 
@@ -279,13 +294,28 @@ class VdcGW(VcdAnsibleModule):
         if state == "absent":
             return self.delete_gw()
 
+    def manage_operations(self):
+        operation = self.params.get('operation')
+        if operation == "update_ip_pool":
+            return self.update_sub_allocated_ip_pools()
+
+        if operation == "add_network":
+            return self.add_network()
+
+        if operation == "remove_network":
+            return self.remove_network()
+
     def get_gateway(self, gateway_name):
         gateway = self.vdc.get_gateway(gateway_name)
         if gateway is None:
-            raise EntityNotFoundException(
-                "Edge gateway {0} is not present".format(gateway_name))
+            msg = "Edge gateway {0} is not present"
+            raise EntityNotFoundException(msg.format(gateway_name))
 
-        return gateway
+        for key, value in gateway.items():
+            if key == "href":
+                return Gateway(self.client, name=gateway_name, href=value)
+
+        return None
 
     def create_gw(self):
         api_version = self.client.get_api_version()
@@ -470,25 +500,18 @@ class VdcGW(VcdAnsibleModule):
         new_gateway_name = self.params.get('new_gateway_name')
         description = self.params.get('description')
         ha_enabled = self.params.get('ha_enabled')
-        edge_gateway_href = None
 
         try:
             gateway = self.get_gateway(gateway_name)
-            for key, value in gateway.items():
-                if key == "href":
-                    edge_gateway_href = value
-                    break
-            gateway = Gateway(
-                self.client, name=gateway_name, href=edge_gateway_href)
+        except EntityNotFoundException as ex:
+            response['warnings'] = ex
+        else:
             update_task = gateway.edit_gateway(newname=new_gateway_name,
                                                desc=description, ha=ha_enabled)
             self.execute_task(update_task)
             msg = "Edge Gateway {0} has been updated with {1}"
             response['msg'] = msg.format(gateway_name, new_gateway_name)
             response['changed'] = True
-        except EntityNotFoundException:
-            msg = 'Edge Gateway {0} is not present'
-            response['warnings'] = msg.format(gateway_name)
 
         return response
 
@@ -499,14 +522,91 @@ class VdcGW(VcdAnsibleModule):
 
         try:
             self.get_gateway(gateway_name)
-        except EntityNotFoundException:
-            msg = "Edge Gateway {0} is not present"
-            response['warnings'] = msg.format(gateway_name)
+        except EntityNotFoundException as ex:
+            response['warnings'] = ex
         else:
             delete_task = self.vdc.delete_gateway(gateway_name)
             self.execute_task(delete_task)
             msg = "Edge Gateway {0} has been deleted"
             response['msg'] = msg.format(gateway_name)
+            response['changed'] = True
+
+        return response
+
+    def _get_gateway_network_subnet_participation(self, gw_resource, network):
+        for gateway_inf in \
+                gw_resource.Configuration.GatewayInterfaces.GatewayInterface:
+            if gateway_inf.Name == network:
+                return gateway_inf.SubnetParticipation
+
+    def update_sub_allocated_ip_pools(self):
+        response = dict()
+        response['changed'] = False
+        gateway_name = self.params.get('gateway_name')
+
+        try:
+            gateway = self.get_gateway(gateway_name)
+        except EntityNotFoundException as ex:
+            response['warnings'] = ex
+        else:
+            ip_pool = self.params.get('ext_net_subnet_allocated_ip_pool')
+            for network, new_ip_range in ip_pool.items():
+                subnet_participation = self._get_gateway_network_subnet_participation(
+                    gateway.get_resource(), network)
+                ip_ranges = gateway.get_sub_allocate_ip_ranges_element(
+                    subnet_participation)
+                old_ip_range = "{0}-{1}".format(ip_ranges.IpRange.StartAddress,
+                                                ip_ranges.IpRange.EndAddress)
+                update_task = gateway.edit_sub_allocated_ip_pools(
+                    network, old_ip_range, new_ip_range)
+                self.execute_task(update_task)
+            msg = "Ip Pools have been updated on edge gatway {0}"
+            response['msg'] = msg.format(gateway_name)
+            response['changed'] = True
+
+        return response
+
+    def add_network(self):
+        response = dict()
+        response['changed'] = False
+        gateway_name = self.params.get('gateway_name')
+
+        try:
+            gateway = self.get_gateway(gateway_name)
+        except EntityNotFoundException as ex:
+            response['warnings'] = ex
+        else:
+            networks = list()
+            network_settings = self.params.get(
+                'ext_net_to_participated_subnet_with_ip_settings')
+            for network, ip_settings in network_settings.items():
+                networks.append(network)
+                for subnet, ip in ip_settings.items():
+                    add_network_task = gateway.add_external_network(
+                        network, [(subnet, ip)])
+                    self.execute_task(add_network_task)
+            msg = "Networks {0} have been added to edge gatway {1}"
+            response['msg'] = msg.format(networks, gateway_name)
+            response['changed'] = True
+
+        return response
+
+    def remove_network(self):
+        response = dict()
+        response['changed'] = False
+        gateway_name = self.params.get('gateway_name')
+
+        try:
+            gateway = self.get_gateway(gateway_name)
+        except EntityNotFoundException as ex:
+            response['warnings'] = ex
+        else:
+            external_networks = self.params.get('external_networks')
+            for network in external_networks:
+                remove_network_task = gateway.remove_external_network(network)
+                self.execute_task(remove_network_task)
+            msg = "Networks {0} have been removed from edge gatway {1}"
+            response['msg'] = msg.format(external_networks, gateway_name)
             response['changed'] = True
 
         return response
@@ -524,8 +624,10 @@ def main():
             response['skipped'] = True
         elif module.params.get('state'):
             response = module.manage_states()
+        elif module.params.get('operation'):
+            response = module.manage_operations()
         else:
-            raise Exception('Please provide state for resource')
+            raise Exception('Please provide state/operation for resource')
 
     except Exception as error:
         response['msg'] = error.__str__()
