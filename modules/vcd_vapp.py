@@ -178,9 +178,7 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupport
 
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy',
-                      'list_vms', 'list_networks']
-
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'list_vms', 'list_networks']
 VM_STATUSES = {'3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF'}
 
 
@@ -231,23 +229,17 @@ class Vapp(VcdAnsibleModule):
             return self.delete()
 
     def manage_operations(self):
-        state = self.params.get('operation')
-        if state == "poweron":
+        operation = self.params.get('operation')
+        if operation == "poweron":
             return self.power_on()
 
-        if state == "poweroff":
+        if operation == "poweroff":
             return self.power_off()
 
-        if state == "deploy":
-            return self.deploy()
-
-        if state == "undeploy":
-            return self.undeploy()
-
-        if state == "list_vms":
+        if operation == "list_vms":
             return self.list_vms()
 
-        if state == "list_networks":
+        if operation == "list_networks":
             return self.list_networks()
 
     def get_vapp(self):
@@ -370,125 +362,60 @@ class Vapp(VcdAnsibleModule):
         return response
 
     def power_on(self):
-        vapp_name = self.params.get('vapp_name')
         response = dict()
         response['changed'] = False
-
         vapp = self.get_vapp()
-
-        if vapp.is_powered_on():
-            msg = 'Vapp {} is already powered on'
-            response['warnings'] = msg.format(vapp_name)
-            return response
+        vapp_name = self.params.get('vapp_name')
 
         try:
-            vapp_resource = self.vdc.get_vapp(vapp_name)
-            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-            power_on_vapp_task = vapp.power_on()
-            self.execute_task(power_on_vapp_task)
+            deploy_vapp_task = vapp.deploy()
+            self.execute_task(deploy_vapp_task)
             msg = 'Vapp {} has been powered on'
             response['msg'] = msg.format(vapp_name)
             response['changed'] = True
-        except OperationNotSupportedException:
-            msg = 'Operation is not supported. You may have no VM(s) in {}'
-            response['warnings'] = msg.format(vapp_name)
+        except OperationNotSupportedException as ex:
+            response['warnings'] = str(ex)
 
         return response
 
     def power_off(self):
-        vapp_name = self.params.get('vapp_name')
         response = dict()
         response['changed'] = False
-
         vapp = self.get_vapp()
-
-        if vapp.is_powered_off():
-            msg = 'Vapp {} is already powered off'
-            response['warnings'] = msg.format(vapp_name)
-            return response
+        vapp_name = self.params.get('vapp_name')
 
         try:
-            vapp_resource = self.vdc.get_vapp(vapp_name)
-            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-            power_off_vapp_task = vapp.power_off()
-            self.execute_task(power_off_vapp_task)
-            msg = 'Vapp {} has been powered off'
-            response['msg'] = msg.format(vapp_name)
+            undeploy_vapp_task = vapp.undeploy(action="powerOff")
+            self.execute_task(undeploy_vapp_task)
+            response['msg'] = 'Vapp {} has been powered off'.format(vapp_name)
             response['changed'] = True
-        except OperationNotSupportedException:
-            msg = 'Operation is not supported. You may have no VM(s) in {}'
-            response['warnings'] = msg.format(vapp_name)
-
-        return response
-
-    def deploy(self):
-        vapp_name = self.params.get('vapp_name')
-        response = dict()
-        response['changed'] = False
-
-        vapp = self.get_vapp()
-
-        if vapp.is_deployed():
-            msg = 'Vapp {} is already deployed'
-            response['warnings'] = msg.format(vapp_name)
-            return response
-
-        vapp_resource = self.vdc.get_vapp(vapp_name)
-        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-        deploy_vapp_task = vapp.deploy()
-        self.execute_task(deploy_vapp_task)
-        msg = 'Vapp {} has been deployed'
-        response['msg'] = msg.format(vapp_name)
-        response['changed'] = True
-
-        return response
-
-    def undeploy(self):
-        vapp_name = self.params.get('vapp_name')
-        response = dict()
-        response['changed'] = False
-
-        vapp = self.get_vapp()
-
-        if not vapp.is_deployed():
-            msg = 'Vapp {} is already undeployed'
-            response['warnings'] = msg.format(vapp_name)
-            return response
-
-        vapp_resource = self.vdc.get_vapp(vapp_name)
-        vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-        undeploy_vapp_task = vapp.undeploy(action="powerOff")
-        self.execute_task(undeploy_vapp_task)
-        response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
-        response['changed'] = True
+        except OperationNotSupportedException as ex:
+            response['warnings'] = str(ex)
 
         return response
 
     def list_vms(self):
-        vapp = self.get_vapp()
         response = dict()
         response['msg'] = list()
-
+        vapp = self.get_vapp()
         for vm in vapp.get_all_vms():
             try:
                 ip = vapp.get_primary_ip(vm.get('name'))
             except Exception:
                 ip = None
-            finally:
-                vm_details = {"name": vm.get('name'),
-                              "status": VM_STATUSES[vm.get('status')],
-                              "deployed": vm.get('deployed') == 'true',
-                              "ip_address": ip
-                              }
-
-                response['msg'].append(vm_details)
+            vm_details = {
+                "name": vm.get('name'),
+                "status": VM_STATUSES[vm.get('status')],
+                "deployed": vm.get('deployed') == 'true',
+                "ip_address": ip
+            }
+            response['msg'].append(vm_details)
 
         return response
 
     def list_networks(self):
-        vapp = self.get_vapp()
         response = dict()
-
+        vapp = self.get_vapp()
         networks = vapp.get_all_networks()
         response['msg'] = [network.get(
             '{' + NSMAP['ovf'] + '}name') for network in networks]
