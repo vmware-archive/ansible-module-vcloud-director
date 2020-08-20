@@ -9,7 +9,7 @@
 
 ### Prerequisites
 
-* The [pyvcloud](https://github.com/vmware/pyvcloud) module is required. 
+* The [pyvcloud](https://github.com/vmware/pyvcloud) module is required.
 * vCD Ansible modules require Python 3.6 or above.
 
 ### Build & Run
@@ -47,12 +47,14 @@ concept to define playbooks in modular fashion for these modules. Please refer [
 
 Following is the approx version matrix which are tested and supported through vCD ansible modules,
 
-| vCD Version    | Pyvcloud Version    | API Versions       |
-| -------------  | :-------------:     | -----:             |
-| vCD 9.1        | 20.1                | 28.0 / 29.0 / 30.0 |
-| vCD 9.5        | 22.0.1              | 29.0 / 30.0 / 31.0 / 32.0 / 33.0 |
-| vCD 10.0       | 22.0.1              | 30.0 / 31.0 / 32.0 / 33.0 / 34.0 |
-| vCD 10.1       | 22.0.1              | 30.0 / 31.0 / 32.0 / 33.0 / 34.0 |
+| vCD Version    |  API Versions       |
+| -------------  | :-------------:     |
+| vCD 9.0        | 29.0 			   |
+| vCD 9.1        | 30.0				   |
+| vCD 9.5        | 31.0                |
+| vCD 9.7        | 32.0 		       |
+| vCD 10.0       | 33.0                |
+| vCD 10.1       | 34.0                |
 
 Note - Testing is still in progress for new releases of vCD and Pyvcloud.
 
