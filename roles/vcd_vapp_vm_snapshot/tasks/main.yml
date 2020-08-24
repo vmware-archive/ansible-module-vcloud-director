@@ -1,19 +1,37 @@
 ---
 # tasks file for vcd_vapp_vm_snapshot
-# 
+#
 - name: create vm snapshot
   vcd_vapp_vm_snapshot:
     user: acmeadmin
     org: Acme
     password: VMware1!
     vdc_name: ACME_PAYG
-    vapp_name: vApp_system_1
-    vm_name: Tiny Linux template
-    mem_snapshot: true
+    vapp_name: acme_vapp
+    vms:
+      - name: sample-2
+        mem_snapshot: true
+        snapshot_name: snap_sample
     state: present
   register: output
 
 - name: create vm snapshot output
+  debug:
+    msg: '{{ output }}'
+
+- name: list vm snapshot
+  vcd_vapp_vm_snapshot:
+    user: acmeadmin
+    org: Acme
+    password: VMware1!
+    vdc_name: ACME_PAYG
+    vapp_name: acme_vapp
+    vms:
+      - name: sample-2
+    operation: list
+  register: output
+
+- name: list vm snapshot output
   debug:
     msg: '{{ output }}'
 
@@ -23,12 +41,29 @@
     org: Acme
     password: VMware1!
     vdc_name: ACME_PAYG
-    vapp_name: vApp_system_1
-    vm_name: Tiny Linux template
+    vapp_name: acme_vapp
+    vms:
+      - name: sample-2
     operation: revert
   register: output
 
 - name: revert vm snapshot output
+  debug:
+    msg: '{{ output }}'
+
+- name: list vm snapshot
+  vcd_vapp_vm_snapshot:
+    user: acmeadmin
+    org: Acme
+    password: VMware1!
+    vdc_name: ACME_PAYG
+    vapp_name: acme_vapp
+    vms:
+      - name: sample-2
+    operation: list
+  register: output
+
+- name: list vm snapshot output
   debug:
     msg: '{{ output }}'
 
@@ -38,8 +73,9 @@
     org: Acme
     password: VMware1!
     vdc_name: ACME_PAYG
-    vapp_name: vApp_system_1
-    vm_name: Tiny Linux template
+    vapp_name: acme_vapp
+    vms:
+      - name: sample-2
     state: absent
   register: output
 
