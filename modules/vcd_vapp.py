@@ -126,6 +126,11 @@ options:
         description:
             - true if delete vApp forcefully else false
         required: false
+    shared_access
+        description:
+            - shared access for a vapp across the org.
+            - Possible values could be 'ReadOnly', 'Change', 'FullControl'
+        requried: false
     state:
         description:
             - state of new virtual machines (present/absent).
@@ -178,8 +183,10 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupport
 
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'list_vms', 'list_networks']
+VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'list_vms', 'list_networks',
+                      'share', 'unshare']
 VM_STATUSES = {'3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF'}
+VAPP_SHARED_ACCESS = ['ReadOnly', 'Change', 'FullControl']
 
 
 def vapp_argument_spec():
@@ -190,8 +197,6 @@ def vapp_argument_spec():
         vdc=dict(type='str', required=True),
         description=dict(type='str', required=False, default=None),
         network=dict(type='str', required=False, default=None),
-        fence_mode=dict(
-            type='str', required=False, default=FenceMode.BRIDGED.value),
         ip_allocation_mode=dict(type='str', required=False, default="dhcp"),
         deploy=dict(type='bool', required=False, default=True),
         power_on=dict(type='bool', required=False, default=True),
@@ -207,6 +212,8 @@ def vapp_argument_spec():
         storage_profile=dict(type='str', required=False, default=None),
         network_adapter_type=dict(type='str', required=False, default=None),
         force=dict(type='bool', required=False, default=False),
+        fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
+        shared_access=dict(type='str', required=False, choices=VAPP_SHARED_ACCESS, default="ReadOnly"),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
     )
@@ -241,6 +248,12 @@ class Vapp(VcdAnsibleModule):
 
         if operation == "list_networks":
             return self.list_networks()
+
+        if operation == "share":
+            return self.share()
+
+        if operation == "unshare":
+            return self.unshare()
 
     def get_vapp(self):
         vapp_name = self.params.get('vapp_name')
@@ -397,6 +410,7 @@ class Vapp(VcdAnsibleModule):
     def list_vms(self):
         response = dict()
         response['msg'] = list()
+        response['changed'] = False
         vapp = self.get_vapp()
         for vm in vapp.get_all_vms():
             try:
@@ -415,10 +429,33 @@ class Vapp(VcdAnsibleModule):
 
     def list_networks(self):
         response = dict()
+        response['changed'] = False
         vapp = self.get_vapp()
         networks = vapp.get_all_networks()
         response['msg'] = [network.get(
             '{' + NSMAP['ovf'] + '}name') for network in networks]
+
+        return response
+
+    def share(self):
+        response = dict()
+        response['changed'] = False
+        vapp = self.get_vapp()
+        access = self.params.get("shared_access")
+        vapp.share_with_org_members(everyone_access_level=access)
+        msg = "Vapp is shared across org with {0} access"
+        response['msg'] = msg.format(access)
+        response['changed'] = True
+
+        return response
+
+    def unshare(self):
+        response = dict()
+        response['changed'] = False
+        vapp = self.get_vapp()
+        vapp.unshare_from_org_members()
+        response['msg'] = "Sharing has been stopped for Vapp"
+        response['changed'] = True
 
         return response
 
