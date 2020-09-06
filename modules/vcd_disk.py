@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_disk
-short_description: Ansible module to manage (create/update/delete) disks in vCloud Director
+short_description: Manage disk's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - Ansible module to manage (create/update/delete) disks in vCloud Director
+    - Manage disk's states/operations in vCloud Director
 
 options:
     user:
@@ -185,18 +185,16 @@ class Disk(VcdAnsibleModule):
         try:
             self.vdc.get_disk(name=disk_name, disk_id=disk_id)
         except EntityNotFoundException:
-            create_disk_task = self.vdc.create_disk(name=disk_name,
-                                                    size=size,
-                                                    bus_type=bus_type,
-                                                    bus_sub_type=bus_sub_type,
-                                                    description=description,
-                                                    iops=iops,
-                                                    storage_profile_name=storage_profile)
+            create_disk_task = self.vdc.create_disk(
+                name=disk_name, size=size, bus_type=bus_type,
+                bus_sub_type=bus_sub_type, description=description,
+                iops=iops, storage_profile_name=storage_profile)
             self.execute_task(create_disk_task.Tasks.Task[0])
             response['msg'] = 'Disk {} has been created.'.format(disk_name)
             response['changed'] = True
         else:
-            response['warnings'] = "Disk {} is already present.".format(disk_name)
+            msg = "Disk {} is already present."
+            response['warnings'] = msg.format(disk_name)
 
         return response
 
@@ -211,13 +209,11 @@ class Disk(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        update_disk_task = self.vdc.update_disk(name=disk_name,
-                                                disk_id=disk_id,
-                                                new_name=new_disk_name,
-                                                new_size=new_size,
-                                                new_iops=new_iops,
-                                                new_description=new_description,
-                                                new_storage_profile_name=new_storage_profile)
+        update_disk_task = self.vdc.update_disk(
+            name=disk_name, disk_id=disk_id, new_name=new_disk_name,
+            new_size=new_size, new_iops=new_iops,
+            new_description=new_description,
+            new_storage_profile_name=new_storage_profile)
         self.execute_task(update_disk_task)
         response['msg'] = 'Disk {} has been updated.'.format(disk_name)
         response['changed'] = True
@@ -235,8 +231,8 @@ class Disk(VcdAnsibleModule):
         except EntityNotFoundException:
             response['warnings'] = "Disk {} is not present.".format(disk_name)
         else:
-            delete_disk_task = self.vdc.delete_disk(name=disk_name,
-                                                    disk_id=disk_id)
+            delete_disk_task = self.vdc.delete_disk(
+                name=disk_name, disk_id=disk_id)
             self.execute_task(delete_disk_task)
             response['msg'] = 'Disk {} has been deleted.'.format(disk_name)
             response['changed'] = True
@@ -246,21 +242,25 @@ class Disk(VcdAnsibleModule):
 
 def main():
     argument_spec = vcd_disk_argument_spec()
-    response = dict(
-        msg=dict(type='str'),
-    )
+    response = dict(msg=dict(type='str'))
     module = Disk(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if not module.params.get('state'):
-            raise Exception('Please provide the state for the resource.')
-
-        response = module.manage_states()
-        module.exit_json(**response)
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
+            response = module.manage_states()
+        else:
+            raise Exception('Please provide the state for the resource')
 
     except Exception as error:
         response['msg'] = error
         module.fail_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':

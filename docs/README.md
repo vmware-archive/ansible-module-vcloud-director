@@ -1,4 +1,4 @@
-# ansible-modules-vCenter-automation
+# ansible-modules-vcloud-director
 
 ### Run Docs using Jekyll
 1. Run command `bundle exec jekyll serve`

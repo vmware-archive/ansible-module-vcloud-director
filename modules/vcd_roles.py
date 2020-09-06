@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_roles
-short_description: Ansible module to manage roles in vCloud Director.
+short_description: Manage role's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible module to manage roles in vCloud Director."
+    - Manage role's states/operations in vCloud Director
 
 options:
     user:
@@ -98,8 +98,8 @@ from pyvcloud.vcd.client import E
 from pyvcloud.vcd.system import System
 from pyvcloud.vcd.client import EntityType
 from pyvcloud.vcd.client import RelationType
-from pyvcloud.vcd.exceptions import EntityNotFoundException
 from ansible.module_utils.vcd import VcdAnsibleModule
+from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
 VCD_ROLE_STATES = ['present', 'absent', 'update']
@@ -151,10 +151,10 @@ class Roles(VcdAnsibleModule):
             self.org.get_role_record(role_name)
         except EntityNotFoundException:
             self.org.create_role(role_name, role_description, role_rights)
-            response['msg'] = 'Role {} has been created.'.format(role_name)
+            response['msg'] = 'Role {} has been created'.format(role_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'Role {} is already present.'.format(role_name)
+            response['warnings'] = 'Role {} is already present'.format(role_name)
 
         return response
 
@@ -178,7 +178,8 @@ class Roles(VcdAnsibleModule):
                     href=role_right_record.get('href'),
                     type=EntityType.RIGHT.value))
 
-        self.client.put_resource(role.get('href'), role_resource, EntityType.ROLE.value)
+        self.client.put_resource(
+            role.get('href'), role_resource, EntityType.ROLE.value)
         response['msg'] = 'Role {} has been updated.'.format(role_name)
         response['changed'] = True
 
@@ -192,10 +193,10 @@ class Roles(VcdAnsibleModule):
         try:
             self.org.get_role_record(role_name)
             self.org.delete_role(role_name)
-            response['msg'] = 'Role {} has been deleted.'.format(role_name)
+            response['msg'] = 'Role {} has been deleted'.format(role_name)
             response['changed'] = True
         except EntityNotFoundException:
-            response['warnings'] = 'Role {} is not present.'.format(role_name)
+            response['warnings'] = 'Role {} is not present'.format(role_name)
 
         return response
 
@@ -220,19 +221,23 @@ def main():
     module = Roles(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-
-        if module.params.get("state"):
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get("state"):
             response = module.manage_states()
         elif module.params.get("operation"):
             response = module.manage_operations()
         else:
-            raise Exception("Please provide state/operation for the module")
-
-        module.exit_json(**response)
+            raise Exception("Please provide state/operation for resource")
 
     except Exception as error:
         response['msg'] = error.__str__()
         module.fail_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':

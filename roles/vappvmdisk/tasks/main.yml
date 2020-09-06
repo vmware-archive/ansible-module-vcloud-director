@@ -1,58 +1,73 @@
-# Copyright © 2018 VMware, Inc. All Rights Reserved.
-# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
 ---
-# tasks file for roles/vappvmdisk
-- name: create vapp vm disk
+# tasks file for vcd_vapp_vm_disk
+
+
+- name: add a disk
   vcd_vapp_vm_disk:
-    vm_name: "Tiny Linux template"
-    vapp: "web2"
-    vdc: "ACME_PAYG"
-    size: "12000"
-    state: "present"
-  register: output
-
-- name: create vapp vm disk output
-  debug:
-    msg: '{{ output }}'
-
-- name: read vapp vm disks
-  vcd_vapp_vm_disk:
-    vm_name: "Tiny Linux template"
-    vapp: "web2"
-    vdc: "ACME_PAYG"
-    operation: "read"
-  register: output
-
-- name: read vapp vm disks output
-  debug:
-    msg: '{{ output }}'
-
-
-# - name: update disk
-#   vcd_vapp_vm_disk:
-#     vm_name: "Tiny Linux template"
-#     vapp: "web2"
-#     vdc: "ACME_PAYG"
-#     disk_name: "Hard disk 3"
-#     size: "13000"
-#     state: "update"
-#   register: output
-
-# - name: update disk output
-#   debug:
-#     msg: '{{ output }}'
-
-- name: delete disk
-  vcd_vapp_vm_disk:
-    vm_name: "Tiny Linux template"
-    vapp: "web2"
-    vdc: "ACME_PAYG"
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vm_name: centos
+    vapp: vApp_system_2
+    vdc: ACME_PAYG
     disks:
-      - 'Hard disk 3'
-      - 'Hard disk 4'
-    state: "absent"
-  register: output
+      - size: 1
+        controller: lsilogic
+      - size: 1
+        controller: VirtualSCSI
+    state: present
+  register: myResult
 
-- name: delete disk output
+- name: Show the data
   debug:
-    msg: '{{ output }}'
+    msg: "{{ myResult }}"
+
+- name: update a disk
+  vcd_vapp_vm_disk:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vm_name: centos
+    vapp: vApp_system_2
+    vdc: ACME_PAYG
+    disks:
+      - name: Hard disk 1
+        size: 3
+    state: update
+  register: myResult
+
+- name: Show the data
+  debug:
+    msg: "{{ myResult }}"
+
+- name: Read my disks
+  vcd_vapp_vm_disk:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vm_name: centos
+    vapp: vApp_system_2
+    vdc: ACME_PAYG
+    operation: read
+  register: myResult
+
+- name: Show the data
+  debug:
+    msg: "{{ myResult }}"
+
+- name: delete my disks
+  vcd_vapp_vm_disk:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vm_name: centos
+    vapp: vApp_system_2
+    vdc: ACME_PAYG
+    disks:
+      - name: Hard disk 1
+    state: absent
+  register: myResult
+
+- name: Show the data
+  debug:
+    msg: "{{ myResult }}"
