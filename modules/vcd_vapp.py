@@ -178,15 +178,21 @@ from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import NSMAP
 from pyvcloud.vcd.client import FenceMode
+from pyvcloud.vcd.client import MetadataDomain
+from pyvcloud.vcd.client import MetadataValueType
+from pyvcloud.vcd.client import MetadataVisibility
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'list_vms', 'list_networks',
-                      'share', 'unshare']
 VM_STATUSES = {'3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF'}
 VAPP_SHARED_ACCESS = ['ReadOnly', 'Change', 'FullControl']
+VAPP_METADATA_DOMAINS = ['GENERAL', 'SYSTEM']
+VAPP_METADATA_VISIBILITY = ['PRIVATE', 'READONLY', 'READWRITE']
+VAPP_SET_METADATA_VALUE_TYPE = ['String', 'Number', 'Boolean', 'DateTime']
+VAPP_OPERATIONS = ['poweron', 'poweroff', 'list_vms', 'list_networks',
+                   'share', 'unshare', 'set_meta', 'get_meta', 'remove_meta']
 
 
 def vapp_argument_spec():
@@ -212,10 +218,14 @@ def vapp_argument_spec():
         storage_profile=dict(type='str', required=False, default=None),
         network_adapter_type=dict(type='str', required=False, default=None),
         force=dict(type='bool', required=False, default=False),
+        metadata=dict(type='dict', required=False, default=None),
+        metadata_type=dict(type='str', required=False, default='String', choices=VAPP_SET_METADATA_VALUE_TYPE),
+        metadata_visibility=dict(type='str', required=False, default='READWRITE', choices=VAPP_METADATA_VISIBILITY),
+        metadata_domain=dict(type='str', required=False, default='GENERAL', choices=VAPP_METADATA_DOMAINS),
         fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
         shared_access=dict(type='str', required=False, choices=VAPP_SHARED_ACCESS, default="ReadOnly"),
         state=dict(choices=VAPP_VM_STATES, required=False),
-        operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
+        operation=dict(choices=VAPP_OPERATIONS, required=False),
     )
 
 
@@ -254,6 +264,15 @@ class Vapp(VcdAnsibleModule):
 
         if operation == "unshare":
             return self.unshare()
+
+        if operation == "set_meta":
+            return self.set_meta()
+
+        if operation == "get_meta":
+            return self.get_meta()
+
+        if operation == "remove_meta":
+            return self.remove_meta()
 
     def get_vapp(self):
         vapp_name = self.params.get('vapp_name')
@@ -456,6 +475,58 @@ class Vapp(VcdAnsibleModule):
         vapp.unshare_from_org_members()
         response['msg'] = "Sharing has been stopped for Vapp"
         response['changed'] = True
+
+        return response
+
+    def set_meta(self):
+        response = dict()
+        response['changed'] = False
+        vapp_name = self.params.get('vapp_name')
+        metadata = self.params.get('metadata')
+        domain = self.params.get("metadata_domain")
+        visibility = self.params.get("metadata_visibility")
+        metadata_type = self.params.get("metadata_type")
+        metadata_type = "Metadata{0}Value".format(metadata_type)
+        vapp = self.get_vapp()
+        domain = MetadataDomain(domain)
+        visibility = MetadataVisibility(visibility)
+        metadata_type = MetadataValueType(metadata_type)
+        set_meta_task = vapp.set_multiple_metadata(metadata,
+                                                   domain=domain,
+                                                   visibility=visibility,
+                                                   metadata_value_type=metadata_type)
+        self.execute_task(set_meta_task)
+        msg = "Metadata {0} have been set to vApp {1}"
+        response["msg"] = msg.format(list(metadata.keys()), vapp_name)
+
+        return response
+
+    def get_meta(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = dict()
+        vapp = self.get_vapp()
+        metadata = vapp.get_metadata()
+        response['msg'] = {
+             metadata.MetadataEntry.Key.text: metadata.MetadataEntry.TypedValue.Value.text
+        }
+
+        return response
+
+    def remove_meta(self):
+        response = dict()
+        response['changed'] = False
+        vapp_name = self.params.get('vapp_name')
+        domain = self.params.get("metadata_domain")
+        vapp = self.get_vapp()
+        metadata = self.params.get('metadata')
+        domain = MetadataDomain(domain)
+        response['msg'] = list()
+        for key in metadata:
+            remove_meta_task = vapp.remove_metadata(key, domain=domain)
+            self.execute_task(remove_meta_task)
+        msg = "Metadata {0} have been removed from vApp {1}"
+        response["msg"] = msg.format(list(metadata.keys()), vapp_name)
 
         return response
 

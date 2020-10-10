@@ -275,3 +275,57 @@
 - name: list "{{ vapp_vm_2 }}" vapp vm nics output
   debug:
     msg: "{{ output }}"
+
+- name: set vm metadata
+  vcd_vapp_vm:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    target_vm_name: centos
+    target_vapp: acme_vapp
+    target_vdc: ACME_PAYG
+    metadata:
+      sample7: sample-value4
+      sample8: sample-value4
+      sample9: sample-value4
+    operation: set_meta
+  register: output
+
+- name: set vm metadata output
+  debug:
+    msg: '{{ output }}'
+
+- name: get vm metadata
+  vcd_vapp_vm:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    target_vm_name: centos
+    target_vdc: ACME_PAYG
+    target_vapp: acme_vapp
+    operation: get_meta
+  register: output
+
+- name: get vm metadata output
+  debug:
+    msg: '{{ output }}'
+
+- name: remove vm metadata
+  vcd_vapp_vm:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    target_vm_name: centos
+    target_vapp: acme_vapp
+    target_vdc: ACME_PAYG
+    metadata:
+      sample7: sample-value4
+      sample8: sample-value4
+      sample9: sample-value4
+    operation: remove_meta
+  register: output
+
+- name: remove vm metadata output
+  debug:
+    msg: '{{ output }}'
+

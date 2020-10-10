@@ -198,13 +198,20 @@ from pyvcloud.vcd.client import E_OVF
 from pyvcloud.vcd.client import NSMAP
 from pyvcloud.vcd.client import EntityType
 from pyvcloud.vcd.client import RelationType
+from pyvcloud.vcd.client import MetadataDomain
+from pyvcloud.vcd.client import MetadataValueType
+from pyvcloud.vcd.client import MetadataVisibility
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 
 VAPP_VM_STATES = ['present', 'absent', 'update']
+VAPP_VM_METADATA_DOMAINS = ['GENERAL', 'SYSTEM']
+VAPP_VM_METADATA_VISIBILITY = ['PRIVATE', 'READONLY', 'READWRITE']
+VAPP_VM_SET_METADATA_VALUE_TYPE = ['String', 'Number', 'Boolean', 'DateTime']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
-                      'deploy', 'undeploy', 'list_disks', 'list_nics']
+                      'deploy', 'undeploy', 'list_disks', 'list_nics',
+                      'set_meta', 'get_meta', 'remove_meta']
 
 
 def vapp_vm_argument_spec():
@@ -231,6 +238,10 @@ def vapp_vm_argument_spec():
         deploy=dict(type='bool', required=False, default=True),
         power_on=dict(type='bool', required=False, default=True),
         all_eulas_accepted=dict(type='bool', required=False, default=None),
+        metadata=dict(type='dict', required=False, default=None),
+        metadata_type=dict(type='str', required=False, default='String', choices=VAPP_VM_SET_METADATA_VALUE_TYPE),
+        metadata_visibility=dict(type='str', required=False, default='READWRITE', choices=VAPP_VM_METADATA_VISIBILITY),
+        metadata_domain=dict(type='str', required=False, default='GENERAL', choices=VAPP_VM_METADATA_DOMAINS),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
         force_customization=dict(type='bool', required=False, default=False)
@@ -276,6 +287,15 @@ class VappVM(VcdAnsibleModule):
 
         if operation == "list_nics":
             return self.list_nics()
+
+        if operation == "set_meta":
+            return self.set_meta()
+
+        if operation == "get_meta":
+            return self.get_meta()
+
+        if operation == "remove_meta":
+            return self.remove_meta()
 
     def get_source_resource(self):
         source_catalog_name = self.params.get('source_catalog_name')
@@ -531,6 +551,58 @@ class VappVM(VcdAnsibleModule):
 
         vm = self.get_vm()
         response['msg'] = vm.list_nics()
+
+        return response
+
+    def set_meta(self):
+        response = dict()
+        response['changed'] = False
+        vm_name = self.params.get('target_vm_name')
+        metadata = self.params.get('metadata')
+        domain = self.params.get("metadata_domain")
+        visibility = self.params.get("metadata_visibility")
+        metadata_type = self.params.get("metadata_type")
+        metadata_type = "Metadata{0}Value".format(metadata_type)
+        domain = MetadataDomain(domain)
+        visibility = MetadataVisibility(visibility)
+        metadata_type = MetadataValueType(metadata_type)
+        vm = self.get_vm()
+        set_meta_task = vm.set_multiple_metadata(metadata,
+                                                 domain=domain,
+                                                 visibility=visibility,
+                                                 metadata_value_type=metadata_type)
+        self.execute_task(set_meta_task)
+        msg = "Metadata {0} have been set to vm {1}"
+        response["msg"] = msg.format(list(metadata.keys()), vm_name)
+
+        return response
+
+    def get_meta(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = dict()
+        vm = self.get_vm()
+        metadata = vm.get_metadata()
+        response['msg'] = {
+             metadata.MetadataEntry.Key.text: metadata.MetadataEntry.TypedValue.Value.text
+        }
+
+        return response
+
+    def remove_meta(self):
+        response = dict()
+        response['changed'] = False
+        vm_name = self.params.get('target_vm_name')
+        domain = self.params.get("metadata_domain")
+        vm = self.get_vm()
+        metadata = self.params.get('metadata')
+        domain = MetadataDomain(domain)
+        response['msg'] = list()
+        for key in metadata:
+            remove_meta_task = vm.remove_metadata(key, domain=domain)
+            self.execute_task(remove_meta_task)
+        msg = "Metadata {0} have been removed from vm {1}"
+        response["msg"] = msg.format(list(metadata.keys()), vm_name)
 
         return response
 
