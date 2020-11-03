@@ -101,7 +101,7 @@ author:
 
 EXAMPLES = '''
 - name: Test with a message
-  vcd_vapp_vm:
+  vcd_vapp_network:
     user: terraform
     password: abcd
     host: csa.sandbox.org
@@ -109,12 +109,14 @@ EXAMPLES = '''
     api_version: 30
     verify_ssl_certs: False
     network: uplink
-    dns_suffix: test_suffix
-    ip_ranges: [192.168.1.2-192.168.1.49, 192.168.1.100-192.168.1.149]
-    network_cidr: 192.168.1.1/24
-    primary_dns_ip: 192.168.1.50
     vapp: vapp1
     vdc: vdc1
+    dns_suffix: test_suffix
+    ip_ranges:
+        - 192.168.1.2-192.168.1.49
+        - 192.168.1.100-192.168.1.149
+    network_cidr: 192.168.1.1/24
+    primary_dns_ip: 192.168.1.50
     state: present
 '''
 
@@ -208,7 +210,6 @@ class VappNetwork(VcdAnsibleModule):
             response['msg'][name] = n
 
         return response
-
 
     def add_network(self):
         network_name = self.params.get('network')
