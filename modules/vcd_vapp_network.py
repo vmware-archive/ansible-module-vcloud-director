@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_vapp_network
-short_description: Ansible Module to manage (create/delete) Networks in vApps in vCloud Director.
+short_description: Manage vApp Network's states/operation in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible Module to manage (create/delete) Networks in vApps."
+    - Manage vApp Network's states/operation in vCloud Director
 
 options:
     user:
@@ -42,10 +42,6 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
-    network:
-        description:
-            - Network name
-        required: true
     vapp:
         description:
             - vApp name
@@ -54,38 +50,74 @@ options:
         description:
             - VDC name
         required: true
-    fence_mode:
+    network:
         description:
-            - Network fence mode
+            - Network name
+        required: true
+    new_network:
+        description:
+            - Name of the new Network in case of update vApp Network
         required: false
-    parent_network:
+    network_cidr:
         description:
-            - VDC parent network to connect to
+            - CIDR in the format of 192.168.1.1/24
         required: false
-    ip_scope:
+    description:
         description:
-            - IP scope when no parent_network is defined
+            - description of vApp network
+        required: false
+    primary_dns_ip:
+        description:
+            - IP address of primary DNS server
+        required: false
+    secondary_dns_ip:
+        description:
+            - IP address of secondary DNS Server
+        required: false
+    dns_suffix:
+        description:
+            - DNS suffix
+        required: false
+    ip_ranges:
+        description:
+            - list of IP ranges used for static pool allocation in the network
+            - For example, [192.168.1.2-192.168.1.49, 192.168.1.100-192.168.1.149]
+        required: false
+    is_guest_vlan_allowed:
+        description:
+            - True if guest vlan allowed in vApp network else False
+        required: false
     state:
         description:
-            - state of network ('present'/'absent').
-        required: true
+            - state of network (present/update/absent)
+        required: false
+    operation:
+        description:
+            - operation on network (read)
+        required: false
 author:
     - mtaneja@vmware.com
 '''
 
 EXAMPLES = '''
 - name: Test with a message
-  vcd_vapp_vm:
+  vcd_vapp_network:
     user: terraform
     password: abcd
     host: csa.sandbox.org
     org: Terraform
     api_version: 30
     verify_ssl_certs: False
-    network = "uplink"
-    vapp = "vapp1"
-    vdc = "vdc1"
-    state = "present"
+    network: uplink
+    vapp: vapp1
+    vdc: vdc1
+    dns_suffix: test_suffix
+    ip_ranges:
+        - 192.168.1.2-192.168.1.49
+        - 192.168.1.100-192.168.1.149
+    network_cidr: 192.168.1.1/24
+    primary_dns_ip: 192.168.1.50
+    state: present
 '''
 
 RETURN = '''
@@ -93,33 +125,36 @@ msg: success/failure message corresponding to vapp network state
 changed: true if resource has been changed else false
 '''
 
-from lxml import etree
-from ipaddress import ip_network
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
-from pyvcloud.vcd.client import E
 from pyvcloud.vcd.vapp import VApp
+from collections import defaultdict
 from pyvcloud.vcd.client import NSMAP
-from pyvcloud.vcd.client import E_OVF
-from pyvcloud.vcd.client import FenceMode
 from pyvcloud.vcd.client import EntityType
-from pyvcloud.vcd.client import RelationType
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
+from pyvcloud.vcd.exceptions import EntityNotFoundException
+from pyvcloud.vcd.exceptions import OperationNotSupportedException
 
 
-VAPP_NETWORK_STATES = ['present', 'absent']
+VAPP_NETWORK_STATES = ['present', 'update', 'absent']
+VAPP_NETWORK_OPERATIONS = ['read']
 
 
 def vapp_network_argument_spec():
     return dict(
-        network=dict(type='str', required=True),
-        vapp=dict(type='str', required=True),
-        vdc=dict(type='str', required=True),
-        fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
-        parent_network=dict(type='str', required=False, default=None),
-        ip_scope=dict(type='str', required=False, default=None),
-        state=dict(choices=VAPP_NETWORK_STATES, required=True),
+        vdc=dict(type='str', required=False),
+        vapp=dict(type='str', required=False),
+        network=dict(type='str', required=False),
+        new_network=dict(type='str', required=False),
+        dns_suffix=dict(type='str', required=False),
+        ip_ranges=dict(type='list', required=False),
+        description=dict(type='str', required=False),
+        network_cidr=dict(type='str', required=False),
+        primary_dns_ip=dict(type='str', required=False),
+        secondary_dns_ip=dict(type='str', required=False),
+        is_guest_vlan_allowed=dict(type='bool', required=False),
+        state=dict(choices=VAPP_NETWORK_STATES, required=False),
+        operation=dict(choices=VAPP_NETWORK_OPERATIONS, required=False),
     )
 
 
@@ -134,15 +169,24 @@ class VappNetwork(VcdAnsibleModule):
         if state == "present":
             return self.add_network()
 
+        if state == "update":
+            return self.update_network()
+
         if state == "absent":
             return self.delete_network()
+
+    def manage_operations(self):
+        operation = self.params.get('operation')
+        if operation == "read":
+            return self.get_all_networks()
 
     def get_resource(self):
         vapp = self.params.get('vapp')
         vdc = self.params.get('vdc')
         org_resource = Org(self.client, resource=self.client.get_org())
         vdc_resource = VDC(self.client, resource=org_resource.get_vdc(vdc))
-        vapp_resource_href = vdc_resource.get_resource_href(name=vapp, entity_type=EntityType.VAPP)
+        vapp_resource_href = vdc_resource.get_resource_href(
+            name=vapp, entity_type=EntityType.VAPP)
         vapp_resource = self.client.get_resource(vapp_resource_href)
 
         return vapp_resource
@@ -151,9 +195,73 @@ class VappNetwork(VcdAnsibleModule):
         network_name = self.params.get('network')
         networks = self.vapp.get_all_networks()
         for network in networks:
-            if network.get('{'+NSMAP['ovf']+'}name') == network_name:
+            if network.get('{' + NSMAP['ovf'] + '}name') == network_name:
                 return network
         raise EntityNotFoundException('Can\'t find the specified vApp network')
+
+    def get_all_networks(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = defaultdict(dict)
+
+        for network in self.vapp.get_all_networks():
+            name = network.get('{' + NSMAP['ovf'] + '}name')
+            n = {'description': str(network.Description)}
+            response['msg'][name] = n
+
+        return response
+
+    def add_network(self):
+        network_name = self.params.get('network')
+        network_cidr = self.params.get('network_cidr')
+        network_description = self.params.get('description')
+        primary_dns_ip = self.params.get('primary_dns_ip')
+        secondary_dns_ip = self.params.get('secondary_dns_ip')
+        dns_suffix = self.params.get('dns_suffix')
+        ip_ranges = self.params.get('ip_ranges')
+        is_guest_vlan_allowed = self.params.get('is_guest_vlan_allowed')
+        response = dict()
+        response['changed'] = False
+
+        try:
+            self.get_network()
+        except EntityNotFoundException:
+            add_network_task = self.vapp.create_vapp_network(name=network_name,
+                                                             network_cidr=network_cidr,
+                                                             description=network_description,
+                                                             primary_dns_ip=primary_dns_ip,
+                                                             secondary_dns_ip=secondary_dns_ip,
+                                                             dns_suffix=dns_suffix,
+                                                             ip_ranges=ip_ranges,
+                                                             is_guest_vlan_allowed=is_guest_vlan_allowed)
+            self.execute_task(add_network_task)
+            response['msg'] = 'Vapp Network {} has been added'.format(network_name)
+            response['changed'] = True
+        else:
+            response['warnings'] = 'Vapp Network {} is already present.'.format(network_name)
+
+        return response
+
+    def update_network(self):
+        network_name = self.params.get('network')
+        new_network_name = self.params.get('new_network')
+        network_description = self.params.get('description')
+        response = dict()
+        response['changed'] = False
+
+        try:
+            self.get_network()
+        except EntityNotFoundException:
+            response['warnings'] = 'Vapp Network {} is not present'.format(network_name)
+        else:
+            update_network_task = self.vapp.update_vapp_network(network_name=network_name,
+                                                             new_net_name=new_network_name,
+                                                             new_net_desc=network_description)
+            self.execute_task(update_network_task)
+            response['msg'] = 'Vapp Network {} has been updated'.format(network_name)
+            response['changed'] = True
+
+        return response
 
     def delete_network(self):
         network_name = self.params.get('network')
@@ -163,89 +271,39 @@ class VappNetwork(VcdAnsibleModule):
         try:
             self.get_network()
         except EntityNotFoundException:
-            response['warnings'] = 'Vapp Network {} is not present.'.format(network_name)
+            response['warnings'] = 'Vapp Network {} is not present'.format(network_name)
         else:
-            network_config_section = self.vapp.resource.NetworkConfigSection
-            for network_config in network_config_section.NetworkConfig:
-                if network_config.get('networkName') == network_name:
-                    network_config_section.remove(network_config)
-            delete_network_task = self.client.put_linked_resource(
-                self.vapp.resource.NetworkConfigSection, RelationType.EDIT,
-                EntityType.NETWORK_CONFIG_SECTION.value,
-                network_config_section)
+            delete_network_task = self.vapp.delete_vapp_network(network_name)
             self.execute_task(delete_network_task)
             response['msg'] = 'Vapp Network {} has been deleted.'.format(network_name)
             response['changed'] = True
 
         return response
 
-    def add_network(self):
-        network_name = self.params.get('network')
-        fence_mode = self.params.get('fence_mode')
-        parent_network = self.params.get('parent_network')
-        ip_scope = self.params.get('ip_scope')
-
-        response = dict()
-        response['changed'] = False
-
-        try:
-            self.get_network()
-        except EntityNotFoundException:
-            network_config_section = self.vapp.resource.NetworkConfigSection
-            config = E.Configuration()
-            if parent_network:
-                vdc = self.params.get('vdc')
-                org_resource = Org(self.client, resource=self.client.get_org())
-                vdc_resource = VDC(self.client, resource=org_resource.get_vdc(vdc))
-                orgvdc_networks = vdc_resource.list_orgvdc_network_resources(parent_network)
-                parent = next((network for network in orgvdc_networks if network.get('name') == parent_network), None)
-                if parent:
-                    config.append(E.ParentNetwork(href=parent.get('href')))
-                else:
-                    raise EntityNotFoundException('Parent network \'%s\' does not exist'.format(parent_network))
-            elif ip_scope:
-                scope = E.IpScope(
-                    E.IsInherited('false'),
-                    E.Gateway(str(ip_network(ip_scope, strict=False).network_address+1)),
-                    E.Netmask(str(ip_network(ip_scope, strict=False).netmask)))
-                config.append(E.IpScopes(scope))
-            else:
-                raise VappNetworkCreateError('Either parent_network or ip_scope must be set')
-            config.append(E.FenceMode(fence_mode))
-
-            network_config = E.NetworkConfig(config, networkName=network_name)
-            network_config_section.append(network_config)
-
-            add_network_task = self.client.put_linked_resource(
-                self.vapp.resource.NetworkConfigSection, RelationType.EDIT,
-                EntityType.NETWORK_CONFIG_SECTION.value,
-                network_config_section)
-            self.execute_task(add_network_task)
-            response['msg'] = 'Vapp Network {} has been added'.format(network_name)
-            response['changed'] = True
-        else:
-            response['warnings'] = 'Vapp Network {} is already present.'.format(network_name)
-
-        return response
-
 
 def main():
     argument_spec = vapp_network_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = VappNetwork(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if not module.params.get('state'):
-            raise Exception('Please provide the state for the resource.')
-
-        response = module.manage_states()
-        module.exit_json(**response)
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
+            response = module.manage_states()
+        elif module.params.get('operation'):
+            response = module.manage_operations()
+        else:
+            raise Exception('Please provide the state for the resource')
 
     except Exception as error:
         response['msg'] = error
         module.fail_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':

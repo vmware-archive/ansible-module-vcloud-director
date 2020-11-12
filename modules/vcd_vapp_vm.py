@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_vapp_vm
-short_description: Ansible Module to manage (create/update/delete) VMs in vApps in vCloud Director.
+short_description: Manage VM's state/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible Module to manage (create/update/delete) VMs in vApps."
+    - Manage VM's state/operations in vCloud Director
 
 options:
     user:
@@ -88,7 +88,7 @@ options:
         required: false
     vmpassword_reset:
         description:
-            - true if the administrator password for this virtual machine must be reset after first use else false
+            - true/false to reset administrator password
         required: false
     cust_script:
         description:
@@ -96,7 +96,8 @@ options:
         required: false
     network:
         description:
-            - Name of the vApp network to connect. If omitted, the VM won't be connected to any network
+            - Name of the vApp network to connect
+            - If omitted, the VM won't be connected to any network
         required: false
     storage_profile:
         description:
@@ -122,9 +123,6 @@ options:
         description:
             - memory size in MB
         required: false
-    properties:
-        description:
-            - custom properties
     deploy:
         description:
             - deploy VMs
@@ -135,11 +133,25 @@ options:
         required: false
     state:
         description:
-            - state of new virtual machines (present/absent).One from state or operation has to be provided.
+            - state of new virtual machines (present/absent)
+            - One from state or operation has to be provided
         required: false
     operation:
         description:
-            - operations performed over new vapp (poweron/poweroff/modifycpu/modifymemory/reloadvm/list_disks/list_nics).One from state or operation has to be provided.
+            - operation to perform on new vapp
+            - Available operations are
+                - poweron
+                - poweroff
+                - modifycpu
+                - modifymemory
+                - reloadvm
+                - list_disks
+                - list_nics
+            - One from state or operation has to be provided.
+        required: false
+    force_customization:
+        description:
+            - whether or not to force customization
         required: false
 author:
     - mtaneja@vmware.com
@@ -180,19 +192,26 @@ from lxml import etree
 from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
-from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import E
+from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import E_OVF
-from pyvcloud.vcd.client import EntityType
 from pyvcloud.vcd.client import NSMAP
+from pyvcloud.vcd.client import EntityType
 from pyvcloud.vcd.client import RelationType
+from pyvcloud.vcd.client import MetadataDomain
+from pyvcloud.vcd.client import MetadataValueType
+from pyvcloud.vcd.client import MetadataVisibility
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
 
 VAPP_VM_STATES = ['present', 'absent', 'update']
+VAPP_VM_METADATA_DOMAINS = ['GENERAL', 'SYSTEM']
+VAPP_VM_METADATA_VISIBILITY = ['PRIVATE', 'READONLY', 'READWRITE']
+VAPP_VM_SET_METADATA_VALUE_TYPE = ['String', 'Number', 'Boolean', 'DateTime']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
-                      'deploy', 'undeploy', 'list_disks', 'list_nics']
+                      'deploy', 'undeploy', 'list_disks', 'list_nics',
+                      'set_meta', 'get_meta', 'remove_meta']
 
 
 def vapp_vm_argument_spec():
@@ -219,9 +238,13 @@ def vapp_vm_argument_spec():
         deploy=dict(type='bool', required=False, default=True),
         power_on=dict(type='bool', required=False, default=True),
         all_eulas_accepted=dict(type='bool', required=False, default=None),
-        properties=dict(type='dict', required=False),
+        metadata=dict(type='dict', required=False, default=None),
+        metadata_type=dict(type='str', required=False, default='String', choices=VAPP_VM_SET_METADATA_VALUE_TYPE),
+        metadata_visibility=dict(type='str', required=False, default='READWRITE', choices=VAPP_VM_METADATA_VISIBILITY),
+        metadata_domain=dict(type='str', required=False, default='GENERAL', choices=VAPP_VM_METADATA_DOMAINS),
         state=dict(choices=VAPP_VM_STATES, required=False),
-        operation=dict(choices=VAPP_VM_OPERATIONS, required=False)
+        operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
+        force_customization=dict(type='bool', required=False, default=False)
     )
 
 
@@ -264,6 +287,15 @@ class VappVM(VcdAnsibleModule):
 
         if operation == "list_nics":
             return self.list_nics()
+
+        if operation == "set_meta":
+            return self.set_meta()
+
+        if operation == "get_meta":
+            return self.get_meta()
+
+        if operation == "remove_meta":
+            return self.remove_meta()
 
     def get_source_resource(self):
         source_catalog_name = self.params.get('source_catalog_name')
@@ -330,7 +362,6 @@ class VappVM(VcdAnsibleModule):
         ip_allocation_mode = params.get('ip_allocation_mode')
         cust_script = params.get('cust_script')
         storage_profile = params.get('storage_profile')
-        properties = params.get('properties')
         response = dict()
         response['changed'] = False
 
@@ -351,45 +382,22 @@ class VappVM(VcdAnsibleModule):
             }
 
             spec = {k: v for k, v in spec.items() if v}
-            if storage_profile != '':
-                spec['storage_profile'] = self.get_storage_profile(
-                    storage_profile)
-            source_vm = self.vapp.to_sourced_item(spec)
-
-            # Check the source vm if we need to inject OVF properties.
-            source_vapp = VApp(self.client, resource=source_vapp_resource)
-            vm = source_vapp.get_vm(source_vm_name)
-            productsection = vm.find('ovf:ProductSection', NSMAP)
-            if productsection is not None:
-                for prop in productsection.iterfind('ovf:Property', NSMAP):
-                    if properties and prop.get('{' + NSMAP['ovf'] + '}key') in properties:
-                        val = prop.find('ovf:Value', NSMAP)
-                        if val:
-                            prop.remove(val)
-                        val = E_OVF.Value()
-                        val.set(
-                            '{' + NSMAP['ovf'] + '}value', properties[prop.get('{' + NSMAP['ovf'] + '}key')])
-                        prop.append(val)
-                source_vm.InstantiationParams.append(productsection)
-                source_vm.VmGeneralParams.NeedsCustomization = E.NeedsCustomization(
-                    'true')
-
-            params = E.RecomposeVAppParams(
-                deploy='true' if deploy else 'false', powerOn='true' if power_on else 'false')
-            params.append(source_vm)
-            if all_eulas_accepted is not None:
-                params.append(E.AllEULAsAccepted(all_eulas_accepted))
-
-            add_vms_task = self.client.post_linked_resource(
-                self.get_target_resource(), RelationType.RECOMPOSE,
-                EntityType.RECOMPOSE_VAPP_PARAMS.value, params)
+            if storage_profile:
+                spec['storage_profile'] = self.get_storage_profile(storage_profile)
+            specs = [spec]
+            args = {
+                "specs": specs,
+                "deploy": deploy,
+                "power_on": power_on,
+                "all_eulas_accepted": all_eulas_accepted
+            }
+            add_vms_task = self.vapp.add_vms(**args)
             self.execute_task(add_vms_task)
-            response['msg'] = 'VM {} has been created.'.format(
-                target_vm_name)
+            response['msg'] = 'VM {} has been created.'.format(target_vm_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'VM {} is already present.'.format(
-                target_vm_name)
+            msg = 'VM {} is already present.'
+            response['warnings'] = msg.format(target_vm_name)
 
         return response
 
@@ -399,11 +407,12 @@ class VappVM(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            self.get_vm()
+            vm = self.get_vm()
         except EntityNotFoundException:
             response['warnings'] = 'VM {} is not present.'.format(vm_name)
         else:
-            self.undeploy_vm()
+            if not vm.is_powered_off():
+                self.undeploy_vm()
             delete_vms_task = self.vapp.delete_vms([vm_name])
             self.execute_task(delete_vms_task)
             response['msg'] = 'VM {} has been deleted.'.format(vm_name)
@@ -452,8 +461,7 @@ class VappVM(VcdAnsibleModule):
 
         vm = self.get_vm()
         if not vm.is_powered_on():
-            power_on_task = vm.power_on()
-            self.execute_task(power_on_task)
+            self.deploy_vm()
             response['msg'] = 'VM {} has been powered on.'.format(vm_name)
             response['changed'] = True
         else:
@@ -468,8 +476,7 @@ class VappVM(VcdAnsibleModule):
 
         vm = self.get_vm()
         if not vm.is_powered_off():
-            power_off_task = vm.power_off()
-            self.execute_task(power_off_task)
+            self.undeploy_vm()
             response['msg'] = 'VM {} has been powered off.'.format(vm_name)
             response['changed'] = True
         else:
@@ -491,17 +498,20 @@ class VappVM(VcdAnsibleModule):
 
     def deploy_vm(self):
         vm_name = self.params.get('target_vm_name')
+        force_customization = self.params.get('force_customization')
         response = dict()
         response['changed'] = False
 
         vm = self.get_vm()
         if not vm.is_deployed():
-            deploy_vm_task = vm.deploy()
+            deploy_vm_task = vm.deploy(force_customization=force_customization)
             self.execute_task(deploy_vm_task)
-            response['msg'] = 'VM {} has been deployed.'.format(vm_name)
+            msg = 'VM {} has been deployed'
+            response['msg'] = msg.format(vm_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'VM {} is already deployed.'.format(vm_name)
+            msg = 'VM {} is already deployed'
+            response['warnings'] = msg.format(vm_name)
 
         return response
 
@@ -511,73 +521,115 @@ class VappVM(VcdAnsibleModule):
         response['changed'] = False
 
         vm = self.get_vm()
-        if vm.is_deployed():
-            undeploy_vm_task = vm.undeploy()
+        if not vm.is_deployed():
+            undeploy_vm_task = vm.undeploy(action="powerOff")
             self.execute_task(undeploy_vm_task)
-            response['msg'] = 'VM {} has been undeployed.'.format(vm_name)
+            msg = 'VM {} has been undeployed'
+            response['msg'] = msg.format(vm_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'VM {} is already undeployed.'.format(
-                vm_name)
+            msg = 'VM {} is already undeployed'
+            response['warnings'] = msg.format(vm_name)
 
         return response
 
     def list_disks(self):
         response = dict()
         response['changed'] = False
-        response['msg'] = []
+        response['msg'] = list()
 
         vm = self.get_vm()
-        disks = self.client.get_resource(vm.resource.get(
-            'href') + '/virtualHardwareSection/disks')
-        for disk in disks.Item:
-            if disk['{' + NSMAP['rasd'] + '}ResourceType'] == 17:
-                response['msg'].append({
-                    'id': disk['{' + NSMAP['rasd'] + '}InstanceID'].text,
-                    'name': disk['{' + NSMAP['rasd'] + '}ElementName'].text,
-                    'description': disk['{' + NSMAP['rasd'] + '}Description'].text,
-                    'size': disk['{' + NSMAP['rasd'] + '}HostResource'].get('{' + NSMAP['vcloud'] + '}capacity')
-                })
+        response['msg'] = vm.list_virtual_hardware_section(
+            is_cpu=False, is_memory=False, is_disk=True)
 
         return response
 
     def list_nics(self):
         response = dict()
         response['changed'] = False
-        response['msg'] = []
+        response['msg'] = list()
 
         vm = self.get_vm()
-        nics = self.client.get_resource(
-            vm.resource.get('href') + '/networkConnectionSection')
-        for nic in nics.NetworkConnection:
-            response['msg'].append({
-                'index': nic.NetworkConnectionIndex.text,
-                'network': nic.get('network')
-            })
+        response['msg'] = vm.list_nics()
+
+        return response
+
+    def set_meta(self):
+        response = dict()
+        response['changed'] = False
+        vm_name = self.params.get('target_vm_name')
+        metadata = self.params.get('metadata')
+        domain = self.params.get("metadata_domain")
+        visibility = self.params.get("metadata_visibility")
+        metadata_type = self.params.get("metadata_type")
+        metadata_type = "Metadata{0}Value".format(metadata_type)
+        domain = MetadataDomain(domain)
+        visibility = MetadataVisibility(visibility)
+        metadata_type = MetadataValueType(metadata_type)
+        vm = self.get_vm()
+        set_meta_task = vm.set_multiple_metadata(metadata,
+                                                 domain=domain,
+                                                 visibility=visibility,
+                                                 metadata_value_type=metadata_type)
+        self.execute_task(set_meta_task)
+        msg = "Metadata {0} have been set to vm {1}"
+        response["msg"] = msg.format(list(metadata.keys()), vm_name)
+
+        return response
+
+    def get_meta(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = dict()
+        vm = self.get_vm()
+        metadata = vm.get_metadata()
+        response['msg'] = {
+             metadata.MetadataEntry.Key.text: metadata.MetadataEntry.TypedValue.Value.text
+        }
+
+        return response
+
+    def remove_meta(self):
+        response = dict()
+        response['changed'] = False
+        vm_name = self.params.get('target_vm_name')
+        domain = self.params.get("metadata_domain")
+        vm = self.get_vm()
+        metadata = self.params.get('metadata')
+        domain = MetadataDomain(domain)
+        response['msg'] = list()
+        for key in metadata:
+            remove_meta_task = vm.remove_metadata(key, domain=domain)
+            self.execute_task(remove_meta_task)
+        msg = "Metadata {0} have been removed from vm {1}"
+        response["msg"] = msg.format(list(metadata.keys()), vm_name)
 
         return response
 
 
 def main():
     argument_spec = vapp_vm_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = VappVM(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if module.params.get('state'):
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
             response = module.manage_states()
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('One of the state/operation should be provided.')
+            raise Exception('Please provide state/operation for resource')
 
     except Exception as error:
         response['msg'] = error
         module.fail_json(**response)
-
-    module.exit_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':

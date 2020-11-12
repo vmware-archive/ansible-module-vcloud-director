@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_vapp
-short_description: Ansible Module to manage (create/update/delete) vApps in vCloud Director.
+short_description: Manage vApp's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - "Ansible Module to manage (create/update/delete) vApps in vCloud Director."
+    - Manage vApp's states/operations in vCloud Director
 
 options:
     user:
@@ -126,6 +126,11 @@ options:
         description:
             - true if delete vApp forcefully else false
         required: false
+    shared_access
+        description:
+            - shared access for a vapp across the org.
+            - Possible values could be 'ReadOnly', 'Change', 'FullControl'
+        requried: false
     state:
         description:
             - state of new virtual machines (present/absent).
@@ -133,7 +138,7 @@ options:
         required: false
     operation:
         description:
-            - operation on vApp (poweron/poweroff/deploy/undeploy/list_vms/list_networks).
+            - operation to perform on vApp.
             - One from state or operation has to be provided.
         required: false
 
@@ -171,15 +176,23 @@ from lxml import etree
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
-from pyvcloud.vcd.client import FenceMode
 from pyvcloud.vcd.client import NSMAP
+from pyvcloud.vcd.client import FenceMode
+from pyvcloud.vcd.client import MetadataDomain
+from pyvcloud.vcd.client import MetadataValueType
+from pyvcloud.vcd.client import MetadataVisibility
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
 
-VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'deploy', 'undeploy', 'list_vms', 'list_networks']
 
+VAPP_VM_STATES = ['present', 'absent']
 VM_STATUSES = {'3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF'}
+VAPP_SHARED_ACCESS = ['ReadOnly', 'Change', 'FullControl']
+VAPP_METADATA_DOMAINS = ['GENERAL', 'SYSTEM']
+VAPP_METADATA_VISIBILITY = ['PRIVATE', 'READONLY', 'READWRITE']
+VAPP_SET_METADATA_VALUE_TYPE = ['String', 'Number', 'Boolean', 'DateTime']
+VAPP_OPERATIONS = ['poweron', 'poweroff', 'list_vms', 'list_networks',
+                   'share', 'unshare', 'set_meta', 'get_meta', 'remove_meta']
 
 
 def vapp_argument_spec():
@@ -190,7 +203,6 @@ def vapp_argument_spec():
         vdc=dict(type='str', required=True),
         description=dict(type='str', required=False, default=None),
         network=dict(type='str', required=False, default=None),
-        fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
         ip_allocation_mode=dict(type='str', required=False, default="dhcp"),
         deploy=dict(type='bool', required=False, default=True),
         power_on=dict(type='bool', required=False, default=True),
@@ -206,8 +218,14 @@ def vapp_argument_spec():
         storage_profile=dict(type='str', required=False, default=None),
         network_adapter_type=dict(type='str', required=False, default=None),
         force=dict(type='bool', required=False, default=False),
+        metadata=dict(type='dict', required=False, default=None),
+        metadata_type=dict(type='str', required=False, default='String', choices=VAPP_SET_METADATA_VALUE_TYPE),
+        metadata_visibility=dict(type='str', required=False, default='READWRITE', choices=VAPP_METADATA_VISIBILITY),
+        metadata_domain=dict(type='str', required=False, default='GENERAL', choices=VAPP_METADATA_DOMAINS),
+        fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
+        shared_access=dict(type='str', required=False, choices=VAPP_SHARED_ACCESS, default="ReadOnly"),
         state=dict(choices=VAPP_VM_STATES, required=False),
-        operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
+        operation=dict(choices=VAPP_OPERATIONS, required=False),
     )
 
 
@@ -228,24 +246,33 @@ class Vapp(VcdAnsibleModule):
             return self.delete()
 
     def manage_operations(self):
-        state = self.params.get('operation')
-        if state == "poweron":
+        operation = self.params.get('operation')
+        if operation == "poweron":
             return self.power_on()
 
-        if state == "poweroff":
+        if operation == "poweroff":
             return self.power_off()
 
-        if state == "deploy":
-            return self.deploy()
-
-        if state == "undeploy":
-            return self.undeploy()
-
-        if state == "list_vms":
+        if operation == "list_vms":
             return self.list_vms()
 
-        if state == "list_networks":
+        if operation == "list_networks":
             return self.list_networks()
+
+        if operation == "share":
+            return self.share()
+
+        if operation == "unshare":
+            return self.unshare()
+
+        if operation == "set_meta":
+            return self.set_meta()
+
+        if operation == "get_meta":
+            return self.get_meta()
+
+        if operation == "remove_meta":
+            return self.remove_meta()
 
     def get_vapp(self):
         vapp_name = self.params.get('vapp_name')
@@ -303,10 +330,12 @@ class Vapp(VcdAnsibleModule):
                 storage_profile=storage_profile,
                 network_adapter_type=network_adapter_type)
             self.execute_task(create_vapp_task.Tasks.Task[0])
-            response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
+            msg = 'Vapp {} has been created'
+            response['msg'] = msg.format(vapp_name)
             response['changed'] = True
         else:
-            response['warnings'] = "Vapp {} is already present.".format(vapp_name)
+            msg = "Vapp {} is already present"
+            response['warnings'] = msg.format(vapp_name)
 
         return response
 
@@ -336,10 +365,12 @@ class Vapp(VcdAnsibleModule):
                 fence_mode=fence_mode,
                 accept_all_eulas=accept_all_eulas)
             self.execute_task(create_vapp_task.Tasks.Task[0])
-            response['msg'] = 'Vapp {} has been created.'.format(vapp_name)
+            msg = 'Vapp {} has been created'
+            response['msg'] = msg.format(vapp_name)
             response['changed'] = True
         else:
-            response['warnings'] = "Vapp {} is already present.".format(vapp_name)
+            msg = "Vapp {} is already present"
+            response['warnings'] = msg.format(vapp_name)
 
         return response
 
@@ -354,7 +385,8 @@ class Vapp(VcdAnsibleModule):
         except EntityNotFoundException:
             response['warnings'] = "Vapp {} is not present.".format(vapp_name)
         else:
-            delete_vapp_task = self.vdc.delete_vapp(name=vapp_name, force=force)
+            delete_vapp_task = self.vdc.delete_vapp(
+                name=vapp_name, force=force)
             self.execute_task(delete_vapp_task)
             response['msg'] = 'Vapp {} has been deleted.'.format(vapp_name)
             response['changed'] = True
@@ -362,134 +394,166 @@ class Vapp(VcdAnsibleModule):
         return response
 
     def power_on(self):
-        vapp_name = self.params.get('vapp_name')
         response = dict()
         response['changed'] = False
-
         vapp = self.get_vapp()
+        vapp_name = self.params.get('vapp_name')
+
         try:
-            if not vapp.is_powered_on():
-                vapp_resource = self.vdc.get_vapp(vapp_name)
-                vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-                power_on_vapp_task = vapp.power_on()
-                self.execute_task(power_on_vapp_task)
-                response['msg'] = 'Vapp {} has been powered on.'.format(vapp_name)
-                response['changed'] = True
-            else:
-                response['warnings'] = 'Vapp {} is already powered on.'.format(vapp_name)
-        except OperationNotSupportedException:
-            response['warnings'] = 'Operation is not supported. You may have no VM(s) in {}'.format(vapp_name)
+            deploy_vapp_task = vapp.deploy()
+            self.execute_task(deploy_vapp_task)
+            msg = 'Vapp {} has been powered on'
+            response['msg'] = msg.format(vapp_name)
+            response['changed'] = True
+        except OperationNotSupportedException as ex:
+            response['warnings'] = str(ex)
 
         return response
 
     def power_off(self):
-        vapp_name = self.params.get('vapp_name')
         response = dict()
         response['changed'] = False
-
         vapp = self.get_vapp()
+        vapp_name = self.params.get('vapp_name')
+
         try:
-            if not vapp.is_powered_off():
-                vapp_resource = self.vdc.get_vapp(vapp_name)
-                vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-                power_off_vapp_task = vapp.power_off()
-                self.execute_task(power_off_vapp_task)
-                response['msg'] = 'Vapp {} has been powered off.'.format(vapp_name)
-                response['changed'] = True
-            else:
-                response['warnings'] = 'Vapp {} is already powered off.'.format(vapp_name)
-        except OperationNotSupportedException:
-            response['warnings'] = 'Operation is not supported. You may have no VM(s) in {}'.format(vapp_name)
-
-        return response
-
-    def deploy(self):
-        vapp_name = self.params.get('vapp_name')
-        response = dict()
-        response['changed'] = False
-
-        vapp = self.get_vapp()
-        if not vapp.is_deployed():
-            vapp_resource = self.vdc.get_vapp(vapp_name)
-            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
-            deploy_vapp_task = vapp.deploy()
-            self.execute_task(deploy_vapp_task)
-            response['msg'] = 'Vapp {} has been deployed.'.format(vapp_name)
-            response['changed'] = True
-        else:
-            response['warnings'] = 'Vapp {} is already deployed.'.format(vapp_name)
-
-        return response
-
-    def undeploy(self):
-        vapp_name = self.params.get('vapp_name')
-        response = dict()
-        response['changed'] = False
-
-        vapp = self.get_vapp()
-        if vapp.is_deployed():
-            vapp_resource = self.vdc.get_vapp(vapp_name)
-            vapp = VApp(self.client, name=vapp_name, resource=vapp_resource)
             undeploy_vapp_task = vapp.undeploy(action="powerOff")
             self.execute_task(undeploy_vapp_task)
-            response['msg'] = 'Vapp {} has been undeployed.'.format(vapp_name)
+            response['msg'] = 'Vapp {} has been powered off'.format(vapp_name)
             response['changed'] = True
-        else:
-            response['warnings'] = 'Vapp {} is already undeployed.'.format(vapp_name)
+        except OperationNotSupportedException as ex:
+            response['warnings'] = str(ex)
 
         return response
 
     def list_vms(self):
-        vapp = self.get_vapp()
         response = dict()
         response['msg'] = list()
-
+        response['changed'] = False
+        vapp = self.get_vapp()
         for vm in vapp.get_all_vms():
-            vm_details = dict()
-            vm_details['name'] = vm.get('name')
-            vm_details['status'] = VM_STATUSES[vm.get('status')]
-            vm_details['deployed'] = vm.get('deployed') == 'true'
-
             try:
-                vm_details['ip_address'] = vapp.get_primary_ip(vm.get('name'))
+                ip = vapp.get_primary_ip(vm.get('name'))
             except Exception:
-                vm_details['ip_address'] = None
-
+                ip = None
+            vm_details = {
+                "name": vm.get('name'),
+                "status": VM_STATUSES[vm.get('status')],
+                "deployed": vm.get('deployed') == 'true',
+                "ip_address": ip
+            }
             response['msg'].append(vm_details)
 
         return response
 
     def list_networks(self):
-        vapp = self.get_vapp()
         response = dict()
-        response['msg'] = list()
+        response['changed'] = False
+        vapp = self.get_vapp()
+        networks = vapp.get_all_networks()
+        response['msg'] = [network.get(
+            '{' + NSMAP['ovf'] + '}name') for network in networks]
 
-        for network in vapp.get_all_networks():
-            response['msg'].append(network.get('{' + NSMAP['ovf'] + '}name'))
+        return response
+
+    def share(self):
+        response = dict()
+        response['changed'] = False
+        vapp = self.get_vapp()
+        access = self.params.get("shared_access")
+        vapp.share_with_org_members(everyone_access_level=access)
+        msg = "Vapp is shared across org with {0} access"
+        response['msg'] = msg.format(access)
+        response['changed'] = True
+
+        return response
+
+    def unshare(self):
+        response = dict()
+        response['changed'] = False
+        vapp = self.get_vapp()
+        vapp.unshare_from_org_members()
+        response['msg'] = "Sharing has been stopped for Vapp"
+        response['changed'] = True
+
+        return response
+
+    def set_meta(self):
+        response = dict()
+        response['changed'] = False
+        vapp_name = self.params.get('vapp_name')
+        metadata = self.params.get('metadata')
+        domain = self.params.get("metadata_domain")
+        visibility = self.params.get("metadata_visibility")
+        metadata_type = self.params.get("metadata_type")
+        metadata_type = "Metadata{0}Value".format(metadata_type)
+        vapp = self.get_vapp()
+        domain = MetadataDomain(domain)
+        visibility = MetadataVisibility(visibility)
+        metadata_type = MetadataValueType(metadata_type)
+        set_meta_task = vapp.set_multiple_metadata(metadata,
+                                                   domain=domain,
+                                                   visibility=visibility,
+                                                   metadata_value_type=metadata_type)
+        self.execute_task(set_meta_task)
+        msg = "Metadata {0} have been set to vApp {1}"
+        response["msg"] = msg.format(list(metadata.keys()), vapp_name)
+
+        return response
+
+    def get_meta(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = dict()
+        vapp = self.get_vapp()
+        metadata = vapp.get_metadata()
+        response['msg'] = {
+             metadata.MetadataEntry.Key.text: metadata.MetadataEntry.TypedValue.Value.text
+        }
+
+        return response
+
+    def remove_meta(self):
+        response = dict()
+        response['changed'] = False
+        vapp_name = self.params.get('vapp_name')
+        domain = self.params.get("metadata_domain")
+        vapp = self.get_vapp()
+        metadata = self.params.get('metadata')
+        domain = MetadataDomain(domain)
+        response['msg'] = list()
+        for key in metadata:
+            remove_meta_task = vapp.remove_metadata(key, domain=domain)
+            self.execute_task(remove_meta_task)
+        msg = "Metadata {0} have been removed from vApp {1}"
+        response["msg"] = msg.format(list(metadata.keys()), vapp_name)
 
         return response
 
 
 def main():
     argument_spec = vapp_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = Vapp(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if module.params.get('state'):
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
             response = module.manage_states()
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('One of the state/operation should be provided.')
+            raise Exception('Please provide state/operation for resource')
 
     except Exception as error:
         response['msg'] = error
         module.fail_json(**response)
-
-    module.exit_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':

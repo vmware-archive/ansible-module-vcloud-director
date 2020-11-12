@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_org
-short_description: Ansible module to manage (create/update/delete) orgs in vCloud Director
+short_description: Manage org's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - Ansible module to manage (create/update/delete) orgs in vCloud Director
+    - Manage org's states/operations in vCloud Director
 
 options:
     user:
@@ -102,8 +102,10 @@ from pyvcloud.vcd.system import System
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, BadRequestException
 
+
 VCD_ORG_STATES = ['present', 'absent', 'update']
-VCD_ORG_OPERATIONS = ['read', 'add_rights', 'remove_rights', 'list_rights', 'list_roles']
+VCD_ORG_OPERATIONS = ['read', 'add_rights', 'remove_rights',
+                      'list_rights', 'list_roles']
 
 
 def org_argument_spec():
@@ -162,10 +164,10 @@ class VCDOrg(VcdAnsibleModule):
             sys_admin = self.client.get_admin()
             self.system = System(self.client, admin_resource=sys_admin)
             self.system.create_org(org_name, full_name, is_enabled)
-            response['msg'] = 'Org {} has been created.'.format(org_name)
+            response['msg'] = 'Org {} has been created'.format(org_name)
             response['changed'] = True
         except BadRequestException:
-            response['warnings'] = 'Org {} is already present.'.format(org_name)
+            response['warnings'] = 'Org {} is already present'.format(org_name)
 
         return response
 
@@ -194,7 +196,7 @@ class VCDOrg(VcdAnsibleModule):
         resource = self.client.get_org_by_name(org_name)
         org = Org(self.client, resource=resource)
         org.update_org(is_enabled)
-        response['msg'] = "Org {} has been updated.".format(org_name)
+        response['msg'] = "Org {} has been updated".format(org_name)
         response['changed'] = True
 
         return response
@@ -209,12 +211,13 @@ class VCDOrg(VcdAnsibleModule):
         try:
             sys_admin = self.client.get_admin()
             self.system = System(self.client, admin_resource=sys_admin)
-            delete_org_task = self.system.delete_org(org_name, force, recursive)
+            delete_org_task = self.system.delete_org(
+                org_name, force, recursive)
             self.execute_task(delete_org_task)
-            response['msg'] = "Org {} has been deleted.".format(org_name)
+            response['msg'] = "Org {} has been deleted".format(org_name)
             response['changed'] = True
         except EntityNotFoundException:
-            response['warnings'] = "Org {} is not present.".format(org_name)
+            response['warnings'] = "Org {} is not present".format(org_name)
 
         return response
 
@@ -271,24 +274,27 @@ class VCDOrg(VcdAnsibleModule):
 
 def main():
     argument_spec = org_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = VCDOrg(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if module.params.get('state'):
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
             response = module.manage_states()
         elif module.params.get('operation'):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide state or operation for the module')
+            raise Exception('Please provide state/operation for resource')
 
     except Exception as error:
         response['msg'] = error
         module.fail_json(**response)
-
-    module.exit_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':

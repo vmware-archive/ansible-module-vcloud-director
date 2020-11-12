@@ -12,10 +12,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = '''
 ---
 module: vcd_user
-short_description: Ansible module to manage (create/update/delete) users in vCloud Director
+short_description: Manage user's states/operations in vCloud Director
 version_added: "2.4"
 description:
-    - Ansible module to manage (create/update/delete) users in vCloud Director
+    - Manage user's states/operations in vCloud Director
 
 options:
     user:
@@ -36,7 +36,8 @@ options:
         required: false
     org_name:
         description:
-            - Organization name on vCloud Director where the user is created, if unset it uses the org option value (or env_org environment var).
+            - Organization name on vCloud Director where the user is created
+            - default value is module level / environment level org
         required: false
     api_version:
         description:
@@ -185,15 +186,14 @@ def user_argument_spec():
         is_alert_enabled=dict(type='bool', required=False, default=False),
         is_enabled=dict(type='bool', required=False, default=True),
         state=dict(choices=USER_STATES, required=False),
-        org_name=dict(type='str', required=False, default=''),
+        org_name=dict(type='str', required=False, default=None),
     )
 
 
 class User(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
-        logged_in_org = self.client.get_org()
-        self.org = Org(self.client, resource=logged_in_org)
+        self.org = self.get_org()
 
     def manage_states(self):
         state = self.params.get('state')
@@ -206,48 +206,51 @@ class User(VcdAnsibleModule):
         if state == "update":
             return self.update()
 
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org_by_name(
+            org_name) if org_name else self.client.get_org()
+
+        return Org(self.client, resource=org_resource)
+
     def create(self):
-        params = self.params
-        username = params.get('username')
-        userpassword = params.get('userpassword')
-        full_username = params.get('full_username')
-        description = params.get('description')
-        email = params.get('email')
-        telephone = params.get('telephone')
-        im = params.get('im')
-        alert_email = params.get('alert_email')
-        alert_email_prefix = params.get('alert_email_prefix')
-        stored_vm_quota = params.get('stored_vm_quota')
-        deployed_vm_quota = params.get('deployed_vm_quota')
-        is_group_role = params.get('is_group_role')
-        is_default_cached = params.get('is_default_cached')
-        is_external = params.get('is_external')
-        is_alert_enabled = params.get('is_alert_enabled')
-        is_enabled = params.get('is_enabled')
-        org_name = params.get('org_name', None)
+        username = self.params.get('username')
+        userpassword = self.params.get('userpassword')
+        full_username = self.params.get('full_username')
+        description = self.params.get('description')
+        email = self.params.get('email')
+        telephone = self.params.get('telephone')
+        im = self.params.get('im')
+        alert_email = self.params.get('alert_email')
+        alert_email_prefix = self.params.get('alert_email_prefix')
+        stored_vm_quota = self.params.get('stored_vm_quota')
+        deployed_vm_quota = self.params.get('deployed_vm_quota')
+        is_group_role = self.params.get('is_group_role')
+        is_default_cached = self.params.get('is_default_cached')
+        is_external = self.params.get('is_external')
+        is_alert_enabled = self.params.get('is_alert_enabled')
+        is_enabled = self.params.get('is_enabled')
         response = dict()
         response['changed'] = False
 
-        if org_name:
-            org_name = Org(self.client, resource=self.client.get_org_by_name(org_name))
-        else:
-            org_name = self.org
-        role = org_name.get_role_record(params.get('role_name'))
+        role = self.org.get_role_record(self.params.get('role_name'))
         role_href = role.get('href')
 
         try:
-            org_name.get_user(username)
+            self.org.get_user(username)
         except EntityNotFoundException:
-            org_name.create_user(
+            self.org.create_user(
                 username, userpassword, role_href, full_username, description,
                 email, telephone, im, alert_email, alert_email_prefix,
                 stored_vm_quota, deployed_vm_quota, is_group_role,
                 is_default_cached, is_external, is_alert_enabled,
                 is_enabled)
-            response['msg'] = "User {} has been created.".format(username)
+            msg = "User {} has been created"
+            response['msg'] = msg.format(username)
             response['changed'] = True
         else:
-            response['warnings'] = "User {} is already present.".format(username)
+            msg = "User {} is already present"
+            response['warnings'] = msg.format(username)
 
         return response
 
@@ -283,21 +286,25 @@ class User(VcdAnsibleModule):
 
 def main():
     argument_spec = user_argument_spec()
-    response = dict(
-        msg=dict(type='str')
-    )
+    response = dict(msg=dict(type='str'))
     module = User(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
-        if not module.params.get('state'):
-            raise Exception('Please provide the state for the resource.')
-
-        response = module.manage_states()
-        module.exit_json(**response)
+        if module.check_mode:
+            response = dict()
+            response['changed'] = False
+            response['msg'] = "skipped, running in check mode"
+            response['skipped'] = True
+        elif module.params.get('state'):
+            response = module.manage_states()
+        else:
+            raise Exception('Please provide the state for the resource')
 
     except Exception as error:
         response['msg'] = error
         module.fail_json(**response)
+    else:
+        module.exit_json(**response)
 
 
 if __name__ == '__main__':

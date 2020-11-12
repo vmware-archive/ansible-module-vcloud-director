@@ -1,23 +1,24 @@
 # Copyright © 2018 VMware, Inc. All Rights Reserved.
 # SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
 
-import os
 from lxml import etree
 from pyvcloud.vcd.client import Client
 from pyvcloud.vcd.client import TaskStatus
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, env_fallback
 from pyvcloud.vcd.client import BasicLoginCredentials
-from ansible.module_utils.vcd_errors import VCDLoginError
+from requests.packages import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def vcd_argument_spec():
     return dict(
-        user=dict(type='str', required=False, default=os.environ.get('env_user')),
-        password=dict(type='str', required=False, no_log=True, default=os.environ.get('env_password')),
-        org=dict(type='str', required=False, default=os.environ.get('env_org')),
-        host=dict(type='str', required=False, default=os.environ.get('env_host')),
-        api_version=dict(type='str', default=os.environ.get('env_api_version', '30.0')),
-        verify_ssl_certs=dict(type='bool', default=os.environ.get('env_verify_ssl_certs', False))
+        user=dict(type='str', required=True, fallback=(env_fallback, ['env_user'])),
+        password=dict(type='str', required=True, no_log=True, fallback=(env_fallback, ['env_password'])),
+        org=dict(type='str', required=True, fallback=(env_fallback, ['env_org'])),
+        host=dict(type='str', required=True, fallback=(env_fallback, ['env_host'])),
+        api_version=dict(type='str', fallback=(env_fallback, ['env_api_version']), default='30.0'),
+        verify_ssl_certs=dict(type='bool', fallback=(env_fallback, ['env_verify_ssl_certs']), default=False)
     )
 
 
@@ -45,8 +46,7 @@ class VcdAnsibleModule(AnsibleModule):
             self.client.set_credentials(BasicLoginCredentials(user, org, password))
 
         except Exception as error:
-            error = 'Login failed for user {} to org {}'
-            raise VCDLoginError(error.format(user, org))
+            self.fail_json(msg='Login failed for user {} to org {}'.format(user, org))
 
     def execute_task(self, task):
         task_monitor = self.client.get_task_monitor()

@@ -3,13 +3,13 @@
 # ansible-module-vcloud-director
 
 ## Overview
-ansible-module-vcloud-director is a set of ansible modules that manage a VMware vCloud Director instance.
+**ansible-module-vcloud-director** is a set of ansible modules that manage a VMware vCloud Director instance.
 
 ## Try it out
 
 ### Prerequisites
 
-* The [pyvcloud](https://github.com/vmware/pyvcloud) module is required. 
+* The [pyvcloud](https://github.com/vmware/pyvcloud) module is required.
 * vCD Ansible modules require Python 3.6 or above.
 
 ### Build & Run
@@ -20,7 +20,7 @@ ansible-module-vcloud-director is a set of ansible modules that manage a VMware 
 
 ## Documentation
 
-Refer [docs](https://github.com/vmware/ansible-module-vcloud-director/tree/master/docs) to know more about available modules's usage.
+Refer [docs](https://github.com/vmware/ansible-module-vcloud-director/wiki/vCD-Ansible-Modules) to know more about available modules's usage.
 
 1. vcd_catalog
 2. vcd_catalog_item
@@ -38,20 +38,30 @@ Refer [docs](https://github.com/vmware/ansible-module-vcloud-director/tree/maste
 14. vcd_vapp_vm_snapshot
 15. vcd_vdc_gateway
 16. vcd_vdc_network
+17. vcd_gateway_services
+
+We have also written sample ansible playbooks to show usage of these ansible modules and their interaction with vCD instance. We are using [ansible role](https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html)
+concept to define playbooks in modular fashion for these modules. Please refer [roles](https://github.com/vmware/ansible-module-vcloud-director/tree/master/roles) and [main.yml](https://github.com/vmware/ansible-module-vcloud-director/blob/master/main.yml) to see usage.
 
 ## Releases & Major Branches
 
-Following is the version matrix tested and supported through vCD ansible modules,
+Following is the approx version matrix which are tested and supported through vCD ansible modules,
 
-| vCD Version   | Pyvcloud Version | API Versions       |
-| ------------- | :-------------:  | -----:             |
-| vCD 9.1       | 20.1             | 28.0 / 29.0 / 30.0 |
+| vCD Version    |  API Versions       |
+| -------------  | :-------------:     |
+| vCD 9.0        | 29.0 			   |
+| vCD 9.1        | 30.0				   |
+| vCD 9.5        | 31.0                |
+| vCD 9.7        | 32.0 		       |
+| vCD 10.0       | 33.0                |
+| vCD 10.1       | 34.0                |
 
 Note - Testing is still in progress for new releases of vCD and Pyvcloud.
 
 ## Contributing
 
-The ansible-module-vcloud-director project team welcomes contributions from the community. Before you start working with ansible-module-vcloud-director, please read our [Developer Certificate of Origin](https://cla.vmware.com/dco). All contributions to this repository must be signed as described on that page. Your signature certifies that you wrote the patch or have the right to pass it on as an open-source patch. For more detailed information, refer to [CONTRIBUTING.md](CONTRIBUTING.md).
+The **ansible-module-vcloud-director** project team welcomes contributions from the community. Before you start working with ansible-module-vcloud-director, please read our [Developer Certificate of Origin](https://cla.vmware.com/dco).
+All contributions to this repository must be signed as described on that page. Your signature certifies that you wrote the patch or have the right to pass it on as an open-source patch. For more detailed information, refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 [BSD-2 License or GPLv3](LICENSE.txt)

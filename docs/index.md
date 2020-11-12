@@ -2011,7 +2011,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  <pre>
  <code>
  - name: create role
-   vcd_role:
+   vcd_roles:
    	role_name: test_role
    	role_description: test role description
    	role_rights:
@@ -2039,7 +2039,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  <pre>
  <code>
  - name: update role
-   vcd_role:
+   vcd_roles:
    	role_name: test_role
    	role_description: test role description
    	role_rights:
@@ -2067,7 +2067,7 @@ and any objects it contains that are in a state that normally allows removal. Th
  <pre>
  <code>
  - name: delete role
-   vcd_role:
+   vcd_roles:
    	role_name: test_role
    	state: absent
  </code>
