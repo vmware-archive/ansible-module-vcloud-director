@@ -217,6 +217,36 @@
   debug:
     msg: '{{ output }}'
 
+- name: add org network
+  vcd_vapp:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vapp_name: acme_vapp
+    vdc: ACME_PAYG
+    network: acme_internal_direct_2
+    operation: add_org_network
+  register: output
+
+- name: add org network
+  debug:
+    msg: '{{ output }}'
+
+- name: delete org network
+  vcd_vapp:
+    user: acmeadmin
+    password: VMware1!
+    org: Acme
+    vapp_name: acme_vapp
+    vdc: ACME_PAYG
+    network: acme_internal_direct_2
+    operation: delete_org_network
+  register: output
+
+- name: delete org network
+  debug:
+    msg: '{{ output }}'
+
 - name: delete vapp
   vcd_vapp:
     vapp_name: test_vapp_1
