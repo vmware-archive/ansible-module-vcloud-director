@@ -126,7 +126,7 @@ options:
         description:
             - true if delete vApp forcefully else false
         required: false
-    shared_access
+    shared_access:
         description:
             - shared access for a vapp across the org.
             - Possible values could be 'ReadOnly', 'Change', 'FullControl'
