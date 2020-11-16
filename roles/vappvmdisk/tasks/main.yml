@@ -13,8 +13,10 @@
     disks:
       - size: 1
         controller: lsilogic
+        name: "Hard disk 1"
       - size: 1
         controller: VirtualSCSI
+        name: "Hard disk 2"
     state: present
   register: myResult
 

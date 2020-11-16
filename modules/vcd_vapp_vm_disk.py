@@ -87,6 +87,7 @@ EXAMPLES = '''
     disks:
         - size: 3
           controller: lsilogic
+          name: Hard disk 1
     state = "present"
 '''
 
@@ -181,17 +182,32 @@ class VappVMDisk(VcdAnsibleModule):
         response = dict()
         response['msg'] = list()
         response['changed'] = False
+        available_disks = self.read_disks().get("disks").keys()
+        warnings = list()
 
         for disk in disks:
             disk_size = int(disk.get("size"))
             disk_controller = disk.get("controller")
-            add_disk_task = self.vapp.add_disk_to_vm(
-                vm_name, disk_size, disk_controller)
-            self.execute_task(add_disk_task)
-            msg = "A disk with size {0} and controller {1} has been added to VM {2}"
-            msg = msg.format(disk_size, disk_controller, vm_name)
-            response['msg'].append(msg)
-        response['changed'] = True
+            disk_name = disk.get("name")
+            '''
+            here the condition covers both the situtation
+            1. if someone has given the disk name then it will check for the disk
+            availability first before adding it.
+            2. if someone has ignored giving the disk name then it will add a new disk
+            any way.
+            '''
+            if disk_name not in available_disks:
+                add_disk_task = self.vapp.add_disk_to_vm(vm_name, disk_size, disk_controller)
+                self.execute_task(add_disk_task)
+                msg = "A disk with size {0} and controller {1} has been added to VM {2}"
+                msg = msg.format(disk_size, disk_controller, vm_name)
+                response['changed'] = True
+                response['msg'].append(msg)
+            else:
+                warnings.append(disk_name)
+        if warnings:
+            warnings = ','.join(warnings)
+            response["warnings"] = "Hard disk(s) with name {0} are already present".format(warnings)
 
         return response
 
