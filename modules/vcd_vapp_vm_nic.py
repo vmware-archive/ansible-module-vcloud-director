@@ -54,6 +54,10 @@ options:
         description:
             - VM name
         required: true
+    adapter_type:
+        description:
+            - nic adapter type.One of NetworkAdapterType values
+        required: true
     vapp:
         description:
             - vApp name
@@ -93,7 +97,7 @@ EXAMPLES = '''
     org: Terraform
     api_version: 30
     verify_ssl_certs: False
-    vm: vm1
+    vm_name: vm1
     vapp = vapp1
     vdc = vdc1
     network: acme_internal_direct
