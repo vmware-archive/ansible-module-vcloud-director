@@ -28,7 +28,7 @@
     org: 'XXXXXXXXXX'
     password: 'XXXXXXXXXX'
     host: 'XXXXXXXXXX'
-    catalog_name: "{{ catalog_name }}" 
+    catalog_name: "{{ catalog_name }}"
     operation: "read"
   register: output
 
@@ -45,8 +45,8 @@
     org: 'XXXXXXXXXX'
     password: 'XXXXXXXXXX'
     host: 'XXXXXXXXXX'
-    catalog_name: "{{ catalog_name }}" 
-    new_catalog_name: "{{ new_catalog_name }}" 
+    catalog_name: "{{ catalog_name }}"
+    new_catalog_name: "{{ new_catalog_name }}"
     description: "{{ description }}"
     state: "update"
   register: output
@@ -63,7 +63,7 @@
     org: 'XXXXXXXXXX'
     password: 'XXXXXXXXXX'
     host: 'XXXXXXXXXX'
-    catalog_name: "{{ new_catalog_name }}" 
+    catalog_name: "{{ new_catalog_name }}"
     shared: "{{ shared }}"
     operation: "shared"
   register: output
@@ -85,7 +85,7 @@
 
 - name: delete catalog output
   debug:
-    msg: '{{ output }}' 
+    msg: '{{ output }}'
 
 #################################### List items ##########################################################################
 - name: list catalog items

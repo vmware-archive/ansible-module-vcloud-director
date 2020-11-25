@@ -14,7 +14,7 @@
     source_template_name: "centos7"
     source_vm_name: "CentOS7"
     hostname: "vcdcell"
-    vmpassword: "rootpass" 
+    vmpassword: "rootpass"
     vmpassword_auto: "false"
     vmpassword_reset: "false"
     ip_allocation_mode: "DHCP"
@@ -37,9 +37,9 @@
     source_vdc: "Terraform_VDC"
     target_vdc: "Terraform_VDC"
     source_vapp: "web"
-    source_vm_name: "web1" 
+    source_vm_name: "web1"
     hostname: "vcdcell"
-    vmpassword: "rootpass" 
+    vmpassword: "rootpass"
     vmpassword_auto: "false"
     vmpassword_reset: "false"
     ip_allocation_mode: "DHCP"
@@ -279,7 +279,7 @@
 - name: set vm metadata
   vcd_vapp_vm:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     target_vm_name: centos
     target_vapp: acme_vapp
@@ -298,7 +298,7 @@
 - name: get vm metadata
   vcd_vapp_vm:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     target_vm_name: centos
     target_vdc: ACME_PAYG
@@ -313,7 +313,7 @@
 - name: remove vm metadata
   vcd_vapp_vm:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     target_vm_name: centos
     target_vapp: acme_vapp

@@ -6,7 +6,7 @@
 - name: add vapp network
   vcd_vapp_network:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vdc: ACME_PAYG
     vapp: vApp_system_2
@@ -27,7 +27,7 @@
 - name: read vapp networks
   vcd_vapp_network:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vdc: ACME_PAYG
     vapp: vApp_system_2
@@ -41,7 +41,7 @@
 - name: update vapp network
   vcd_vapp_network:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vdc: ACME_PAYG
     vapp: vApp_system_2
@@ -57,7 +57,7 @@
 - name: read vapp networks
   vcd_vapp_network:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vdc: ACME_PAYG
     vapp: vApp_system_2
@@ -71,7 +71,7 @@
 - name: delete vapp network
   vcd_vapp_network:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vdc: ACME_PAYG
     vapp: vApp_system_2
@@ -86,7 +86,7 @@
 - name: read vapp networks
   vcd_vapp_network:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vdc: ACME_PAYG
     vapp: vApp_system_2

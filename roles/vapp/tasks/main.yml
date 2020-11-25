@@ -142,7 +142,7 @@
 - name: share vapp
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: test_vapp
     vdc: ACME_PAYG
@@ -156,7 +156,7 @@
 - name: unshare vapp
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: acme_vapp
     vdc: ACME_PAYG
@@ -170,7 +170,7 @@
 - name: set vapp metadata
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: acme_vapp
     vdc: ACME_PAYG
@@ -188,7 +188,7 @@
 - name: get vapp metadata
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: acme_vapp
     vdc: ACME_PAYG
@@ -202,7 +202,7 @@
 - name: remove vapp metadata
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: acme_vapp
     vdc: ACME_PAYG
@@ -220,7 +220,7 @@
 - name: add org network
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: acme_vapp
     vdc: ACME_PAYG
@@ -235,7 +235,7 @@
 - name: delete org network
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: acme_vapp
     vdc: ACME_PAYG

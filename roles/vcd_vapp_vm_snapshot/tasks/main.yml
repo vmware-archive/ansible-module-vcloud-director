@@ -5,7 +5,7 @@
   vcd_vapp_vm_snapshot:
     user: acmeadmin
     org: Acme
-    password: VMware1!
+    password: XXXXXXXXXX
     vdc_name: ACME_PAYG
     vapp_name: acme_vapp
     vms:
@@ -23,7 +23,7 @@
   vcd_vapp_vm_snapshot:
     user: acmeadmin
     org: Acme
-    password: VMware1!
+    password: XXXXXXXXXX
     vdc_name: ACME_PAYG
     vapp_name: acme_vapp
     vms:
@@ -39,7 +39,7 @@
   vcd_vapp_vm_snapshot:
     user: acmeadmin
     org: Acme
-    password: VMware1!
+    password: XXXXXXXXXX
     vdc_name: ACME_PAYG
     vapp_name: acme_vapp
     vms:
@@ -55,7 +55,7 @@
   vcd_vapp_vm_snapshot:
     user: acmeadmin
     org: Acme
-    password: VMware1!
+    password: XXXXXXXXXX
     vdc_name: ACME_PAYG
     vapp_name: acme_vapp
     vms:
@@ -71,7 +71,7 @@
   vcd_vapp_vm_snapshot:
     user: acmeadmin
     org: Acme
-    password: VMware1!
+    password: XXXXXXXXXX
     vdc_name: ACME_PAYG
     vapp_name: acme_vapp
     vms:

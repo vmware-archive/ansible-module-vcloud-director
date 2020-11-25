@@ -5,7 +5,7 @@
 - name: add a disk
   vcd_vapp_vm_disk:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vm_name: centos
     vapp: vApp_system_2
@@ -27,7 +27,7 @@
 - name: update a disk
   vcd_vapp_vm_disk:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vm_name: centos
     vapp: vApp_system_2
@@ -45,7 +45,7 @@
 - name: Read my disks
   vcd_vapp_vm_disk:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vm_name: centos
     vapp: vApp_system_2
@@ -60,7 +60,7 @@
 - name: delete my disks
   vcd_vapp_vm_disk:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vm_name: centos
     vapp: vApp_system_2

@@ -7,7 +7,7 @@
 - name: create gateway services
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
@@ -29,7 +29,7 @@
 - name: update gateway services
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
@@ -56,7 +56,7 @@
 - name: list gateway firewalls
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
@@ -72,7 +72,7 @@
 - name: delete gateway services
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
@@ -90,7 +90,7 @@
 - name: list gateway services
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
