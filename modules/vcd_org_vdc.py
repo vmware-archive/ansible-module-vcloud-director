@@ -241,7 +241,9 @@ changed: true if resource has been changed else false
 
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
+from pyvcloud.vcd.client import E
 from pyvcloud.vcd.system import System
+from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 from pyvcloud.vcd.exceptions import OperationNotSupportedException
@@ -249,6 +251,8 @@ from pyvcloud.vcd.exceptions import OperationNotSupportedException
 
 ORG_VDC_STATES = ['present', 'absent', 'update']
 ORG_VDC_OPERATIONS = ['list_vdcs']
+ORG_VDC_ALLOCATION_MODELS = ['AllocationVApp', 'AllocationPool',
+                             'ReservationPool']
 
 
 def org_vdc_argument_spec():
@@ -256,24 +260,21 @@ def org_vdc_argument_spec():
         vdc_name=dict(type='str', required=False),
         vdc_org_name=dict(type='str', required=False),
         provider_vdc_name=dict(type='str', required=False),
-        description=dict(type='str', required=False, default=''),
-        allocation_model=dict(
-            type='str', required=False, default='AllocationVApp',
-            choices=['AllocationVApp', 'AllocationPool', 'ReservationPool']),
-        cpu_units=dict(type='str', required=False, default="MHz"),
-        cpu_allocated=dict(type='int', required=False, default=0),
-        cpu_limit=dict(type='int', required=False, default=0),
-        mem_units=dict(type='str', required=False, default="MB"),
-        mem_allocated=dict(type='int', required=False, default=0),
-        mem_limit=dict(type='int', required=False, default=0),
-        nic_quota=dict(type='int', required=False, default=0),
-        network_quota=dict(type='int', required=False, default=0),
-        vm_quota=dict(type='int', required=False, default=0),
+        description=dict(type='str', required=False),
+        allocation_model=dict(type='str', required=False,
+                              choices=ORG_VDC_ALLOCATION_MODELS),
+        cpu_units=dict(type='str', required=False),
+        cpu_allocated=dict(type='int', required=False),
+        cpu_limit=dict(type='int', required=False),
+        mem_units=dict(type='str', required=False),
+        mem_allocated=dict(type='int', required=False,),
+        mem_limit=dict(type='int', required=False),
+        nic_quota=dict(type='int', required=False),
+        network_quota=dict(type='int', required=False),
+        vm_quota=dict(type='int', required=False),
         storage_profiles=dict(type='list', required=False, default=[]),
-        resource_guaranteed_memory=dict(
-            type='float', required=False, default=1.0),
-        resource_guaranteed_cpu=dict(
-            type='float', required=False, default=1.0),
+        resource_guaranteed_memory=dict(type='float', required=False),
+        resource_guaranteed_cpu=dict(type='float', required=False),
         vcpu_in_mhz=dict(type='int', required=False),
         is_thin_provision=dict(type='bool', required=False),
         network_pool_name=dict(type='str', required=False),
@@ -317,20 +318,22 @@ class Vdc(VcdAnsibleModule):
         vdc_name = self.params.get('vdc_name')
         is_enabled = self.params.get('is_enabled')
         provider_vdc_name = self.params.get('provider_vdc_name')
-        description = self.params.get('description')
+        description = self.params.get('description', '')
         allocation_model = self.params.get('allocation_model')
         storage_profiles = self.params.get('storage_profiles')
-        cpu_units = self.params.get('cpu_units')
-        cpu_allocated = self.params.get('cpu_allocated')
-        cpu_limit = self.params.get('cpu_limit')
-        mem_units = self.params.get('mem_units')
-        mem_allocated = self.params.get('mem_allocated')
-        mem_limit = self.params.get('mem_limit')
-        nic_quota = self.params.get('nic_quota')
-        network_quota = self.params.get('network_quota')
-        vm_quota = self.params.get('vm_quota')
-        resource_guaranteed_memory = self.params.get('resource_guaranteed_memory')
-        resource_guaranteed_cpu = self.params.get('resource_guaranteed_cpu')
+        cpu_units = self.params.get('cpu_units', "MHz")
+        cpu_allocated = self.params.get('cpu_allocated', 0)
+        cpu_limit = self.params.get('cpu_limit', 0)
+        mem_units = self.params.get('mem_units', 'MB')
+        mem_allocated = self.params.get('mem_allocated', 0)
+        mem_limit = self.params.get('mem_limit', 0)
+        nic_quota = self.params.get('nic_quota', 0)
+        network_quota = self.params.get('network_quota', 0)
+        vm_quota = self.params.get('vm_quota', 0)
+        resource_guaranteed_memory = self.params.get(
+            'resource_guaranteed_memory', 1.0)
+        resource_guaranteed_cpu = self.params.get(
+            'resource_guaranteed_cpu', 1.0)
         vcpu_in_mhz = self.params.get('vcpu_in_mhz')
         is_thin_provision = self.params.get('is_thin_provision')
         network_pool_name = self.params.get('network_pool_name')
@@ -376,19 +379,77 @@ class Vdc(VcdAnsibleModule):
 
     def update(self):
         vdc_name = self.params.get('vdc_name')
+        description = self.params.get('description')
+        allocation_model = self.params.get('allocation_model')
+        cpu_units = self.params.get('cpu_units')
+        cpu_allocated = self.params.get('cpu_allocated')
+        cpu_limit = self.params.get('cpu_limit')
+        mem_units = self.params.get('mem_units')
+        mem_allocated = self.params.get('mem_allocated')
+        mem_limit = self.params.get('mem_limit')
+        nic_quota = self.params.get('nic_quota')
+        network_quota = self.params.get('network_quota')
+        vm_quota = self.params.get('vm_quota')
+        resource_guaranteed_memory = self.params.get(
+            'resource_guaranteed_memory')
+        resource_guaranteed_cpu = self.params.get(
+            'resource_guaranteed_cpu')
+        vcpu_in_mhz = self.params.get('vcpu_in_mhz')
+        is_thin_provision = self.params.get('is_thin_provision')
         is_enabled = self.params.get('is_enabled')
         response = dict()
         response['changed'] = False
 
         try:
-            vdc_resource = self.org.get_vdc(vdc_name, is_admin_operation=True)
-            vdc = VDC(self.client, name=vdc_name, resource=vdc_resource)
-            vdc.enable_vdc(enable=is_enabled)
+            vdc = self.org.get_vdc(vdc_name, is_admin_operation=True)
+            assert vdc is not None
+            if description:
+                vdc['Description'] = E.Description(description)
+            if allocation_model:
+                vdc['AllocationModel'] = E.AllocationModel(allocation_model)
+            if cpu_units:
+                vdc.ComputeCapacity.Cpu.Units = E.Units(cpu_units)
+            if cpu_allocated:
+                vdc.ComputeCapacity.Cpu.Allocated = E.Allocated(cpu_allocated)
+            if cpu_limit:
+                vdc.ComputeCapacity.Cpu.Limit = E.Limit(cpu_limit)
+            if mem_units:
+                vdc.ComputeCapacity.Memory.Units = E.Units(mem_units)
+            if mem_allocated:
+                vdc.ComputeCapacity.Memory.Allocated = E.Allocated(
+                    mem_allocated)
+            if mem_limit:
+                vdc.ComputeCapacity.Memory.Limit = E.Limit(mem_limit)
+            if nic_quota:
+                vdc['NicQuota'] = E.NicQuota(nic_quota)
+            if network_quota:
+                vdc['NetworkQuota'] = E.NetworkQuota(network_quota)
+            if vm_quota:
+                vdc['VmQuota'] = E.VmQuota(vm_quota)
+            if resource_guaranteed_memory:
+                vdc['ResourceGuaranteedMemory'] = E.ResourceGuaranteedMemory(
+                    resource_guaranteed_memory)
+            if resource_guaranteed_cpu:
+                vdc['ResourceGuaranteedCpu'] = E.ResourceGuaranteedCpu(
+                    resource_guaranteed_cpu)
+            if vcpu_in_mhz:
+                vdc['VCpuInMhz'] = E.VCpuInMhz(vcpu_in_mhz)
+            if is_thin_provision:
+                vdc['IsThinProvision'] = E.IsThinProvision(is_thin_provision)
+            if is_enabled is not None:
+                vdc['IsEnabled'] = E.IsEnabled(is_enabled)
+
+            update_org_vdc_task = self.client.put_resource(
+                vdc.get("href"), vdc, EntityType.VDC_ADMIN.value)
+            self.execute_task(update_org_vdc_task)
             response['msg'] = 'VDC {} has been updated'.format(vdc_name)
             response['changed'] = True
         except OperationNotSupportedException:
-            m = "VDC {} may already in desired state"
-            response['warnings'] = m.format(vdc_name)
+            msg = "VDC {} may already in desired state"
+            response['warnings'] = msg.format(vdc_name)
+        except AssertionError:
+            msg = "{0} is not found"
+            raise EntityNotFoundException(msg.format(vdc_name))
 
         return response
 
