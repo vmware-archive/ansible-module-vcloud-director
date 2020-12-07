@@ -11,11 +11,19 @@
     env_api_version: 30.0
     env_verify_ssl_certs: false
   roles:
-      - catalogs
-      - user
-      - vapp
-      - vappvm
-      - vdc
-      - disk
       - org
-      - catalog_item
+      - user
+      - vdc
+      - catalogs
+      - catalog_items
+      - disk
+      - vapp
+      - vcd_vapp_network
+      - vappvm
+      - external_networks
+      - vcd_edge_gateway
+      - org_vdc_networks
+      - vcd_vapp_vm_snapshot
+      - vcd_vapp_vm_disk
+      - vcd_vapp_vm_nic
+      - vcd_gateway_services
