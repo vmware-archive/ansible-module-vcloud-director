@@ -1,0 +1,6 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+---
+# vars file for roles/vappvm
+vapp_vm_1: "test_vapp_vm_1"
+vapp_vm_2: "test_vapp_vm_2"

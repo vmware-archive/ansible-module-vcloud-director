@@ -1,0 +1,86 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+
+# ---
+# tasks file for roles/org
+
+# # ############################################ Create Org ##############################################################
+- name: create org
+  vcd_org:
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
+    org_name: "{{ org_name }}"
+    full_name: "{{ org_full_name }}"
+    is_enabled : "{{ is_enabled }}"
+    state: "present"
+  register: output
+
+- name: create org output
+  debug:
+    msg: '{{ output }}'
+
+# # ############################################ Read Org ##############################################################
+- name: read org
+  vcd_org:
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
+    org_name: "{{ org_name }}"
+    operation: "read"
+  register: output
+
+- name: read org output
+  debug:
+    msg: '{{ output }}'
+
+# # ############################################ Disable Org ##############################################################
+- name: disable org
+  vcd_org:
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
+    org_name: "{{ org_name }}"
+    is_enabled: "false"
+    state: "update"
+  register: output
+
+- name: disable org output
+  debug:
+    msg: '{{ output }}'
+
+# # # ############################################ Enable Org ##############################################################
+- name: enable org
+  vcd_org:
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
+    org_name: "{{ org_name }}"
+    is_enabled: "true"
+    state: "update"
+  register: output
+
+- name: enable org output
+  debug:
+    msg: '{{ output }}'
+
+# # ############################################ Delete Org ##############################################################
+- name: delete org
+  vcd_org:
+    user: XXXXXXXXXX
+    password: XXXXXXXXXX
+    host: XXXXXXXXXX
+    org: XXXXXXXXXX
+    org_name: "{{ org_name }}"
+    force: "{{ force }}"
+    recursive: "{{ recursive }}"
+    state: "absent"
+  register: output
+
+- name: delete org output
+  debug:
+    msg: '{{ output }}'

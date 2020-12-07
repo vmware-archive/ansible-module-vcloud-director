@@ -1,0 +1,59 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+---
+# tasks file for roles/vdc
+- name: create vdc
+  no_log: False
+  vcd_org_vdc:
+    user: administrator
+    password: XXXXXXXXXX
+    host: 192.168.110.40
+    org: System
+    vdc_name: "{{ vdc_name }}"
+    provider_vdc_name: "PVDC1"
+    description: "test vdc"
+    allocation_model: "AllocationVApp"
+    is_enabled: "false"
+    storage_profiles:
+      - name: "Performance"
+        enabled: true
+        units: "MB"
+        limit: 50000
+        default: true
+    state: "present"
+  register: output
+
+- name: create vdc output
+  debug:
+    msg: '{{ output }}'
+
+- name: update vdc
+  no_log: False
+  vcd_org_vdc:
+    user: administrator
+    password: XXXXXXXXXX
+    host: 192.168.110.40
+    org: System
+    vdc_name: "{{ vdc_name }}"
+    is_enabled: "true"
+    state: "update"
+  register: output
+
+- name: update vdc output
+  debug:
+    msg: '{{ output }}'
+
+- name: delete vdc
+  no_log: False
+  vcd_org_vdc:
+    user: administrator
+    password: XXXXXXXXXX
+    host: 192.168.110.40
+    org: System
+    vdc_name: "{{ vdc_name }}"
+    state: "absent"
+  register: output
+
+- name: delete vdc output
+  debug:
+    msg: '{{ output }}'

@@ -1,0 +1,104 @@
+# Copyright © 2018 VMware, Inc. All Rights Reserved.
+# SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
+
+---
+# tasks file for roles/vcd_gateway_services
+
+- name: create gateway services
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: firewall
+     service_params:
+        name: test_firewall
+        action: accept
+        type: User
+        enabled: True
+        logging_enabled: False
+     state: present
+  check_mode: yes
+  register: output
+
+- name: create gateway services output
+  debug:
+    msg: '{{ output }}'
+
+- name: update gateway services
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: firewall
+     service_params:
+        name: test_firewall
+        new_name: test_firewall_2
+        source_values:
+            gatewayinterface: external-network
+        destination_values:
+            gatewayinterface: external-network
+        services:
+            - tcp:
+                source_port: any
+                destination_port: any
+     state: update
+  check_mode: yes
+  register: output
+
+- name: update gateway services output
+  debug:
+    msg: '{{ output }}'
+
+- name: list gateway firewalls
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: firewall
+     operation: list
+  check_mode: yes
+  register: output
+
+- name: list gateway services output
+  debug:
+    msg: '{{ output }}'
+
+- name: delete gateway services
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: firewall
+     service_params:
+        name: test_firewall_2
+     state: absent
+  check_mode: yes
+  register: output
+
+- name: delete gateway services output
+  debug:
+    msg: '{{ output }}'
+
+- name: list gateway services
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: firewall
+     operation: list
+  check_mode: yes
+  register: output
+
+- name: list gateway services output
+  debug:
+    msg: '{{ output }}'
