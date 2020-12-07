@@ -225,7 +225,9 @@ class VCDOrg(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            self.get_org()
+            org = self.read()['msg']
+            if org['is_enabled'] == "True":
+                org.update_org(False)
             sys_admin = self.client.get_admin()
             self.system = System(self.client, admin_resource=sys_admin)
             delete_org_task = self.system.delete_org(
