@@ -199,8 +199,9 @@ options:
         description:
             - operation to be performed on org vdc
         type: str
-        choices: ['list_vdcs', 'add_storage_profile',
-                  'update_storage_profile', 'delete_storage_profile',
+        choices: ['add_storage_profile',
+                  'update_storage_profile',
+                  'delete_storage_profile',
                   'list_storage_profiles']
 
 author:
@@ -252,8 +253,7 @@ from pyvcloud.vcd.exceptions import OperationNotSupportedException
 
 
 ORG_VDC_STATES = ['present', 'absent', 'update']
-ORG_VDC_OPERATIONS = ['list_vdcs',
-                      'add_storage_profile',
+ORG_VDC_OPERATIONS = ['add_storage_profile',
                       'update_storage_profile',
                       'delete_storage_profile',
                       'list_storage_profiles']
@@ -312,9 +312,6 @@ class Vdc(VcdAnsibleModule):
 
     def manage_operations(self):
         operation = self.params.get('operation')
-        if operation == 'list_vdcs':
-            return self.list_vdcs()
-
         if operation == 'add_storage_profile':
             return self.add_storage_profile()
 
@@ -494,13 +491,6 @@ class Vdc(VcdAnsibleModule):
             response['warnings'] = 'VDC {} is not present.'.format(vdc_name)
         except OperationNotSupportedException:
             pass
-
-        return response
-
-    def list_vdcs(self):
-        response = dict()
-        response['changed'] = False
-        response['msg'] = [vdc.get('name') for vdc in self.org.list_vdcs()]
 
         return response
 
