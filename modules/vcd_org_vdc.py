@@ -244,9 +244,7 @@ changed: true if resource has been changed else false
 
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
-from pyvcloud.vcd.client import E
 from pyvcloud.vcd.system import System
-from pyvcloud.vcd.client import EntityType
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 from pyvcloud.vcd.exceptions import OperationNotSupportedException
@@ -426,44 +424,25 @@ class Vdc(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            vdc = self.get_vdc().get_resource_admin()
-            if description:
-                vdc['Description'] = E.Description(description)
-            if allocation_model:
-                vdc['AllocationModel'] = E.AllocationModel(allocation_model)
-            if cpu_units:
-                vdc.ComputeCapacity.Cpu.Units = E.Units(cpu_units)
-            if cpu_allocated:
-                vdc.ComputeCapacity.Cpu.Allocated = E.Allocated(cpu_allocated)
-            if cpu_limit:
-                vdc.ComputeCapacity.Cpu.Limit = E.Limit(cpu_limit)
-            if mem_units:
-                vdc.ComputeCapacity.Memory.Units = E.Units(mem_units)
-            if mem_allocated:
-                vdc.ComputeCapacity.Memory.Allocated = E.Allocated(
-                    mem_allocated)
-            if mem_limit:
-                vdc.ComputeCapacity.Memory.Limit = E.Limit(mem_limit)
-            if nic_quota:
-                vdc['NicQuota'] = E.NicQuota(nic_quota)
-            if network_quota:
-                vdc['NetworkQuota'] = E.NetworkQuota(network_quota)
-            if vm_quota:
-                vdc['VmQuota'] = E.VmQuota(vm_quota)
-            if resource_guaranteed_memory:
-                vdc['ResourceGuaranteedMemory'] = E.ResourceGuaranteedMemory(
-                    resource_guaranteed_memory)
-            if resource_guaranteed_cpu:
-                vdc['ResourceGuaranteedCpu'] = E.ResourceGuaranteedCpu(
-                    resource_guaranteed_cpu)
-            if vcpu_in_mhz:
-                vdc['VCpuInMhz'] = E.VCpuInMhz(vcpu_in_mhz)
-            if is_thin_provision:
-                vdc['IsThinProvision'] = E.IsThinProvision(is_thin_provision)
-            if is_enabled is not None:
-                vdc['IsEnabled'] = E.IsEnabled(is_enabled)
-            update_org_vdc_task = self.client.put_resource(
-                vdc.get("href"), vdc, EntityType.VDC_ADMIN.value)
+            self.get_vdc()
+            update_org_vdc_task = self.org.update_org_vdc(
+                vdc_name,
+                description,
+                allocation_model,
+                cpu_units,
+                cpu_allocated,
+                cpu_limit,
+                mem_units,
+                mem_allocated,
+                mem_limit,
+                nic_quota,
+                network_quota,
+                vm_quota,
+                resource_guaranteed_memory,
+                resource_guaranteed_cpu,
+                vcpu_in_mhz,
+                is_thin_provision,
+                is_enabled)
             self.execute_task(update_org_vdc_task)
             response['msg'] = 'VDC {} has been updated'.format(vdc_name)
             response['changed'] = True

@@ -1,57 +1,113 @@
 # Copyright © 2018 VMware, Inc. All Rights Reserved.
 # SPDX-License-Identifier: BSD-2-Clause OR GPL-3.0-only
 ---
-# tasks file for roles/vdc
-- name: create vdc
-  no_log: False
+# tasks file for vdc
+
+- name: create org vdc
   vcd_org_vdc:
-    user: administrator
-    password: XXXXXXXXXX
-    host: 192.168.110.40
-    org: System
-    vdc_name: "{{ vdc_name }}"
-    provider_vdc_name: "PVDC1"
-    description: "test vdc"
-    allocation_model: "AllocationVApp"
-    is_enabled: "false"
+    vdc_org_name: Acme
+    vdc_name: ACME_PAYGG
+    provider_vdc_name: PVDC
+    is_enabled: true
     storage_profiles:
-      - name: "Performance"
+      - name: "*"
         enabled: true
-        units: "MB"
-        limit: 50000
+        units: MB
+        limit: 100000
         default: true
-    state: "present"
+    state: present
   register: output
 
-- name: create vdc output
+- name: create org vdc output
   debug:
     msg: '{{ output }}'
 
-- name: update vdc
-  no_log: False
+
+- name: update org vdc
   vcd_org_vdc:
-    user: administrator
-    password: XXXXXXXXXX
-    host: 192.168.110.40
-    org: System
-    vdc_name: "{{ vdc_name }}"
-    is_enabled: "true"
+    vdc_org_name: Acme
+    vdc_name: ACME_PAYGG
+    resource_guaranteed_cpu: 0.2
+    resource_guaranteed_memory: 0.2
+    vcpu_in_mhz: 10000
     state: "update"
   register: output
 
-- name: update vdc output
+- name: update org vdc output
+  debug:
+    msg: '{{ output }}'
+
+- name: list storage profiles
+  vcd_org_vdc:
+    vdc_org_name: Acme
+    vdc_name: ACME_PAYGG
+    operation: list_storage_profiles
+  register: output
+
+- name: list storage profiles output
+  debug:
+    msg: '{{ output }}'
+
+- name: add storage profiles
+  vcd_org_vdc:
+    vdc_org_name: Acme
+    vdc_name: ACME_PAYGG
+    storage_profiles:
+      - name: 'VM Encryption Policy'
+        enabled: true
+        default: false
+        limit: 1000
+    operation: add_storage_profile
+  register: output
+
+- name: add storage output
+  debug:
+    msg: '{{ output }}'
+
+- name: update storage profiles
+  vcd_org_vdc:
+    vdc_org_name: Acme
+    vdc_name: ACME_PAYGG
+    storage_profiles:
+      - name: 'VM Encryption Policy'
+        enabled: false
+    operation: update_storage_profile
+  register: output
+
+- name: update storage output
+  debug:
+    msg: '{{ output }}'
+
+- name: delete storage profiles
+  vcd_org_vdc:
+    vdc_org_name: Acme
+    vdc_name: ACME_PAYGG
+    storage_profiles:
+      - name: 'VM Encryption Policy'
+    operation: delete_storage_profile
+  register: output
+
+- name: delete storage output
+  debug:
+    msg: '{{ output }}'
+
+- name: list storage profiles
+  vcd_org_vdc:
+    vdc_org_name: Acme
+    vdc_name: ACME_PAYGG
+    operation: list_storage_profiles
+  register: output
+
+- name: list storage profiles output
   debug:
     msg: '{{ output }}'
 
 - name: delete vdc
-  no_log: False
   vcd_org_vdc:
-    user: administrator
-    password: XXXXXXXXXX
-    host: 192.168.110.40
-    org: System
-    vdc_name: "{{ vdc_name }}"
-    state: "absent"
+    vdc_name: ACME_PAYGG
+    provider_vdc_name: PVDC
+    vdc_org_name: Acme
+    state: absent
   register: output
 
 - name: delete vdc output

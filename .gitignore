@@ -6,3 +6,4 @@
 *.todo
 .ipynb_checkpoints/
 *.ipynb
+docs/
