@@ -56,6 +56,11 @@ options:
     service:
         description:
             - The name of the edge gateway service
+            - supported services are
+                - firewall
+                - nat_rule
+                - static_route
+                - ssl_certificates
         required: true
         type: str
     service_params:
@@ -110,11 +115,13 @@ from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.gateway import Gateway
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
+from ansible.module_utils.gateway_static_route import StaticRoutes
 from ansible.module_utils.gateway_nat_rule_service import NatRuleService
 from ansible.module_utils.gateway_firewall_service import FirewallService
+from ansible.module_utils.gateway_ssl_certificates import SSLCertificates
 
 
-EDGE_SERVICES = ["firewall", "nat_rule"]
+EDGE_SERVICES = ["firewall", "nat_rule", "static_route", "ssl_certificates"]
 EDGE_SERVICES_STATES = ['present', 'update', 'absent']
 EDGE_SERVICES_OPERATIONS = ['list']
 
@@ -172,6 +179,12 @@ class EdgeServices(VcdAnsibleModule):
         if service == "nat_rule":
             service = NatRuleService(self.get_gateway(), service_params)
 
+        if service == "static_route":
+            service = StaticRoutes(self.get_gateway(), service_params)
+
+        if service == "ssl_certificates":
+            service = SSLCertificates(self.get_gateway(), service_params)
+
         return service.manage_states(state="present")
 
     def delete_service(self):
@@ -182,6 +195,12 @@ class EdgeServices(VcdAnsibleModule):
 
         if service == "nat_rule":
             service = NatRuleService(self.get_gateway(), service_params)
+
+        if service == "static_route":
+            service = StaticRoutes(self.get_gateway(), service_params)
+
+        if service == "ssl_certificates":
+            service = SSLCertificates(self.get_gateway(), service_params)
 
         return service.manage_states(state="absent")
 
@@ -194,6 +213,12 @@ class EdgeServices(VcdAnsibleModule):
         if service == "nat_rule":
             service = NatRuleService(self.get_gateway(), service_params)
 
+        if service == "static_route":
+            service = StaticRoutes(self.get_gateway(), service_params)
+
+        if service == "ssl_certificates":
+            service = SSLCertificates(self.get_gateway(), service_params)
+
         return service.manage_states(state="update")
 
     def apply_operation_on_service(self, operation):
@@ -203,6 +228,12 @@ class EdgeServices(VcdAnsibleModule):
 
         if service == "nat_rule":
             service = NatRuleService(self.get_gateway())
+
+        if service == "static_route":
+            service = StaticRoutes(self.get_gateway())
+
+        if service == "ssl_certificates":
+            service = SSLCertificates(self.get_gateway())
 
         return service.manage_operations(operation=operation)
 
