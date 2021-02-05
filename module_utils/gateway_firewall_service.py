@@ -77,6 +77,8 @@ class FirewallService():
         if route_values is not None:
             for route_value in route_values:
                 for route, value in route_value.items():
+                    if value[0].lower() == 'any':
+                        return ['any']
                     response.append("{0}:{1}".format(value[0], route))
 
         return response
@@ -139,6 +141,8 @@ class FirewallService():
                 source_values = self._prepare_route_values(source_values)
                 destination_values = self._prepare_route_values(
                     destination_values)
+                if 'any' in destination_values or 'any' in source_values:
+                    continue
                 firewall_rule.edit(source_values=source_values,
                                    services=services,
                                    destination_values=destination_values,
