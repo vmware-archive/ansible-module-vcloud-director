@@ -90,7 +90,7 @@ class StaticRoutes():
         for service_param in self.service_params:
             try:
                 network = service_param.get("network")
-                new_network = service_param.get("new_network")
+                new_network = service_param.get("new_network") or network
                 next_hop = service_param.get("next_hop")
                 mtu = service_param.get("mtu") or 1500
                 description = service_param.get("description")

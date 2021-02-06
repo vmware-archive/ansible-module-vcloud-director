@@ -216,9 +216,6 @@ class EdgeServices(VcdAnsibleModule):
         if service == "static_route":
             service = StaticRoutes(self.get_gateway(), service_params)
 
-        if service == "ssl_certificates":
-            service = SSLCertificates(self.get_gateway(), service_params)
-
         return service.manage_states(state="update")
 
     def apply_operation_on_service(self, operation):
