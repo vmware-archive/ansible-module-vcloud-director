@@ -34,10 +34,6 @@ options:
         description:
             - Organization name on vCloud Director to access i.e. System.
         type: str
-    org_name:
-        description:
-            - Name of the organization the network belongs to.
-        type: str
     api_version:
         description:
             - Pyvcloud API version, required as float i.e 31 => 31.0
@@ -106,7 +102,6 @@ EXAMPLES = '''
     api_version: "{{api_version}}"
     verify_ssl_certs: "{{verify_ssl_certs}}"
     org: "{{system_org}}"
-    org_name: "{{customer_org}}"
     vdc_name: "{{vdc_name}}"
     network_name: "my direct network"
     description: "directly connected network"
@@ -123,7 +118,6 @@ EXAMPLES = '''
     api_version: "{{api_version}}"
     verify_ssl_certs: "{{verify_ssl_certs}}"
     org: "{{system_org}}"
-    org_name: "{{customer_org}}"
     vdc_name: "{{vdc_name}}"
     gateway_name: "{{gw_name}}"
     network_name: "my ROUTED network"
@@ -147,7 +141,6 @@ EXAMPLES = '''
     api_version: "{{api_version}}"
     verify_ssl_certs: "{{verify_ssl_certs}}"
     org: "{{system_org}}"
-    org_name: "{{customer_org}}"
     vdc_name: "{{vdc_name}}"
     network_name: "my ISOLATED network"
     description: "directly ISOLATED network"
@@ -185,7 +178,6 @@ ORG_VDC_NETWORK_STATES = ['present', 'absent']
 
 def org_vdc_network_argument_spec():
     return dict(
-        org_name=dict(type='str', required=True),
         vdc_name=dict(type='str', required=True),
         network_name=dict(type='str', required=True),
         description=dict(type='str', required=False, default=None),
@@ -219,9 +211,7 @@ class OrgVdcNetwork(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(OrgVdcNetwork, self).__init__(**kwargs)
         self.vdc_name = self.params.get('vdc_name')
-        self.org_name = self.params.get('org_name')
-        org_resource = self.client.get_org_by_name(self.org_name)
-        self.org = Org(self.client, resource=org_resource)
+        self.org = Org(self.client, resource=self.client.get_org())
         vdc_resource = self.org.get_vdc(self.vdc_name)
         self.vdc = VDC(self.client, name=self.vdc_name, resource=vdc_resource)
 
