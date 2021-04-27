@@ -42,9 +42,9 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
-    nic_ids:
+    nics:
         description:
-            - List of NIC IDs
+            - List of NICs
         required: false
     network:
         description:
@@ -100,10 +100,12 @@ EXAMPLES = '''
     vm_name: vm1
     vapp = vapp1
     vdc = vdc1
-    network: acme_internal_direct
-    ip_allocation_mode: DHCP
-    is_connected: True
-    adapter_type: E1000
+    nics:
+      - nic_id: 1
+        network: acme_internal_direct
+        ip_allocation_mode: DHCP
+        is_connected: True
+        adapter_type: E1000
     state = "present"
 '''
 
@@ -134,7 +136,7 @@ def vapp_vm_nic_argument_spec():
         vm_name=dict(type='str', required=True),
         vapp=dict(type='str', required=True),
         vdc=dict(type='str', required=True),
-        nic_ids=dict(type='list', required=False),
+        nics=dict(type='list', required=False),
         ip_address=dict(type='str', required=False, default=None),
         network=dict(type='str', required=False),
         is_primary=dict(type='bool', required=False, default=False),
@@ -193,52 +195,65 @@ class VappVMNIC(VcdAnsibleModule):
     def add_nic(self):
         vm = self.get_vm()
         vm_name = self.params.get('vm_name')
-        network = self.params.get('network')
-        ip_address = self.params.get('ip_address')
-        ip_allocation_mode = self.params.get('ip_allocation_mode')
-        adapter_type = self.params.get('adapter_type')
-        is_primary = self.params.get('is_primary')
-        is_connected = self.params.get('is_connected')
+        nics = self.params.get('nics')
         response = dict()
         response['changed'] = False
+        response['msg'] = list()
 
-        add_nic_task = vm.add_nic(adapter_type=adapter_type,
-                                  is_primary=is_primary,
-                                  is_connected=is_connected,
-                                  network_name=network,
-                                  ip_address_mode=ip_allocation_mode,
-                                  ip_address=ip_address)
-        self.execute_task(add_nic_task)
-        response['msg'] = 'A new nic has been added to VM {0}'.format(vm_name)
-        response['changed'] = True
+        for nic in nics:
+            try:
+                network = nic.get('network')
+                nic_id = nic.get('nic_id')
+                ip_address = nic.get('ip_address')
+                ip_allocation_mode = nic.get('ip_allocation_mode')
+                adapter_type = nic.get('adapter_type')
+                is_primary = nic.get('is_primary')
+                is_connected = nic.get('is_connected')
+                add_nic_task = vm.add_nic(adapter_type=adapter_type,
+                                          is_primary=is_primary,
+                                          is_connected=is_connected,
+                                          network_name=network,
+                                          ip_address_mode=ip_allocation_mode,
+                                          ip_address=ip_address)
+                self.execute_task(add_nic_task)
+                msg = 'Nic {0} has been added to VM {1}'
+                msg = msg.format(nic_id, vm_name)
+                response['changed'] = True
+            except OperationNotSupportedException as error:
+                msg = 'Nic {0} throws following error: {1}'
+                msg = msg.format(nic_id, error.__str__())
+            response['msg'].append(msg)
 
         return response
 
     def update_nic(self):
         vm = self.get_vm()
-        vm_name = self.params.get('vm_name')
-        network = self.params.get('network')
-        ip_address = self.params.get('ip_address')
-        ip_allocation_mode = self.params.get('ip_allocation_mode')
-        adapter_type = self.params.get('adapter_type')
-        is_primary = self.params.get('is_primary')
-        is_connected = self.params.get('is_connected')
+        nics = self.params.get('nics')
         response = dict()
         response['changed'] = False
+        response['msg'] = list()
 
-        try:
-            update_nic_task = vm.update_nic(network_name=network,
-                                            is_connected=is_connected,
-                                            is_primary=is_primary,
-                                            adapter_type=adapter_type,
-                                            ip_address=ip_address,
-                                            ip_address_mode=ip_allocation_mode)
-            self.execute_task(update_nic_task)
-            msg = 'A nic attached with VM {0} has been updated'
-            response['msg'] = msg.format(vm_name)
-            response['changed'] = True
-        except EntityNotFoundException as error:
-            response['msg'] = error.__str__()
+        for nic in nics:
+            try:
+                network = nic.get('network')
+                nic_id = nic.get('nic_id')
+                ip_address = nic.get('ip_address')
+                ip_allocation_mode = nic.get('ip_allocation_mode')
+                adapter_type = nic.get('adapter_type')
+                is_primary = nic.get('is_primary')
+                is_connected = nic.get('is_connected')
+                update_nic_task = vm.update_nic(
+                    network_name=network, nic_id=nic_id,
+                    is_connected=is_connected, is_primary=is_primary,
+                    adapter_type=adapter_type, ip_address=ip_address,
+                    ip_address_mode=ip_allocation_mode)
+                self.execute_task(update_nic_task)
+                msg = 'Nic {0} has been updated'.format(nic_id)
+                response['changed'] = True
+            except EntityNotFoundException as error:
+                msg = 'Nic {0} throws following error: {1}'
+                msg = msg.format(nic_id, error.__str__())
+            response['msg'].append(msg)
 
         return response
 
@@ -252,25 +267,28 @@ class VappVMNIC(VcdAnsibleModule):
 
     def delete_nic(self):
         vm = self.get_vm()
-        nic_ids = self.params.get('nic_ids')
+        nics = self.params.get('nics')
         vm_name = self.params.get('vm_name')
         response = dict()
+        response['msg'] = list()
         response['changed'] = False
 
-        # VM should be powered off before deleting a nic
+        # check if VM is powered off
         if not vm.is_powered_off():
             msg = "VM {0} is powered on. Cant remove nics in the current state"
             raise OperationNotSupportedException(msg.format(vm_name))
 
-        for nic_id in nic_ids:
+        for nic in nics:
             try:
+                nic_id = nic.get('nic_id')
                 delete_nic_task = vm.delete_nic(nic_id)
                 self.execute_task(delete_nic_task)
+                msg = 'VM nic {0} has been deleted'.format(nic_id)
                 response['changed'] = True
-            except InvalidParameterException as error:
-                response['msg'] = error.__str__()
-            else:
-                response['msg'] = 'VM nic(s) has been deleted'
+            except (InvalidParameterException, EntityNotFoundException) as error:
+                msg = 'Nic {0} throws following error: {1}'
+                msg = msg.format(nic_id, error.__str__())
+            response['msg'].append(msg)
 
         return response
 
