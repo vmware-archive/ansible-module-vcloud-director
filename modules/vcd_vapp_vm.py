@@ -343,7 +343,6 @@ class VappVM(VcdAnsibleModule):
         ip_allocation_mode = params.get('ip_allocation_mode')
         cust_script = params.get('cust_script')
         storage_profile = params.get('storage_profile')
-        compute_policy_href = params.get('compute_policy_href')
         response = dict()
         response['changed'] = False
 
