@@ -796,6 +796,36 @@ By default, the priority will be given to <b>Local Variables</b> than <b>Environ
 </ul>
 </ul>
 <li>
+<h5>Update compute policy</h5>
+</li>
+<pre>
+<code>
+- name: modify compute policy vapp vm
+  vcd_vapp_vm:
+    target_vm_name: "test_vm"
+    target_vapp: "web2"
+    target_vdc: "test_vdc"
+    compute_policy_href: "https://vcloud.example.com/cloudapi/1.0.0/vdcComputePolicies/51"
+    state: "update"
+
+</code>
+</pre>
+<h5>Argument Reference</h5>
+<ul>
+<li>user - (Optional) - vCloud Director user name</li>
+<li>password - (Optional) - vCloud Director password</li>
+<li>org - (Optional) - vCloud Director org name to log into</li>
+<li>host - (Optional) - vCloud Director host name</li>
+<li>api_version - (Optional) - Pyvcloud API version</li>
+<li>verify_ssl_certs - (Optional) - true to enforce to verify ssl certificate for each requests else false</li>
+<li>target_vm_name - (Required) name of the target vm</li>
+<li>target_vapp - (Required) name of the target vapp</li>
+<li>target_vdc - (Required) name of the target vdc</li>
+<li>compute_policy_href - (Required) the href of the compute policy to apply</li>
+<li>state == "update" (Required) to update vapp vm memory</li>
+</ul>
+</ul>
+<li>
 <h5>Delete Vapp VM</h5>
 </li>
 <pre>
