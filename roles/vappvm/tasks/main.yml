@@ -156,6 +156,32 @@
   debug:
     msg: "{{ output }}"
 
+- name: modify "{{ vapp_vm_1 }}" compute policy vapp vm
+  vcd_vapp_vm:
+    target_vm_name: "{{ vapp_vm_1 }}"
+    target_vapp: "web2"
+    target_vdc: "Terraform_VDC"
+    compute_policy_href: "https://vcloud.example.com/cloudapi/1.0.0/vdcComputePolicies/51"
+    state: "update"
+  register: output
+
+- name: update vapp vm  output
+  debug:
+    msg: "{{ output }}"
+
+- name: modify "{{ vapp_vm_2 }}" compute policy vapp vm
+  vcd_vapp_vm:
+    target_vm_name: "{{ vapp_vm_2 }}"
+    target_vapp: "web2"
+    target_vdc: "Terraform_VDC"
+    compute_policy_href: "https://vcloud.example.com/cloudapi/1.0.0/vdcComputePolicies/51"
+    state: "update"
+  register: output
+
+- name: update vapp vm  output
+  debug:
+    msg: "{{ output }}"
+
 - name: reload "{{ vapp_vm_1 }}" vapp vm
   vcd_vapp_vm:
     target_vm_name: "{{ vapp_vm_1 }}"
