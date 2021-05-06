@@ -1,0 +1,22 @@
+namespace: vmware
+name: vcloud_director
+version: 0.0.1
+readme: README.md
+authors:
+- Mukul Taneja (@mac) mtaneja@vmware.com
+- Abhijeet Kasurde (@Akasurde) akasurde@redhat.com
+description: A Collection to manage VMware Cloud Director
+license:
+- BSD-2-Clause
+- GPL-3.0-only
+license_file: LICENSE
+tags:
+  - cloud
+  - vmware
+  - virtualization
+dependencies: {}
+repository: https://github.com/vmware/ansible-module-vcloud-director
+documentation: https://github.com/vmware/ansible-module-vcloud-director
+homepage: https://github.com/vmware/ansible-module-vcloud-director
+issues: https://github.com/vmware/ansible-module-vcloud-director/issues/new
+build_ignore: []

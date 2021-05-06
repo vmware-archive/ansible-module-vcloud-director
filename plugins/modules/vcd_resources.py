@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: vcd_resources
 short_description: Add/Delete/Update VCD Infrastructure resources
@@ -57,11 +51,11 @@ options:
 
 author:
     - mtaneja@vmware.com
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: add vcd resources
-  vcd_resources
+  vmware.vcloud_director.vcd_resources:
     nsxt:
         url: ""
         username: ""
@@ -69,19 +63,21 @@ EXAMPLES = '''
         networkProviderScope: ""
     state: "present"
   register: output
-'''
+"""
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to resource state
 changed: true if resource has been changed
-'''
+"""
+
 
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.nsxt_extension import NsxtExtension
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
-VCD_RESOURCES_STATES = ['present', 'absent', 'update']
-VCD_RESOURCES_OPERATIONS = ['list']
+
+VCD_RESOURCES_STATES = ["present", "absent", "update"]
+VCD_RESOURCES_OPERATIONS = ["list"]
 
 
 def vcd_resources_argument_spec():
@@ -98,7 +94,7 @@ class VcdResources(VcdAnsibleModule):
         self.nsxt_extension = NsxtExtension(self.client)
 
     def manage_states(self):
-        state = self.params.get('state')
+        state = self.params.get("state")
         if state == "present":
             return self.add()
 
@@ -117,64 +113,65 @@ class VcdResources(VcdAnsibleModule):
         return self.nsxt_extension.get(name)
 
     def add(self):
-        nsxts = self.params.get('nsxts')
+        nsxts = self.params.get("nsxts")
         response = dict()
-        response['changed'] = False
-        response['msg'] = list()
+        response["changed"] = False
+        response["msg"] = list()
 
         for nsxt in nsxts:
             try:
-                name = nsxt.get('name')
+                name = nsxt.get("name")
                 self.get(name)
-                response['msg'].append('Nsx-T manager {0} is already exists'.format(name))
+                response["msg"].append(
+                    "Nsx-T manager {0} is already exists".format(name)
+                )
             except EntityNotFoundException:
-                url = nsxt.get('url')
-                username = nsxt.get('username')
-                password = nsxt.get('password')
+                url = nsxt.get("url")
+                username = nsxt.get("username")
+                password = nsxt.get("password")
                 self.nsxt_extension.add(name, url, username, password)
-                response['msg'].append('NSX-T Manager {0} is added'.format(name))
-                response['changed'] = True
+                response["msg"].append("NSX-T Manager {0} is added".format(name))
+                response["changed"] = True
 
         return response
 
     def delete(self):
-        nsxts = self.params.get('nsxts')
+        nsxts = self.params.get("nsxts")
         response = dict()
-        response['changed'] = False
-        response['msg'] = list()
+        response["changed"] = False
+        response["msg"] = list()
 
         for nsxt in nsxts:
             try:
-                name = nsxt.get('name')
+                name = nsxt.get("name")
                 self.get(name)
                 self.nsxt_extension.delete(name)
-                response['msg'].append('NSX-T Manager {0} is deleted'.format(name))
-                response['changed'] = True
+                response["msg"].append("NSX-T Manager {0} is deleted".format(name))
+                response["changed"] = True
             except EntityNotFoundException:
-                response['msg'].append('NSX-T Manager {0} is not present'.format(name))
-
+                response["msg"].append("NSX-T Manager {0} is not present".format(name))
 
         return response
 
     def update(self):
-        nsxts = self.params.get('nsxts')
+        nsxts = self.params.get("nsxts")
         response = dict()
-        response['changed'] = False
-        response['msg'] = list()
+        response["changed"] = False
+        response["msg"] = list()
 
         for nsxt in nsxts:
             try:
-                name = nsxt.get('name')
+                name = nsxt.get("name")
                 self.get(name)
-                new_name = nsxt.get('new_name')
-                url = nsxt.get('url')
-                username = nsxt.get('username')
-                password = nsxt.get('password')
+                new_name = nsxt.get("new_name")
+                url = nsxt.get("url")
+                username = nsxt.get("username")
+                password = nsxt.get("password")
                 self.nsxt_extension.update(name, new_name, url, username, password)
-                response['msg'].append('NSX-T Manager {0} is updated'.format(name))
-                response['changed'] = True
+                response["msg"].append("NSX-T Manager {0} is updated".format(name))
+                response["changed"] = True
             except EntityNotFoundException:
-                response['msg'].append('NSX-T Manager {0} is not present'.format(name))
+                response["msg"].append("NSX-T Manager {0} is not present".format(name))
 
         return response
 
@@ -196,27 +193,27 @@ class VcdResources(VcdAnsibleModule):
 
 def main():
     argument_spec = vcd_resources_argument_spec()
-    response = dict(msg=dict(type='str'))
+    response = dict(msg=dict(type="str"))
     module = VcdResources(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
-        elif module.params.get('operation'):
+        elif module.params.get("operation"):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide state/operation for resource')
+            raise Exception("Please provide state/operation for resource")
     except Exception as error:
-        response['msg'] = error.__str__()
+        response["msg"] = error.__str__()
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

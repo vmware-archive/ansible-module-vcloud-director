@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: vcd_user
 short_description: Manage user's states/operations in vCloud Director
@@ -123,11 +117,11 @@ options:
 
 author:
     - mtaneja@vmware.com
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Test with a message
-  vcd_user:
+  vmware.vcloud_director.vcd_user:
     user: terraform
     password: abcd
     host: csa.sandbox.org
@@ -152,19 +146,20 @@ EXAMPLES = '''
     is_alert_enabled: False
     is_enabled: True
     state: "present"
-'''
+"""
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to user state/operation
 changed: true if resource has been changed else false
-'''
+"""
+
 
 from pyvcloud.vcd.org import Org
 from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
-USER_STATES = ['present', 'absent', 'update']
+USER_STATES = ["present", "absent", "update"]
 
 
 def user_argument_spec():
@@ -197,7 +192,7 @@ class User(VcdAnsibleModule):
         self.org = self.get_org()
 
     def manage_states(self):
-        state = self.params.get('state')
+        state = self.params.get("state")
         if state == "present":
             return self.create()
 
@@ -216,98 +211,111 @@ class User(VcdAnsibleModule):
         return Org(self.client, resource=org_resource)
 
     def create(self):
-        username = self.params.get('username')
-        userpassword = self.params.get('userpassword')
-        full_username = self.params.get('full_username')
-        description = self.params.get('description')
-        email = self.params.get('email')
-        telephone = self.params.get('telephone')
-        im = self.params.get('im')
-        alert_email = self.params.get('alert_email')
-        alert_email_prefix = self.params.get('alert_email_prefix')
-        stored_vm_quota = self.params.get('stored_vm_quota')
-        deployed_vm_quota = self.params.get('deployed_vm_quota')
-        is_group_role = self.params.get('is_group_role')
-        is_default_cached = self.params.get('is_default_cached')
-        is_external = self.params.get('is_external')
-        is_alert_enabled = self.params.get('is_alert_enabled')
-        is_enabled = self.params.get('is_enabled')
+        username = self.params.get("username")
+        userpassword = self.params.get("userpassword")
+        full_username = self.params.get("full_username")
+        description = self.params.get("description")
+        email = self.params.get("email")
+        telephone = self.params.get("telephone")
+        im = self.params.get("im")
+        alert_email = self.params.get("alert_email")
+        alert_email_prefix = self.params.get("alert_email_prefix")
+        stored_vm_quota = self.params.get("stored_vm_quota")
+        deployed_vm_quota = self.params.get("deployed_vm_quota")
+        is_group_role = self.params.get("is_group_role")
+        is_default_cached = self.params.get("is_default_cached")
+        is_external = self.params.get("is_external")
+        is_alert_enabled = self.params.get("is_alert_enabled")
+        is_enabled = self.params.get("is_enabled")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
-        role = self.org.get_role_record(self.params.get('role_name'))
-        role_href = role.get('href')
+        role = self.org.get_role_record(self.params.get("role_name"))
+        role_href = role.get("href")
 
         try:
             self.org.get_user(username)
         except EntityNotFoundException:
             self.org.create_user(
-                username, userpassword, role_href, full_username, description,
-                email, telephone, im, alert_email, alert_email_prefix,
-                stored_vm_quota, deployed_vm_quota, is_group_role,
-                is_default_cached, is_external, is_alert_enabled,
-                is_enabled)
+                username,
+                userpassword,
+                role_href,
+                full_username,
+                description,
+                email,
+                telephone,
+                im,
+                alert_email,
+                alert_email_prefix,
+                stored_vm_quota,
+                deployed_vm_quota,
+                is_group_role,
+                is_default_cached,
+                is_external,
+                is_alert_enabled,
+                is_enabled,
+            )
             msg = "User {} has been created"
-            response['msg'] = msg.format(username)
-            response['changed'] = True
+            response["msg"] = msg.format(username)
+            response["changed"] = True
         else:
             msg = "User {} is already present"
-            response['warnings'] = msg.format(username)
+            response["warnings"] = msg.format(username)
 
         return response
 
     def delete(self):
-        username = self.params.get('username')
+        username = self.params.get("username")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             self.org.get_user(username)
         except EntityNotFoundException:
-            response['warnings'] = "User {} is not present.".format(username)
+            response["warnings"] = "User {} is not present.".format(username)
         else:
             self.org.delete_user(username)
-            response['msg'] = "User {} has been deleted.".format(username)
-            response['changed'] = True
+            response["msg"] = "User {} has been deleted.".format(username)
+            response["changed"] = True
 
         return response
 
     def update(self):
-        username = self.params.get('username')
-        enabled = self.params.get('is_enabled')
+        username = self.params.get("username")
+        enabled = self.params.get("is_enabled")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         self.org.get_user(username)
         self.org.update_user(username, enabled)
-        response['msg'] = "User {} has been updated".format(username)
-        response['changed'] = True
+        response["msg"] = "User {} has been updated".format(username)
+        response["changed"] = True
 
         return response
 
 
 def main():
     argument_spec = user_argument_spec()
-    response = dict(msg=dict(type='str'))
+    response = dict(msg=dict(type="str"))
     module = User(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
         else:
-            raise Exception('Please provide the state for the resource')
+            raise Exception("Please provide the state for the resource")
 
     except Exception as error:
-        response['msg'] = error
+        response["msg"] = error
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

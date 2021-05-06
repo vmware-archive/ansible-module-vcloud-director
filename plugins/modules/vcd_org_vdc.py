@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: vcd_org_vdc
 short_description: Manage ORG VDC's states/operations in vCloud Director
@@ -206,11 +200,11 @@ options:
 
 author:
     - mtaneja@vmware.com
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Test with a message
-  vcd_org_vdc:
+  vmware.vcloud_director.vcd_org_vdc:
     user: terraform
     password: abcd
     host: csa.sandbox.org
@@ -234,12 +228,12 @@ EXAMPLES = '''
         default: False
     is_enabled: True
     state: "present"
-'''
+"""
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to vdc state/operation
 changed: true if resource has been changed else false
-'''
+"""
 
 
 from pyvcloud.vcd.org import Org
@@ -250,43 +244,44 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException
 from pyvcloud.vcd.exceptions import OperationNotSupportedException
 
 
-ORG_VDC_STATES = ['present', 'absent', 'update']
-ORG_VDC_OPERATIONS = ['add_storage_profile',
-                      'update_storage_profile',
-                      'delete_storage_profile',
-                      'list_storage_profiles']
-ORG_VDC_ALLOCATION_MODELS = ['AllocationVApp',
-                             'AllocationPool',
-                             'ReservationPool']
+ORG_VDC_STATES = ["present", "absent", "update"]
+ORG_VDC_OPERATIONS = [
+    "add_storage_profile",
+    "update_storage_profile",
+    "delete_storage_profile",
+    "list_storage_profiles",
+]
+ORG_VDC_ALLOCATION_MODELS = ["AllocationVApp", "AllocationPool", "ReservationPool"]
 
 
 def org_vdc_argument_spec():
     return dict(
-        vdc_name=dict(type='str', required=False),
-        vdc_org_name=dict(type='str', required=False),
-        provider_vdc_name=dict(type='str', required=False),
-        description=dict(type='str', required=False),
-        allocation_model=dict(type='str', required=False,
-                              choices=ORG_VDC_ALLOCATION_MODELS),
-        cpu_units=dict(type='str', required=False),
-        cpu_allocated=dict(type='int', required=False),
-        cpu_limit=dict(type='int', required=False),
-        mem_units=dict(type='str', required=False),
-        mem_allocated=dict(type='int', required=False),
-        mem_limit=dict(type='int', required=False),
-        nic_quota=dict(type='int', required=False),
-        network_quota=dict(type='int', required=False),
-        vm_quota=dict(type='int', required=False),
-        storage_profiles=dict(type='list', required=False, default=[]),
-        resource_guaranteed_memory=dict(type='float', required=False),
-        resource_guaranteed_cpu=dict(type='float', required=False),
-        vcpu_in_mhz=dict(type='int', required=False),
-        is_thin_provision=dict(type='bool', required=False),
-        network_pool_name=dict(type='str', required=False),
-        uses_fast_provisioning=dict(type='bool', required=False),
-        over_commit_allowed=dict(type='bool', required=False),
-        vm_discovery_enabled=dict(type='bool', required=False),
-        is_enabled=dict(type='bool', required=False),
+        vdc_name=dict(type="str", required=False),
+        vdc_org_name=dict(type="str", required=False),
+        provider_vdc_name=dict(type="str", required=False),
+        description=dict(type="str", required=False),
+        allocation_model=dict(
+            type="str", required=False, choices=ORG_VDC_ALLOCATION_MODELS
+        ),
+        cpu_units=dict(type="str", required=False),
+        cpu_allocated=dict(type="int", required=False),
+        cpu_limit=dict(type="int", required=False),
+        mem_units=dict(type="str", required=False),
+        mem_allocated=dict(type="int", required=False),
+        mem_limit=dict(type="int", required=False),
+        nic_quota=dict(type="int", required=False),
+        network_quota=dict(type="int", required=False),
+        vm_quota=dict(type="int", required=False),
+        storage_profiles=dict(type="list", required=False, default=[]),
+        resource_guaranteed_memory=dict(type="float", required=False),
+        resource_guaranteed_cpu=dict(type="float", required=False),
+        vcpu_in_mhz=dict(type="int", required=False),
+        is_thin_provision=dict(type="bool", required=False),
+        network_pool_name=dict(type="str", required=False),
+        uses_fast_provisioning=dict(type="bool", required=False),
+        over_commit_allowed=dict(type="bool", required=False),
+        vm_discovery_enabled=dict(type="bool", required=False),
+        is_enabled=dict(type="bool", required=False),
         state=dict(choices=ORG_VDC_STATES, required=False),
         operation=dict(choices=ORG_VDC_OPERATIONS, required=False),
     )
@@ -298,39 +293,39 @@ class Vdc(VcdAnsibleModule):
         self.org = Org(self.client, resource=self.get_vdc_org_resource())
 
     def manage_states(self):
-        state = self.params.get('state')
-        if state == 'present':
+        state = self.params.get("state")
+        if state == "present":
             return self.create()
 
-        if state == 'absent':
+        if state == "absent":
             return self.delete()
 
-        if state == 'update':
+        if state == "update":
             return self.update()
 
     def manage_operations(self):
-        operation = self.params.get('operation')
-        if operation == 'add_storage_profile':
+        operation = self.params.get("operation")
+        if operation == "add_storage_profile":
             return self.add_storage_profile()
 
-        if operation == 'update_storage_profile':
+        if operation == "update_storage_profile":
             return self.update_storage_profile()
 
-        if operation == 'delete_storage_profile':
+        if operation == "delete_storage_profile":
             return self.delete_storage_profile()
 
-        if operation == 'list_storage_profiles':
+        if operation == "list_storage_profiles":
             return self.get_storage_profiles()
 
     def get_vdc_org_resource(self):
-        if self.params.get('vdc_org_name'):
-            return self.client.get_org_by_name(self.params.get('vdc_org_name'))
+        if self.params.get("vdc_org_name"):
+            return self.client.get_org_by_name(self.params.get("vdc_org_name"))
 
         return self.client.get_org()
 
     def get_vdc(self):
         try:
-            vdc_name = self.params['vdc_name']
+            vdc_name = self.params["vdc_name"]
             vdc_resource = self.org.get_vdc(vdc_name)
             assert vdc_resource is not None
         except AssertionError:
@@ -340,32 +335,32 @@ class Vdc(VcdAnsibleModule):
         return VDC(self.client, name=vdc_name, resource=vdc_resource)
 
     def create(self):
-        vdc_name = self.params['vdc_name']
-        is_enabled = self.params['is_enabled']
-        provider_vdc_name = self.params['provider_vdc_name']
-        description = self.params['description'] or ''
-        allocation_model = self.params['allocation_model'] or 'AllocationVApp'
-        storage_profiles = self.params['storage_profiles']
-        cpu_units = self.params['cpu_units'] or "MHz"
-        cpu_allocated = self.params['cpu_allocated'] or 0
-        cpu_limit = self.params['cpu_limit'] or 0
-        mem_units = self.params['mem_units'] or 'MB'
-        mem_allocated = self.params['mem_allocated'] or 0
-        mem_limit = self.params['mem_limit'] or 0
-        nic_quota = self.params['nic_quota'] or 0
-        network_quota = self.params['network_quota'] or 0
-        vm_quota = self.params['vm_quota'] or 0
-        resource_guaranteed_memory = self.params['resource_guaranteed_memory'] or 1.0
-        resource_guaranteed_cpu = self.params['resource_guaranteed_cpu'] or 1.0
-        vcpu_in_mhz = self.params['vcpu_in_mhz']
-        is_thin_provision = self.params['is_thin_provision']
-        network_pool_name = self.params['network_pool_name']
-        uses_fast_provisioning = self.params['uses_fast_provisioning']
-        over_commit_allowed = self.params['over_commit_allowed']
-        vm_discovery_enabled = self.params['vm_discovery_enabled']
+        vdc_name = self.params["vdc_name"]
+        is_enabled = self.params["is_enabled"]
+        provider_vdc_name = self.params["provider_vdc_name"]
+        description = self.params["description"] or ""
+        allocation_model = self.params["allocation_model"] or "AllocationVApp"
+        storage_profiles = self.params["storage_profiles"]
+        cpu_units = self.params["cpu_units"] or "MHz"
+        cpu_allocated = self.params["cpu_allocated"] or 0
+        cpu_limit = self.params["cpu_limit"] or 0
+        mem_units = self.params["mem_units"] or "MB"
+        mem_allocated = self.params["mem_allocated"] or 0
+        mem_limit = self.params["mem_limit"] or 0
+        nic_quota = self.params["nic_quota"] or 0
+        network_quota = self.params["network_quota"] or 0
+        vm_quota = self.params["vm_quota"] or 0
+        resource_guaranteed_memory = self.params["resource_guaranteed_memory"] or 1.0
+        resource_guaranteed_cpu = self.params["resource_guaranteed_cpu"] or 1.0
+        vcpu_in_mhz = self.params["vcpu_in_mhz"]
+        is_thin_provision = self.params["is_thin_provision"]
+        network_pool_name = self.params["network_pool_name"]
+        uses_fast_provisioning = self.params["uses_fast_provisioning"]
+        over_commit_allowed = self.params["over_commit_allowed"]
+        vm_discovery_enabled = self.params["vm_discovery_enabled"]
         response = dict()
-        response['changed'] = False
-        response['msg'] = self.params["description"] or "None"
+        response["changed"] = False
+        response["msg"] = self.params["description"] or "None"
 
         try:
             self.get_vdc()
@@ -393,35 +388,36 @@ class Vdc(VcdAnsibleModule):
                 uses_fast_provisioning=uses_fast_provisioning,
                 over_commit_allowed=over_commit_allowed,
                 vm_discovery_enabled=vm_discovery_enabled,
-                is_enabled=is_enabled)
+                is_enabled=is_enabled,
+            )
             self.execute_task(create_vdc_task.Tasks.Task[0])
-            response['msg'] = 'VDC {} has been created'.format(vdc_name)
-            response['changed'] = True
+            response["msg"] = "VDC {} has been created".format(vdc_name)
+            response["changed"] = True
         else:
-            response['warnings'] = 'VDC {} is already present'.format(vdc_name)
+            response["warnings"] = "VDC {} is already present".format(vdc_name)
 
         return response
 
     def update(self):
-        vdc_name = self.params['vdc_name']
-        description = self.params['description']
-        allocation_model = self.params['allocation_model']
-        cpu_units = self.params['cpu_units']
-        cpu_allocated = self.params['cpu_allocated']
-        cpu_limit = self.params['cpu_limit']
-        mem_units = self.params['mem_units']
-        mem_allocated = self.params['mem_allocated']
-        mem_limit = self.params['mem_limit']
-        nic_quota = self.params['nic_quota']
-        network_quota = self.params['network_quota']
-        vm_quota = self.params['vm_quota']
-        resource_guaranteed_memory = self.params['resource_guaranteed_memory']
-        resource_guaranteed_cpu = self.params['resource_guaranteed_cpu']
-        vcpu_in_mhz = self.params['vcpu_in_mhz']
-        is_thin_provision = self.params['is_thin_provision']
-        is_enabled = self.params['is_enabled']
+        vdc_name = self.params["vdc_name"]
+        description = self.params["description"]
+        allocation_model = self.params["allocation_model"]
+        cpu_units = self.params["cpu_units"]
+        cpu_allocated = self.params["cpu_allocated"]
+        cpu_limit = self.params["cpu_limit"]
+        mem_units = self.params["mem_units"]
+        mem_allocated = self.params["mem_allocated"]
+        mem_limit = self.params["mem_limit"]
+        nic_quota = self.params["nic_quota"]
+        network_quota = self.params["network_quota"]
+        vm_quota = self.params["vm_quota"]
+        resource_guaranteed_memory = self.params["resource_guaranteed_memory"]
+        resource_guaranteed_cpu = self.params["resource_guaranteed_cpu"]
+        vcpu_in_mhz = self.params["vcpu_in_mhz"]
+        is_thin_provision = self.params["is_thin_provision"]
+        is_enabled = self.params["is_enabled"]
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             self.get_vdc()
@@ -442,141 +438,142 @@ class Vdc(VcdAnsibleModule):
                 resource_guaranteed_cpu,
                 vcpu_in_mhz,
                 is_thin_provision,
-                is_enabled)
+                is_enabled,
+            )
             self.execute_task(update_org_vdc_task)
-            response['msg'] = 'VDC {} has been updated'.format(vdc_name)
-            response['changed'] = True
+            response["msg"] = "VDC {} has been updated".format(vdc_name)
+            response["changed"] = True
         except OperationNotSupportedException:
             msg = "VDC {} may already in desired state"
-            response['warnings'] = msg.format(vdc_name)
+            response["warnings"] = msg.format(vdc_name)
         except EntityNotFoundException:
-            response['warnings'] = 'VDC {} is not present.'.format(vdc_name)
+            response["warnings"] = "VDC {} is not present.".format(vdc_name)
 
         return response
 
     def delete(self):
-        vdc_name = self.params['vdc_name']
+        vdc_name = self.params["vdc_name"]
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             vdc = self.get_vdc()
             vdc.enable_vdc(enable=False)
             delete_vdc_task = vdc.delete_vdc()
             self.execute_task(delete_vdc_task)
-            response['msg'] = 'VDC {} has been deleted.'.format(vdc_name)
-            response['changed'] = True
+            response["msg"] = "VDC {} has been deleted.".format(vdc_name)
+            response["changed"] = True
         except EntityNotFoundException:
-            response['warnings'] = 'VDC {} is not present.'.format(vdc_name)
+            response["warnings"] = "VDC {} is not present.".format(vdc_name)
         except OperationNotSupportedException:
             pass
 
         return response
 
     def get_storage_profiles(self):
-        vdc_name = self.params['vdc_name']
+        vdc_name = self.params["vdc_name"]
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             vdc = self.get_vdc()
-            response['msg'] = [
+            response["msg"] = [
                 storage_profile.get("name")
                 for storage_profile in vdc.get_storage_profiles()
             ]
         except EntityNotFoundException:
-            msg = 'VDC {} is not present'
-            response['warnings'] = msg.format(vdc_name)
+            msg = "VDC {} is not present"
+            response["warnings"] = msg.format(vdc_name)
 
         return response
 
     def _update_response(self, response, msg, warning):
-        vdc_name = self.params['vdc_name']
-        if response['msg']:
-            response['msg'] = msg.format(response['msg'], vdc_name)
+        vdc_name = self.params["vdc_name"]
+        if response["msg"]:
+            response["msg"] = msg.format(response["msg"], vdc_name)
 
-        if response['warnings']:
-            response['warnings'] = warning.format(response['warnings'])
+        if response["warnings"]:
+            response["warnings"] = warning.format(response["warnings"])
 
         return response
 
     def add_storage_profile(self):
-        vdc_name = self.params['vdc_name']
-        profiles = self.params['storage_profiles']
+        vdc_name = self.params["vdc_name"]
+        profiles = self.params["storage_profiles"]
         response = dict()
-        response['changed'] = False
-        response['msg'] = list()
-        response['warnings'] = list()
-        storage_profiles = self.get_storage_profiles()['msg']
-        msg = 'VDC Storage profile(s) {0} are added'
-        warning = 'VDC Storage profile(s) {0} are already present'
+        response["changed"] = False
+        response["msg"] = list()
+        response["warnings"] = list()
+        storage_profiles = self.get_storage_profiles()["msg"]
+        msg = "VDC Storage profile(s) {0} are added"
+        warning = "VDC Storage profile(s) {0} are already present"
 
         try:
             vdc = self.get_vdc()
             for profile in profiles:
-                name = profile['name']
+                name = profile["name"]
                 if name not in storage_profiles:
-                    enabled = profile['enabled']
-                    default = profile['default']
+                    enabled = profile["enabled"]
+                    default = profile["default"]
                     kwargs = {
-                        'enabled': True if enabled == 'true' else False,
-                        'default': True if default == 'true' else False,
-                        'limit_in_mb': profile['limit']
+                        "enabled": True if enabled == "true" else False,
+                        "default": True if default == "true" else False,
+                        "limit_in_mb": profile["limit"],
                     }
                     task = vdc.add_storage_profile(name, **kwargs)
                     self.execute_task(task)
-                    response['msg'].append(profile['name'])
+                    response["msg"].append(profile["name"])
                     continue
-                response['warnings'].append(name)
+                response["warnings"].append(name)
             response = self._update_response(response, msg, warning)
         except EntityNotFoundException:
-            msg = 'VDC {} is not present'
-            response['warnings'] = msg.format(vdc_name)
+            msg = "VDC {} is not present"
+            response["warnings"] = msg.format(vdc_name)
 
         return response
 
     def update_storage_profile(self):
-        vdc_name = self.params['vdc_name']
-        profiles = self.params['storage_profiles']
+        vdc_name = self.params["vdc_name"]
+        profiles = self.params["storage_profiles"]
         response = dict()
-        response['changed'] = False
-        response['msg'] = list()
-        response['warnings'] = list()
-        storage_profiles = self.get_storage_profiles()['msg']
-        msg = 'Storage profile(s) {0} are updated'
-        warning = 'VDC Storage profile(s) {0} are not found'
+        response["changed"] = False
+        response["msg"] = list()
+        response["warnings"] = list()
+        storage_profiles = self.get_storage_profiles()["msg"]
+        msg = "Storage profile(s) {0} are updated"
+        warning = "VDC Storage profile(s) {0} are not found"
 
         try:
             vdc = self.get_vdc()
             for profile in profiles:
-                name = profile['name']
+                name = profile["name"]
                 if name in storage_profiles:
-                    enabled = True if profile['enabled'] == 'true' else False
+                    enabled = True if profile["enabled"] == "true" else False
                     kwargs = {
-                        'default': profile.get('default', None),
-                        'limit_in_mb': profile.get('limit', None)
+                        "default": profile.get("default", None),
+                        "limit_in_mb": profile.get("limit", None),
                     }
                     vdc.update_storage_profile(name, enabled, **kwargs)
-                    response['msg'].append(name)
+                    response["msg"].append(name)
                     continue
-                response['warnings'].append(name)
+                response["warnings"].append(name)
             response = self._update_response(response, msg, warning)
         except EntityNotFoundException:
-            msg = 'VDC {} is not present'
-            response['warnings'] = msg.format(vdc_name)
+            msg = "VDC {} is not present"
+            response["warnings"] = msg.format(vdc_name)
 
         return response
 
     def delete_storage_profile(self):
-        vdc_name = self.params['vdc_name']
-        profiles = self.params['storage_profiles']
+        vdc_name = self.params["vdc_name"]
+        profiles = self.params["storage_profiles"]
         response = dict()
-        response['msg'] = list()
-        response['warnings'] = list()
-        response['changed'] = False
-        storage_profiles = self.get_storage_profiles()['msg']
-        msg = 'Storage profile(s) {0} are deleted'
-        warning = 'VDC Storage profile(s) {0} are not found'
+        response["msg"] = list()
+        response["warnings"] = list()
+        response["changed"] = False
+        storage_profiles = self.get_storage_profiles()["msg"]
+        msg = "Storage profile(s) {0} are deleted"
+        warning = "VDC Storage profile(s) {0} are not found"
 
         try:
             vdc = self.get_vdc()
@@ -585,41 +582,41 @@ class Vdc(VcdAnsibleModule):
                 if name in storage_profiles:
                     remove_vdc_task = vdc.remove_storage_profile(name)
                     self.execute_task(remove_vdc_task)
-                    response['msg'].append(name)
+                    response["msg"].append(name)
                     continue
-                response['warnings'].append(name)
+                response["warnings"].append(name)
             response = self._update_response(response, msg, warning)
         except EntityNotFoundException:
-            msg = 'VDC {} is not present'
-            response['warnings'] = msg.format(vdc_name)
+            msg = "VDC {} is not present"
+            response["warnings"] = msg.format(vdc_name)
 
         return response
 
 
 def main():
     argument_spec = org_vdc_argument_spec()
-    response = dict(msg=dict(type='str'))
+    response = dict(msg=dict(type="str"))
     module = Vdc(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
-        elif module.params.get('operation'):
+        elif module.params.get("operation"):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide state/operation for resource')
+            raise Exception("Please provide state/operation for resource")
 
     except Exception as error:
-        response['msg'] = error.__str__()
+        response["msg"] = error.__str__()
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

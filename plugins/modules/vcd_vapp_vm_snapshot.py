@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: vcd_vapp_vm
 short_description: Manage VM snapshots states/operations in vCloud Director
@@ -72,12 +66,17 @@ options:
         required: false
 author:
     - mtaneja@vmware.com
-'''
+"""
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to vapp vm snapshot state
 changed: true if resource has been changed else false
-'''
+"""
+
+EXAMPLES = """
+#
+"""
+
 
 import math
 from pyvcloud.vcd.vm import VM
@@ -88,8 +87,8 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import OperationNotSupportedException
 
 
-VM_SNAPSHOT_OPERATIONS = ['revert', 'list']
-VM_SNAPSHOT_STATES = ['present', 'absent']
+VM_SNAPSHOT_OPERATIONS = ["revert", "list"]
+VM_SNAPSHOT_STATES = ["present", "absent"]
 
 
 def vm_snapshot_argument_spec():
@@ -109,7 +108,7 @@ class VMSnapShot(VcdAnsibleModule):
         self.org = self.get_org()
 
     def manage_states(self):
-        state = self.params.get('state')
+        state = self.params.get("state")
         if state == "present":
             return self.create_snapshot()
 
@@ -117,7 +116,7 @@ class VMSnapShot(VcdAnsibleModule):
             return self.delete_snapshot()
 
     def manage_operations(self):
-        operation = self.params.get('operation')
+        operation = self.params.get("operation")
         if operation == "revert":
             return self.revert_snapshot()
 
@@ -144,7 +143,7 @@ class VMSnapShot(VcdAnsibleModule):
 
     def create_snapshot(self):
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
         vms = self.params.get("vms")
         for vm in vms:
             vm_name = vm.get("name")
@@ -153,18 +152,19 @@ class VMSnapShot(VcdAnsibleModule):
             snapshot_name = vm.get("snapshot_name", vm_name)
             vm = self.get_vm(vm_name)
             create_task = vm.snapshot_create(
-                memory=mem_snapshot, quiesce=vm_quiesce, name=snapshot_name)
+                memory=mem_snapshot, quiesce=vm_quiesce, name=snapshot_name
+            )
             self.execute_task(create_task)
 
         msg = "Snapshot(s) have been created of VMs {0}"
-        response['msg'] = msg.format([vm.get("name") for vm in vms])
-        response['changed'] = True
+        response["msg"] = msg.format([vm.get("name") for vm in vms])
+        response["changed"] = True
 
         return response
 
     def delete_snapshot(self):
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
         vms = self.params.get("vms")
         warnings = list()
         operated_vms = list()
@@ -179,16 +179,16 @@ class VMSnapShot(VcdAnsibleModule):
                 warnings.append({vm_name: str(ex)})
         if operated_vms:
             msg = "All snapshots for VMs {0} has been deleted"
-            response['msg'] = msg.format(operated_vms)
-            response['changed'] = True
+            response["msg"] = msg.format(operated_vms)
+            response["changed"] = True
         if warnings:
-            response['warnings'] = str(warnings)
+            response["warnings"] = str(warnings)
 
         return response
 
     def revert_snapshot(self):
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
         vms = self.params.get("vms")
         warnings = list()
         operated_vms = list()
@@ -203,32 +203,32 @@ class VMSnapShot(VcdAnsibleModule):
                 warnings.append({vm_name: str(ex)})
         if operated_vms:
             msg = "VMs {0} has been reverted to current snapshot successfully"
-            response['msg'] = msg.format(operated_vms)
-            response['changed'] = True
+            response["msg"] = msg.format(operated_vms)
+            response["changed"] = True
         if warnings:
-            response['warnings'] = str(warnings)
+            response["warnings"] = str(warnings)
 
         return response
 
     def get_formatted_snapshot_size(self, snapshot_size):
-        '''
-            Convert disk byte size into GB or MB
-            MB = 1024 * 1024 ( 2 ** 20 )
-            GB = 1024 * 1024 * 1024 ( 2 ** 30 )
+        """
+        Convert disk byte size into GB or MB
+        MB = 1024 * 1024 ( 2 ** 20 )
+        GB = 1024 * 1024 * 1024 ( 2 ** 30 )
 
-            Note - only MB and GB are supported from vCD
+        Note - only MB and GB are supported from vCD
 
-        '''
+        """
         log_value = int(math.floor(math.log(snapshot_size, 1024)))
         pow_value = math.pow(1024, log_value)
-        size_metric = ' MB' if log_value == 2 else ' GB'
+        size_metric = " MB" if log_value == 2 else " GB"
 
         return str(round(snapshot_size / pow_value, 1)) + size_metric
 
     def list_snapshots(self):
         response = dict()
-        response['changed'] = False
-        response['msg'] = list()
+        response["changed"] = False
+        response["msg"] = list()
         vms = self.params.get("vms")
         warnings = list()
         for vm in vms:
@@ -240,42 +240,39 @@ class VMSnapShot(VcdAnsibleModule):
                     if key == "size":
                         value = self.get_formatted_snapshot_size(float(value))
                     snapshot[key] = value
-                response['msg'].append({
-                    "vm_name": vm_name,
-                    "snapshot": snapshot
-                })
+                response["msg"].append({"vm_name": vm_name, "snapshot": snapshot})
             except (OperationNotSupportedException, Exception) as ex:
                 warnings.append({vm_name: str(ex)})
         if warnings:
-            response['warnings'] = str(warnings)
+            response["warnings"] = str(warnings)
 
         return response
 
 
 def main():
     argument_spec = vm_snapshot_argument_spec()
-    response = dict(msg=dict(type='str'))
+    response = dict(msg=dict(type="str"))
     module = VMSnapShot(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
-        elif module.params.get('operation'):
+        elif module.params.get("operation"):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide state/operation for resource')
+            raise Exception("Please provide state/operation for resource")
 
     except Exception as error:
-        response['msg'] = error
+        response["msg"] = error
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

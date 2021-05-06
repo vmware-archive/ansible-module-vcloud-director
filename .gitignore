@@ -6,4 +6,5 @@
 *.todo
 .ipynb_checkpoints/
 *.ipynb
-docs/
+
+changelogs/.plugin-cache.yaml

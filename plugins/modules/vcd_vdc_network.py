@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 module: vcd_vdc_network
 short_description: Manage VDC Network's states/operations in vCloud Director
 version_added: "2.7"
@@ -96,12 +90,12 @@ options:
         type: string
         default: present
         choices: ['present','absent']
-'''
+"""
 
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: create vdc network | Direct
-  create_vdc_network:
+  vmware.vcloud_director.vcd_vdc_network:
     user: "{{vcd_user}}"
     password: "{{vcd_password}}"
     host: "{{vcd_host}}"
@@ -117,7 +111,7 @@ EXAMPLES = '''
     state: "{{state}}"
 
 - name: create vdc network | ROUTED
-  vcd_vdc_network:
+  vmware.vcloud_director.vcd_vdc_network:
     user: "{{vcd_user}}"
     password: "{{vcd_password}}"
     host: "{{vcd_host}}"
@@ -140,7 +134,7 @@ EXAMPLES = '''
     state: "{{state}}"
 
 - name: create vdc network | ISOLATED
-  vcd_vdc_network:
+  vmware.vcloud_director.vcd_vdc_network:
     user: "{{vcd_user}}"
     password: "{{vcd_password}}"
     host: "{{vcd_host}}"
@@ -164,13 +158,13 @@ EXAMPLES = '''
     shared: True
     isolated: True
     state: "{{state}}"
-'''
+"""
 
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to vdc state/operation
 changed: true if resource has been changed else false
-'''
+"""
 
 
 from pyvcloud.vcd.org import Org
@@ -179,7 +173,7 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
-ORG_VDC_NETWORK_STATES = ['present', 'absent']
+ORG_VDC_NETWORK_STATES = ["present", "absent"]
 
 
 def org_vdc_network_argument_spec():
@@ -223,7 +217,7 @@ class OrgVdcNetwork(VcdAnsibleModule):
         self.vdc = VDC(self.client, name=self.vdc_name, resource=vdc_resource)
 
     def manage_states(self):
-        state = self.params.get('state')
+        state = self.params.get("state")
         if state == "present":
             return self.create_org_vdc_network()
 
@@ -239,9 +233,9 @@ class OrgVdcNetwork(VcdAnsibleModule):
         return Org(self.client, resource=org_resource)
 
     def create_org_vdc_network(self):
-        direct = self.params.get('direct')
-        isolated = self.params.get('isolated')
-        routed = self.params.get('routed')
+        direct = self.params.get("direct")
+        isolated = self.params.get("isolated")
+        routed = self.params.get("routed")
 
         if direct:
             return self.create_org_vdc_direct_network()
@@ -254,118 +248,135 @@ class OrgVdcNetwork(VcdAnsibleModule):
 
     def create_org_vdc_direct_network(self):
         response = dict()
-        response['changed'] = False
-        network_name = self.params.get('network_name')
-        parent_network_name = self.params.get('parent_network_name')
-        description = self.params.get('description')
-        shared = self.params.get('shared')
+        response["changed"] = False
+        network_name = self.params.get("network_name")
+        parent_network_name = self.params.get("parent_network_name")
+        description = self.params.get("description")
+        shared = self.params.get("shared")
 
         try:
             self.vdc.get_direct_orgvdc_network(network_name)
         except EntityNotFoundException:
             create_task = self.vdc.create_directly_connected_vdc_network(
-                network_name, parent_network_name, description=description,
-                is_shared=shared)
+                network_name,
+                parent_network_name,
+                description=description,
+                is_shared=shared,
+            )
             self.execute_task(create_task.Tasks.Task[0])
-            msg = 'Org VDC Direct Network {0} has been created'
-            response['msg'] = msg.format(network_name)
-            response['changed'] = True
+            msg = "Org VDC Direct Network {0} has been created"
+            response["msg"] = msg.format(network_name)
+            response["changed"] = True
         else:
-            msg = 'Org VDC Direct Network {0} is already present'
-            response['warnings'] = msg.format(network_name)
+            msg = "Org VDC Direct Network {0} is already present"
+            response["warnings"] = msg.format(network_name)
 
         return response
 
     def create_org_vdc_isolated_network(self):
         response = dict()
-        response['changed'] = False
-        network_name = self.params.get('network_name')
-        network_cidr = self.params.get('network_cidr')
-        description = self.params.get('description')
-        shared = self.params.get('shared')
-        primary_dns_ip = self.params.get('primary_dns_ip')
-        secondary_dns_ip = self.params.get('secondary_dns_ip')
-        dns_suffix = self.params.get('dns_suffix')
-        ip_range_start = self.params.get('ip_range_start')
-        ip_range_end = self.params.get('ip_range_end')
-        dhcp_enabled = self.params.get('dhcp_enabled')
-        default_lease_time = self.params.get('default_lease_time')
-        max_lease_time = self.params.get('max_lease_time')
-        dhcp_ip_range_start = self.params.get('dhcp_ip_range_start')
-        dhcp_ip_range_end = self.params.get('dhcp_ip_range_end')
+        response["changed"] = False
+        network_name = self.params.get("network_name")
+        network_cidr = self.params.get("network_cidr")
+        description = self.params.get("description")
+        shared = self.params.get("shared")
+        primary_dns_ip = self.params.get("primary_dns_ip")
+        secondary_dns_ip = self.params.get("secondary_dns_ip")
+        dns_suffix = self.params.get("dns_suffix")
+        ip_range_start = self.params.get("ip_range_start")
+        ip_range_end = self.params.get("ip_range_end")
+        dhcp_enabled = self.params.get("dhcp_enabled")
+        default_lease_time = self.params.get("default_lease_time")
+        max_lease_time = self.params.get("max_lease_time")
+        dhcp_ip_range_start = self.params.get("dhcp_ip_range_start")
+        dhcp_ip_range_end = self.params.get("dhcp_ip_range_end")
 
         try:
             self.vdc.get_isolated_orgvdc_network(network_name)
         except EntityNotFoundException:
             create_task = self.vdc.create_isolated_vdc_network(
-                network_name, network_cidr, description=description,
+                network_name,
+                network_cidr,
+                description=description,
                 primary_dns_ip=primary_dns_ip,
                 secondary_dns_ip=secondary_dns_ip,
-                dns_suffix=dns_suffix, ip_range_start=ip_range_start,
-                ip_range_end=ip_range_end, is_dhcp_enabled=dhcp_enabled,
+                dns_suffix=dns_suffix,
+                ip_range_start=ip_range_start,
+                ip_range_end=ip_range_end,
+                is_dhcp_enabled=dhcp_enabled,
                 default_lease_time=default_lease_time,
                 max_lease_time=max_lease_time,
                 dhcp_ip_range_start=dhcp_ip_range_start,
-                dhcp_ip_range_end=dhcp_ip_range_end, is_shared=shared)
+                dhcp_ip_range_end=dhcp_ip_range_end,
+                is_shared=shared,
+            )
             self.execute_task(create_task.Tasks.Task[0])
-            msg = 'Org VDC Isolated Network {0} has been created'
-            response['msg'] = msg.format(network_name)
-            response['changed'] = True
+            msg = "Org VDC Isolated Network {0} has been created"
+            response["msg"] = msg.format(network_name)
+            response["changed"] = True
 
         else:
-            msg = 'Org VDC Isolated Network {0} is already present'
-            response['warnings'] = msg.format(network_name)
+            msg = "Org VDC Isolated Network {0} is already present"
+            response["warnings"] = msg.format(network_name)
 
         return response
 
     def create_org_vdc_routed_network(self):
         response = dict()
-        response['changed'] = False
-        network_name = self.params.get('network_name')
-        gateway_name = self.params.get('gateway_name')
-        network_cidr = self.params.get('network_cidr')
-        description = self.params.get('description')
-        shared = self.params.get('shared')
-        primary_dns_ip = self.params.get('primary_dns_ip')
-        secondary_dns_ip = self.params.get('secondary_dns_ip')
-        dns_suffix = self.params.get('dns_suffix')
-        ip_range_start = self.params.get('ip_range_start')
-        ip_range_end = self.params.get('ip_range_end')
-        guest_vlan_allowed = self.params.get('guest_vlan_allowed')
-        sub_interface = self.params.get('sub_interface')
-        distributed_interface = self.params.get('distributed_interface')
+        response["changed"] = False
+        network_name = self.params.get("network_name")
+        gateway_name = self.params.get("gateway_name")
+        network_cidr = self.params.get("network_cidr")
+        description = self.params.get("description")
+        shared = self.params.get("shared")
+        primary_dns_ip = self.params.get("primary_dns_ip")
+        secondary_dns_ip = self.params.get("secondary_dns_ip")
+        dns_suffix = self.params.get("dns_suffix")
+        ip_range_start = self.params.get("ip_range_start")
+        ip_range_end = self.params.get("ip_range_end")
+        guest_vlan_allowed = self.params.get("guest_vlan_allowed")
+        sub_interface = self.params.get("sub_interface")
+        distributed_interface = self.params.get("distributed_interface")
         retain_net_info_across_deployments = self.params.get(
-            'retain_net_info_across_deployments')
+            "retain_net_info_across_deployments"
+        )
 
         try:
             self.vdc.get_routed_orgvdc_network(network_name)
         except EntityNotFoundException:
             create_task = self.vdc.create_routed_vdc_network(
-                network_name, gateway_name, network_cidr,
-                description=description, primary_dns_ip=primary_dns_ip,
-                secondary_dns_ip=secondary_dns_ip, dns_suffix=dns_suffix,
-                ip_range_start=ip_range_start, ip_range_end=ip_range_end,
-                is_shared=shared, guest_vlan_allowed=guest_vlan_allowed,
+                network_name,
+                gateway_name,
+                network_cidr,
+                description=description,
+                primary_dns_ip=primary_dns_ip,
+                secondary_dns_ip=secondary_dns_ip,
+                dns_suffix=dns_suffix,
+                ip_range_start=ip_range_start,
+                ip_range_end=ip_range_end,
+                is_shared=shared,
+                guest_vlan_allowed=guest_vlan_allowed,
                 sub_interface=sub_interface,
                 distributed_interface=distributed_interface,
-                retain_net_info_across_deployments=retain_net_info_across_deployments)
+                retain_net_info_across_deployments=retain_net_info_across_deployments,
+            )
             self.execute_task(create_task.Tasks.Task[0])
-            msg = 'Org VDC Routed Network {0} has been created'
-            response['msg'] = msg.format(network_name)
-            response['changed'] = True
+            msg = "Org VDC Routed Network {0} has been created"
+            response["msg"] = msg.format(network_name)
+            response["changed"] = True
 
         else:
-            msg = 'Org VDC Routed Network {0} is already present'
-            response['warnings'] = msg.format(network_name)
+            msg = "Org VDC Routed Network {0} is already present"
+            response["warnings"] = msg.format(network_name)
 
         return response
 
     def delete_org_vdc_network(self):
         response = dict()
-        response['changed'] = False
-        direct = self.params.get('direct')
-        isolated = self.params.get('isolated')
-        routed = self.params.get('routed')
+        response["changed"] = False
+        direct = self.params.get("direct")
+        isolated = self.params.get("isolated")
+        routed = self.params.get("routed")
 
         if direct:
             return self.delete_org_vdc_direct_network()
@@ -380,90 +391,92 @@ class OrgVdcNetwork(VcdAnsibleModule):
 
     def delete_org_vdc_direct_network(self):
         response = dict()
-        response['changed'] = False
-        network_name = self.params.get('network_name')
-        force = self.params.get('force')
+        response["changed"] = False
+        network_name = self.params.get("network_name")
+        force = self.params.get("force")
 
         try:
             self.vdc.get_direct_orgvdc_network(network_name)
         except EntityNotFoundException:
             msg = "Org VDC Direct Network {0} is not present"
-            response['warnings'] = msg.format(network_name)
+            response["warnings"] = msg.format(network_name)
         else:
             delete_task = self.vdc.delete_direct_orgvdc_network(
-                network_name, force=force)
+                network_name, force=force
+            )
             self.execute_task(delete_task)
-            msg = 'Org VDC Direct Network {} has been deleted'
-            response['msg'] = msg.format(network_name)
-            response['changed'] = True
+            msg = "Org VDC Direct Network {} has been deleted"
+            response["msg"] = msg.format(network_name)
+            response["changed"] = True
 
         return response
 
     def delete_org_vdc_isolated_network(self):
         response = dict()
-        response['changed'] = False
-        network_name = self.params.get('network_name')
-        force = self.params.get('force')
+        response["changed"] = False
+        network_name = self.params.get("network_name")
+        force = self.params.get("force")
 
         try:
             self.vdc.get_isolated_orgvdc_network(network_name)
         except EntityNotFoundException:
             msg = "Org VDC Direct Network {0} is not present"
-            response['warnings'] = msg.format(network_name)
+            response["warnings"] = msg.format(network_name)
         else:
             delete_task = self.vdc.delete_isolated_orgvdc_network(
-                network_name, force=force)
+                network_name, force=force
+            )
             self.execute_task(delete_task)
-            msg = 'Org VDC Direct Network {} has been deleted'
-            response['msg'] = msg.format(network_name)
-            response['changed'] = True
+            msg = "Org VDC Direct Network {} has been deleted"
+            response["msg"] = msg.format(network_name)
+            response["changed"] = True
 
         return response
 
     def delete_org_vdc_routed_network(self):
         response = dict()
-        response['changed'] = False
-        network_name = self.params.get('network_name')
-        force = self.params.get('force')
+        response["changed"] = False
+        network_name = self.params.get("network_name")
+        force = self.params.get("force")
 
         try:
             self.vdc.get_routed_orgvdc_network(network_name)
         except EntityNotFoundException:
             msg = "Org VDC Direct Network {0} is not present"
-            response['warnings'] = msg.format(network_name)
+            response["warnings"] = msg.format(network_name)
         else:
             delete_task = self.vdc.delete_routed_orgvdc_network(
-                network_name, force=force)
+                network_name, force=force
+            )
             self.execute_task(delete_task)
-            msg = 'Org VDC Direct Network {} has been deleted'
-            response['msg'] = msg.format(network_name)
-            response['changed'] = True
+            msg = "Org VDC Direct Network {} has been deleted"
+            response["msg"] = msg.format(network_name)
+            response["changed"] = True
 
         return response
 
 
 def main():
     argument_spec = org_vdc_network_argument_spec()
-    response = dict(msg=dict(type='str'))
-    module = OrgVdcNetwork(
-        argument_spec=argument_spec, supports_check_mode=True)
+    response = dict(msg=dict(type="str"))
+    module = OrgVdcNetwork(argument_spec=argument_spec, supports_check_mode=True)
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
         else:
-            raise Exception('Please provide the state for the resource')
+            raise Exception("Please provide the state for the resource")
 
     except Exception as error:
-        response['msg'] = error.__str__()
+        response["msg"] = error.__str__()
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

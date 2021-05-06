@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: vcd_disk
 short_description: Manage disk's states/operations in vCloud Director
@@ -111,22 +105,22 @@ options:
 
 author:
     - mtaneja@vmware.com
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: create disk
-  vcd_disk:
+  vmware.vcloud_director.vcd_disk:
     disk_name: "DISK_NAME"
     size: "100"
     vdc: "OVD4"
     state: "present"
   register: output
-'''
+"""
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to disk state/operation
 changed: true if resource has been changed else false
-'''
+"""
 
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
@@ -134,7 +128,7 @@ from ansible.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 
-VCD_DISK_STATES = ['present', 'update', 'absent']
+VCD_DISK_STATES = ["present", "update", "absent"]
 
 
 def vcd_disk_argument_spec():
@@ -166,14 +160,14 @@ class Disk(VcdAnsibleModule):
         self.vdc = VDC(self.client, href=vdc.get('href'))
 
     def manage_states(self):
-        state = self.params.get('state')
-        if state == 'present':
+        state = self.params.get("state")
+        if state == "present":
             return self.create()
 
-        if state == 'absent':
+        if state == "absent":
             return self.delete()
 
-        if state == 'update':
+        if state == "update":
             return self.update()
 
     def get_org(self):
@@ -185,97 +179,105 @@ class Disk(VcdAnsibleModule):
         return Org(self.client, resource=org_resource)
 
     def create(self):
-        disk_name = self.params.get('disk_name')
-        disk_id = self.params.get('disk_id')
-        size = self.params.get('size')
-        description = self.params.get('description')
-        storage_profile = self.params.get('storage_profile')
-        bus_type = self.params.get('bus_type')
-        bus_sub_type = self.params.get('bus_sub_type')
-        iops = self.params.get('iops')
+        disk_name = self.params.get("disk_name")
+        disk_id = self.params.get("disk_id")
+        size = self.params.get("size")
+        description = self.params.get("description")
+        storage_profile = self.params.get("storage_profile")
+        bus_type = self.params.get("bus_type")
+        bus_sub_type = self.params.get("bus_sub_type")
+        iops = self.params.get("iops")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             self.vdc.get_disk(name=disk_name, disk_id=disk_id)
         except EntityNotFoundException:
             create_disk_task = self.vdc.create_disk(
-                name=disk_name, size=size, bus_type=bus_type,
-                bus_sub_type=bus_sub_type, description=description,
-                iops=iops, storage_profile_name=storage_profile)
+                name=disk_name,
+                size=size,
+                bus_type=bus_type,
+                bus_sub_type=bus_sub_type,
+                description=description,
+                iops=iops,
+                storage_profile_name=storage_profile,
+            )
             self.execute_task(create_disk_task.Tasks.Task[0])
-            response['msg'] = 'Disk {} has been created.'.format(disk_name)
-            response['changed'] = True
+            response["msg"] = "Disk {} has been created.".format(disk_name)
+            response["changed"] = True
         else:
             msg = "Disk {} is already present."
-            response['warnings'] = msg.format(disk_name)
+            response["warnings"] = msg.format(disk_name)
 
         return response
 
     def update(self):
-        disk_name = self.params.get('disk_name')
-        disk_id = self.params.get('disk_id')
-        new_disk_name = self.params.get('new_disk_name')
-        new_size = self.params.get('new_size')
-        new_description = self.params.get('new_description')
-        new_storage_profile = self.params.get('new_storage_profile')
-        new_iops = self.params.get('new_iops')
+        disk_name = self.params.get("disk_name")
+        disk_id = self.params.get("disk_id")
+        new_disk_name = self.params.get("new_disk_name")
+        new_size = self.params.get("new_size")
+        new_description = self.params.get("new_description")
+        new_storage_profile = self.params.get("new_storage_profile")
+        new_iops = self.params.get("new_iops")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         update_disk_task = self.vdc.update_disk(
-            name=disk_name, disk_id=disk_id, new_name=new_disk_name,
-            new_size=new_size, new_iops=new_iops,
+            name=disk_name,
+            disk_id=disk_id,
+            new_name=new_disk_name,
+            new_size=new_size,
+            new_iops=new_iops,
             new_description=new_description,
-            new_storage_profile_name=new_storage_profile)
+            new_storage_profile_name=new_storage_profile,
+        )
         self.execute_task(update_disk_task)
-        response['msg'] = 'Disk {} has been updated.'.format(disk_name)
-        response['changed'] = True
+        response["msg"] = "Disk {} has been updated.".format(disk_name)
+        response["changed"] = True
 
         return response
 
     def delete(self):
-        disk_name = self.params.get('disk_name')
-        disk_id = self.params.get('disk_id')
+        disk_name = self.params.get("disk_name")
+        disk_id = self.params.get("disk_id")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             self.vdc.get_disk(name=disk_name, disk_id=disk_id)
         except EntityNotFoundException:
-            response['warnings'] = "Disk {} is not present.".format(disk_name)
+            response["warnings"] = "Disk {} is not present.".format(disk_name)
         else:
-            delete_disk_task = self.vdc.delete_disk(
-                name=disk_name, disk_id=disk_id)
+            delete_disk_task = self.vdc.delete_disk(name=disk_name, disk_id=disk_id)
             self.execute_task(delete_disk_task)
-            response['msg'] = 'Disk {} has been deleted.'.format(disk_name)
-            response['changed'] = True
+            response["msg"] = "Disk {} has been deleted.".format(disk_name)
+            response["changed"] = True
 
         return response
 
 
 def main():
     argument_spec = vcd_disk_argument_spec()
-    response = dict(msg=dict(type='str'))
+    response = dict(msg=dict(type="str"))
     module = Disk(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
         else:
-            raise Exception('Please provide the state for the resource')
+            raise Exception("Please provide the state for the resource")
 
     except Exception as error:
-        response['msg'] = error
+        response["msg"] = error
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

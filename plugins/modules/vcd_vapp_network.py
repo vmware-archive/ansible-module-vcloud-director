@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: vcd_vapp_network
 short_description: Manage vApp Network's states/operation in vCloud Director
@@ -104,11 +98,11 @@ options:
         required: false
 author:
     - mtaneja@vmware.com
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Test with a message
-  vcd_vapp_network:
+  vmware.vcloud_director.vcd_vapp_network:
     user: terraform
     password: abcd
     host: csa.sandbox.org
@@ -125,12 +119,13 @@ EXAMPLES = '''
     network_cidr: 192.168.1.1/24
     primary_dns_ip: 192.168.1.50
     state: present
-'''
+"""
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to vapp network state
 changed: true if resource has been changed else false
-'''
+"""
+
 
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
@@ -143,8 +138,8 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException
 from pyvcloud.vcd.exceptions import OperationNotSupportedException
 
 
-VAPP_NETWORK_STATES = ['present', 'update', 'absent']
-VAPP_NETWORK_OPERATIONS = ['read']
+VAPP_NETWORK_STATES = ["present", "update", "absent"]
+VAPP_NETWORK_OPERATIONS = ["read"]
 
 
 def vapp_network_argument_spec():
@@ -174,7 +169,7 @@ class VappNetwork(VcdAnsibleModule):
         self.vapp = VApp(self.client, resource=vapp_resource)
 
     def manage_states(self):
-        state = self.params.get('state')
+        state = self.params.get("state")
         if state == "present":
             return self.add_network()
 
@@ -185,7 +180,7 @@ class VappNetwork(VcdAnsibleModule):
             return self.delete_network()
 
     def manage_operations(self):
-        operation = self.params.get('operation')
+        operation = self.params.get("operation")
         if operation == "read":
             return self.get_all_networks()
 
@@ -202,42 +197,43 @@ class VappNetwork(VcdAnsibleModule):
         vdc = self.params.get('vdc')
         vdc_resource = VDC(self.client, resource=self.org.get_vdc(vdc))
         vapp_resource_href = vdc_resource.get_resource_href(
-            name=vapp, entity_type=EntityType.VAPP)
+            name=vapp, entity_type=EntityType.VAPP
+        )
         vapp_resource = self.client.get_resource(vapp_resource_href)
 
         return vapp_resource
 
     def get_network(self):
-        network_name = self.params.get('network')
+        network_name = self.params.get("network")
         networks = self.vapp.get_all_networks()
         for network in networks:
-            if network.get('{' + NSMAP['ovf'] + '}name') == network_name:
+            if network.get("{" + NSMAP["ovf"] + "}name") == network_name:
                 return network
-        raise EntityNotFoundException('Can\'t find the specified vApp network')
+        raise EntityNotFoundException("Can't find the specified vApp network")
 
     def get_all_networks(self):
         response = dict()
-        response['changed'] = False
-        response['msg'] = defaultdict(dict)
+        response["changed"] = False
+        response["msg"] = defaultdict(dict)
 
         for network in self.vapp.get_all_networks():
-            name = network.get('{' + NSMAP['ovf'] + '}name')
-            n = {'description': str(network.Description)}
-            response['msg'][name] = n
+            name = network.get("{" + NSMAP["ovf"] + "}name")
+            n = {"description": str(network.Description)}
+            response["msg"][name] = n
 
         return response
 
     def add_network(self):
-        network_name = self.params.get('network')
-        network_cidr = self.params.get('network_cidr')
-        network_description = self.params.get('description')
-        primary_dns_ip = self.params.get('primary_dns_ip')
-        secondary_dns_ip = self.params.get('secondary_dns_ip')
-        dns_suffix = self.params.get('dns_suffix')
-        ip_ranges = self.params.get('ip_ranges')
-        is_guest_vlan_allowed = self.params.get('is_guest_vlan_allowed')
+        network_name = self.params.get("network")
+        network_cidr = self.params.get("network_cidr")
+        network_description = self.params.get("description")
+        primary_dns_ip = self.params.get("primary_dns_ip")
+        secondary_dns_ip = self.params.get("secondary_dns_ip")
+        dns_suffix = self.params.get("dns_suffix")
+        ip_ranges = self.params.get("ip_ranges")
+        is_guest_vlan_allowed = self.params.get("is_guest_vlan_allowed")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             self.get_network()
@@ -259,11 +255,11 @@ class VappNetwork(VcdAnsibleModule):
         return response
 
     def update_network(self):
-        network_name = self.params.get('network')
-        new_network_name = self.params.get('new_network')
-        network_description = self.params.get('description')
+        network_name = self.params.get("network")
+        new_network_name = self.params.get("new_network")
+        network_description = self.params.get("description")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             self.get_network()
@@ -282,9 +278,9 @@ class VappNetwork(VcdAnsibleModule):
         return response
 
     def delete_network(self):
-        network_name = self.params.get('network')
+        network_name = self.params.get("network")
         response = dict()
-        response['changed'] = False
+        response["changed"] = False
 
         try:
             self.get_network()
@@ -303,28 +299,28 @@ class VappNetwork(VcdAnsibleModule):
 
 def main():
     argument_spec = vapp_network_argument_spec()
-    response = dict(msg=dict(type='str'))
+    response = dict(msg=dict(type="str"))
     module = VappNetwork(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
-        elif module.params.get('operation'):
+        elif module.params.get("operation"):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide the state for the resource')
+            raise Exception("Please provide the state for the resource")
 
     except Exception as error:
-        response['msg'] = error
+        response["msg"] = error
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

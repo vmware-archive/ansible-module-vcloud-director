@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: vcd_gateway_services
 short_description: Manage edge gateway service in vCloud Director
@@ -89,11 +83,11 @@ options:
 
 author:
     - Mukul Taneja  <mtaneja@vmware.com>
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: create gateway services
-  vcd_gateway_services:
+  vmware.vcloud_director.vcd_gateway_services:
      user: acmeadmin
      password: *******
      org: Acme
@@ -108,13 +102,14 @@ EXAMPLES = '''
           logging_enabled: False
      state: present
 
-'''
+"""
 
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to edge gateway state
 changed: true if resource has been changed else false
-'''
+"""
+
 
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
@@ -128,19 +123,19 @@ from ansible.module_utils.gateway_ssl_certificates import SSLCertificates
 
 
 EDGE_SERVICES = ["firewall", "nat_rule", "static_route", "ssl_certificates"]
-EDGE_SERVICES_STATES = ['present', 'update', 'absent']
-EDGE_SERVICES_OPERATIONS = ['list']
+EDGE_SERVICES_STATES = ["present", "update", "absent"]
+EDGE_SERVICES_OPERATIONS = ["list"]
 
 
 def vcd_gateway_services_argument_spec():
     return dict(
-        vdc=dict(type='str', required=True),
-        gateway=dict(type='str', required=True),
-        service_params=dict(type='list', required=False),
+        vdc=dict(type="str", required=True),
+        gateway=dict(type="str", required=True),
+        service_params=dict(type="list", required=False),
         service=dict(choices=EDGE_SERVICES, required=True),
         org_name=dict(type='str', required=False, default=None),
         state=dict(choices=EDGE_SERVICES_STATES, required=False),
-        operation=dict(choices=EDGE_SERVICES_OPERATIONS, required=False)
+        operation=dict(choices=EDGE_SERVICES_OPERATIONS, required=False),
     )
 
 
@@ -252,29 +247,28 @@ class EdgeServices(VcdAnsibleModule):
 
 def main():
     argument_spec = vcd_gateway_services_argument_spec()
-    response = dict(msg=dict(type='str'))
-    module = EdgeServices(
-        argument_spec=argument_spec, supports_check_mode=True)
+    response = dict(msg=dict(type="str"))
+    module = EdgeServices(argument_spec=argument_spec, supports_check_mode=True)
 
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
-        elif module.params.get('operation'):
+        elif module.params.get("operation"):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide state for resource')
+            raise Exception("Please provide state for resource")
 
     except Exception as error:
-        response['msg'] = error.__str__()
+        response["msg"] = error.__str__()
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

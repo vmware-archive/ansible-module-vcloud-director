@@ -3,13 +3,7 @@
 
 # !/usr/bin/python
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
-
-DOCUMENTATION = '''
+DOCUMENTATION = """
 ---
 module: vcd_vapp_vm_nic
 short_description: Manage VM NIC's states/operations in vCloud Director
@@ -92,11 +86,11 @@ options:
         required: false
 author:
     - mtaneja@vmware.com
-'''
+"""
 
-EXAMPLES = '''
+EXAMPLES = """
 - name: Test with a message
-  vcd_vapp_vm_nic:
+  vmware.vcloud_director.vcd_vapp_vm_nic:
     user: terraform
     password: abcd
     host: csa.sandbox.org
@@ -113,12 +107,13 @@ EXAMPLES = '''
         is_connected: True
         adapter_type: E1000
     state = "present"
-'''
+"""
 
-RETURN = '''
+RETURN = """
 msg: success/failure message corresponding to nic state
 changed: true if resource has been changed else false
-'''
+"""
+
 
 from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.org import Org
@@ -130,23 +125,22 @@ from pyvcloud.vcd.exceptions import OperationNotSupportedException
 from pyvcloud.vcd.exceptions import EntityNotFoundException, InvalidParameterException
 
 
-VAPP_VM_NIC_OPERATIONS = ['read']
+VAPP_VM_NIC_OPERATIONS = ["read"]
 IP_ALLOCATION_MODE = ["DHCP", "POOL", "MANUAL"]
-VAPP_VM_NIC_STATES = ['present', 'absent', 'update']
-NETWORK_ADAPTER_TYPE = ['VMXNET', 'VMXNET2',
-                        'VMXNET3', 'E1000', 'E1000E', 'PCNet32']
+VAPP_VM_NIC_STATES = ["present", "absent", "update"]
+NETWORK_ADAPTER_TYPE = ["VMXNET", "VMXNET2", "VMXNET3", "E1000", "E1000E", "PCNet32"]
 
 
 def vapp_vm_nic_argument_spec():
     return dict(
-        vm_name=dict(type='str', required=True),
-        vapp=dict(type='str', required=True),
-        vdc=dict(type='str', required=True),
-        nics=dict(type='list', required=False),
-        ip_address=dict(type='str', required=False, default=None),
-        network=dict(type='str', required=False),
-        is_primary=dict(type='bool', required=False, default=False),
-        is_connected=dict(type='bool', required=False, default=False),
+        vm_name=dict(type="str", required=True),
+        vapp=dict(type="str", required=True),
+        vdc=dict(type="str", required=True),
+        nics=dict(type="list", required=False),
+        ip_address=dict(type="str", required=False, default=None),
+        network=dict(type="str", required=False),
+        is_primary=dict(type="bool", required=False, default=False),
+        is_connected=dict(type="bool", required=False, default=False),
         ip_allocation_mode=dict(choices=IP_ALLOCATION_MODE, required=False),
         adapter_type=dict(choices=NETWORK_ADAPTER_TYPE, required=False),
         org_name=dict(type='str', required=False, default=None),
@@ -163,7 +157,7 @@ class VappVMNIC(VcdAnsibleModule):
         self.vapp = VApp(self.client, resource=vapp_resource)
 
     def manage_states(self):
-        state = self.params.get('state')
+        state = self.params.get("state")
         if state == "present":
             return self.add_nic()
 
@@ -174,7 +168,7 @@ class VappVMNIC(VcdAnsibleModule):
             return self.delete_nic()
 
     def manage_operations(self):
-        operation = self.params.get('operation')
+        operation = self.params.get("operation")
         if operation == "read":
             return self.read_nics()
 
@@ -191,13 +185,14 @@ class VappVMNIC(VcdAnsibleModule):
         vdc = self.params.get('vdc')
         vdc_resource = VDC(self.client, resource=self.org.get_vdc(vdc))
         vapp_resource_href = vdc_resource.get_resource_href(
-            name=vapp, entity_type=EntityType.VAPP)
+            name=vapp, entity_type=EntityType.VAPP
+        )
         vapp_resource = self.client.get_resource(vapp_resource_href)
 
         return vapp_resource
 
     def get_vm(self):
-        vapp_vm_resource = self.vapp.get_vm(self.params.get('vm_name'))
+        vapp_vm_resource = self.vapp.get_vm(self.params.get("vm_name"))
 
         return VM(self.client, resource=vapp_vm_resource)
 
@@ -205,88 +200,95 @@ class VappVMNIC(VcdAnsibleModule):
         vm = self.get_vm()
 
         return self.client.get_resource(
-            vm.resource.get('href') + '/networkConnectionSection')
+            vm.resource.get("href") + "/networkConnectionSection"
+        )
 
     def add_nic(self):
         vm = self.get_vm()
-        vm_name = self.params.get('vm_name')
-        nics = self.params.get('nics')
+        vm_name = self.params.get("vm_name")
+        nics = self.params.get("nics")
         response = dict()
-        response['changed'] = False
-        response['msg'] = list()
+        response["changed"] = False
+        response["msg"] = list()
 
         for nic in nics:
             try:
-                network = nic.get('network')
-                nic_id = nic.get('nic_id')
-                ip_address = nic.get('ip_address')
-                ip_allocation_mode = nic.get('ip_allocation_mode')
-                adapter_type = nic.get('adapter_type')
-                is_primary = nic.get('is_primary')
-                is_connected = nic.get('is_connected')
-                add_nic_task = vm.add_nic(adapter_type=adapter_type,
-                                          is_primary=is_primary,
-                                          is_connected=is_connected,
-                                          network_name=network,
-                                          ip_address_mode=ip_allocation_mode,
-                                          ip_address=ip_address)
+                network = nic.get("network")
+                nic_id = nic.get("nic_id")
+                ip_address = nic.get("ip_address")
+                ip_allocation_mode = nic.get("ip_allocation_mode")
+                adapter_type = nic.get("adapter_type")
+                is_primary = nic.get("is_primary")
+                is_connected = nic.get("is_connected")
+                add_nic_task = vm.add_nic(
+                    adapter_type=adapter_type,
+                    is_primary=is_primary,
+                    is_connected=is_connected,
+                    network_name=network,
+                    ip_address_mode=ip_allocation_mode,
+                    ip_address=ip_address,
+                )
                 self.execute_task(add_nic_task)
-                msg = 'Nic {0} has been added to VM {1}'
+                msg = "Nic {0} has been added to VM {1}"
                 msg = msg.format(nic_id, vm_name)
-                response['changed'] = True
+                response["changed"] = True
             except OperationNotSupportedException as error:
-                msg = 'Nic {0} throws following error: {1}'
+                msg = "Nic {0} throws following error: {1}"
                 msg = msg.format(nic_id, error.__str__())
-            response['msg'].append(msg)
+            response["msg"].append(msg)
 
         return response
 
     def update_nic(self):
         vm = self.get_vm()
-        nics = self.params.get('nics')
+        nics = self.params.get("nics")
         response = dict()
-        response['changed'] = False
-        response['msg'] = list()
+        response["changed"] = False
+        response["msg"] = list()
 
         for nic in nics:
             try:
-                network = nic.get('network')
-                nic_id = nic.get('nic_id')
-                ip_address = nic.get('ip_address')
-                ip_allocation_mode = nic.get('ip_allocation_mode')
-                adapter_type = nic.get('adapter_type')
-                is_primary = nic.get('is_primary')
-                is_connected = nic.get('is_connected')
+                network = nic.get("network")
+                nic_id = nic.get("nic_id")
+                ip_address = nic.get("ip_address")
+                ip_allocation_mode = nic.get("ip_allocation_mode")
+                adapter_type = nic.get("adapter_type")
+                is_primary = nic.get("is_primary")
+                is_connected = nic.get("is_connected")
                 update_nic_task = vm.update_nic(
-                    network_name=network, nic_id=nic_id,
-                    is_connected=is_connected, is_primary=is_primary,
-                    adapter_type=adapter_type, ip_address=ip_address,
-                    ip_address_mode=ip_allocation_mode)
+                    network_name=network,
+                    nic_id=nic_id,
+                    is_connected=is_connected,
+                    is_primary=is_primary,
+                    adapter_type=adapter_type,
+                    ip_address=ip_address,
+                    ip_address_mode=ip_allocation_mode,
+                )
                 self.execute_task(update_nic_task)
-                msg = 'Nic {0} has been updated'.format(nic_id)
-                response['changed'] = True
+                msg = "Nic {0} has been updated".format(nic_id)
+                response["changed"] = True
             except EntityNotFoundException as error:
-                msg = 'Nic {0} throws following error: {1}'
+                msg = "Nic {0} throws following error: {1}"
                 msg = msg.format(nic_id, error.__str__())
-            response['msg'].append(msg)
+            response["msg"].append(msg)
 
         return response
 
     def read_nics(self):
         vm = self.get_vm()
         response = dict()
-        response['changed'] = False
-        response['msg'] = vm.list_nics()
+        response["changed"] = False
+        response["msg"] = vm.list_nics()
 
         return response
 
     def delete_nic(self):
         vm = self.get_vm()
-        nics = self.params.get('nics')
-        vm_name = self.params.get('vm_name')
+        nics = self.params.get("nics")
+        vm_name = self.params.get("vm_name")
         response = dict()
-        response['msg'] = list()
-        response['changed'] = False
+        response["msg"] = list()
+        response["changed"] = False
 
         # check if VM is powered off
         if not vm.is_powered_off():
@@ -295,42 +297,42 @@ class VappVMNIC(VcdAnsibleModule):
 
         for nic in nics:
             try:
-                nic_id = nic.get('nic_id')
+                nic_id = nic.get("nic_id")
                 delete_nic_task = vm.delete_nic(nic_id)
                 self.execute_task(delete_nic_task)
-                msg = 'VM nic {0} has been deleted'.format(nic_id)
-                response['changed'] = True
+                msg = "VM nic {0} has been deleted".format(nic_id)
+                response["changed"] = True
             except (InvalidParameterException, EntityNotFoundException) as error:
-                msg = 'Nic {0} throws following error: {1}'
+                msg = "Nic {0} throws following error: {1}"
                 msg = msg.format(nic_id, error.__str__())
-            response['msg'].append(msg)
+            response["msg"].append(msg)
 
         return response
 
 
 def main():
     argument_spec = vapp_vm_nic_argument_spec()
-    response = dict(msg=dict(type='str'))
+    response = dict(msg=dict(type="str"))
     module = VappVMNIC(argument_spec=argument_spec, supports_check_mode=True)
     try:
         if module.check_mode:
             response = dict()
-            response['changed'] = False
-            response['msg'] = "skipped, running in check mode"
-            response['skipped'] = True
-        elif module.params.get('state'):
+            response["changed"] = False
+            response["msg"] = "skipped, running in check mode"
+            response["skipped"] = True
+        elif module.params.get("state"):
             response = module.manage_states()
-        elif module.params.get('operation'):
+        elif module.params.get("operation"):
             response = module.manage_operations()
         else:
-            raise Exception('Please provide state/operation for resource')
+            raise Exception("Please provide state/operation for resource")
 
     except Exception as error:
-        response['msg'] = error
+        response["msg"] = error
         module.fail_json(**response)
     else:
         module.exit_json(**response)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
