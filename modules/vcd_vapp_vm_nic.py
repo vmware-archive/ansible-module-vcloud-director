@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     nics:
         description:
             - List of NICs
@@ -143,6 +149,7 @@ def vapp_vm_nic_argument_spec():
         is_connected=dict(type='bool', required=False, default=False),
         ip_allocation_mode=dict(choices=IP_ALLOCATION_MODE, required=False),
         adapter_type=dict(choices=NETWORK_ADAPTER_TYPE, required=False),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=VAPP_VM_NIC_STATES, required=False),
         operation=dict(choices=VAPP_VM_NIC_OPERATIONS, required=False),
     )
@@ -151,6 +158,7 @@ def vapp_vm_nic_argument_spec():
 class VappVMNIC(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VappVMNIC, self).__init__(**kwargs)
+        self.org = self.get_org()
         vapp_resource = self.get_resource()
         self.vapp = VApp(self.client, resource=vapp_resource)
 
@@ -170,11 +178,18 @@ class VappVMNIC(VcdAnsibleModule):
         if operation == "read":
             return self.read_nics()
 
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
+
     def get_resource(self):
         vapp = self.params.get('vapp')
         vdc = self.params.get('vdc')
-        org_resource = Org(self.client, resource=self.client.get_org())
-        vdc_resource = VDC(self.client, resource=org_resource.get_vdc(vdc))
+        vdc_resource = VDC(self.client, resource=self.org.get_vdc(vdc))
         vapp_resource_href = vdc_resource.get_resource_href(
             name=vapp, entity_type=EntityType.VAPP)
         vapp_resource = self.client.get_resource(vapp_resource_href)

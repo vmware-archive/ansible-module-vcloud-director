@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     catalog_name:
         description:
             - catalog name
@@ -104,6 +110,7 @@ def vcd_catalog_argument_spec():
         new_catalog_name=dict(type='str', required=False),
         description=dict(type='str', required=False),
         shared=dict(type='bool', required=False, default=True),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=VCD_CATALOG_STATES, required=False),
         operation=dict(choices=VCD_CATALOG_OPERATIONS, required=False)
     )
@@ -112,8 +119,7 @@ def vcd_catalog_argument_spec():
 class Catalog(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(Catalog, self).__init__(**kwargs)
-        logged_in_org = self.client.get_org()
-        self.org = Org(self.client, resource=logged_in_org)
+        self.org = self.get_org()
 
     def manage_states(self):
         state = self.params.get('state')
@@ -136,6 +142,14 @@ class Catalog(VcdAnsibleModule):
 
         if operation == "list_items":
             return self.list_items()
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
 
     def create(self):
         catalog_name = self.params.get('catalog_name')

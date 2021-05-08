@@ -277,8 +277,9 @@ class VcdExternalNetwork(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            t = self.platform.delete_external_network(network_name, force_delete)
-            self.execute_task(t)
+            task = self.platform.delete_external_network(
+                network_name, force_delete)
+            self.execute_task(task)
         except EntityNotFoundException:
             msg = "External Network {0} does not exists"
             response['msg'] = msg.format(network_name)

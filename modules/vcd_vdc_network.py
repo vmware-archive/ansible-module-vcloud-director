@@ -42,6 +42,12 @@ options:
         description:
             - Whether to use secure connection to vCloud Director host.
         type: bool
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     vdc_name:
         description:
             - The name of the vdc where GW is going to be created.
@@ -203,6 +209,7 @@ def org_vdc_network_argument_spec():
         sub_interface=dict(type='bool', required=False),
         distributed_interface=dict(type='bool', required=False),
         retain_net_info_across_deployments=dict(type='bool', required=False),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=ORG_VDC_NETWORK_STATES, required=True)
     )
 
@@ -211,7 +218,7 @@ class OrgVdcNetwork(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(OrgVdcNetwork, self).__init__(**kwargs)
         self.vdc_name = self.params.get('vdc_name')
-        self.org = Org(self.client, resource=self.client.get_org())
+        self.org = self.get_org()
         vdc_resource = self.org.get_vdc(self.vdc_name)
         self.vdc = VDC(self.client, name=self.vdc_name, resource=vdc_resource)
 
@@ -222,6 +229,14 @@ class OrgVdcNetwork(VcdAnsibleModule):
 
         if state == "absent":
             return self.delete_org_vdc_network()
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
 
     def create_org_vdc_network(self):
         direct = self.params.get('direct')

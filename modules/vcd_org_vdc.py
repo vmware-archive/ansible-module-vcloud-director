@@ -48,7 +48,7 @@ options:
         type: str
     vdc_org_name:
         description:
-            - The name of organization the vdc associated with
+            - name of the vdc organization
         type: str
     provider_vdc_name:
         description:

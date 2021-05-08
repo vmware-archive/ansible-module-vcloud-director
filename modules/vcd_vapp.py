@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     vapp_name:
         description:
             - Vapp name
@@ -225,6 +231,7 @@ def vapp_argument_spec():
         metadata_domain=dict(type='str', required=False, default='GENERAL', choices=VAPP_METADATA_DOMAINS),
         fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
         shared_access=dict(type='str', required=False, choices=VAPP_SHARED_ACCESS, default="ReadOnly"),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_OPERATIONS, required=False),
     )
@@ -233,8 +240,7 @@ def vapp_argument_spec():
 class Vapp(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(Vapp, self).__init__(**kwargs)
-        logged_in_org = self.client.get_org()
-        self.org = Org(self.client, resource=logged_in_org)
+        self.org = self.get_org()
         vdc_resource = self.org.get_vdc(self.params.get('vdc'))
         self.vdc = VDC(self.client, href=vdc_resource.get('href'))
 
@@ -280,6 +286,14 @@ class Vapp(VcdAnsibleModule):
 
         if operation == "delete_org_network":
             return self.delete_org_network()
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
 
     def get_vapp(self):
         vapp_name = self.params.get('vapp_name')
