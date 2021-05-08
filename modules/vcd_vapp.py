@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     vapp_name:
         description:
             - Vapp name
@@ -126,7 +132,7 @@ options:
         description:
             - true if delete vApp forcefully else false
         required: false
-    shared_access
+    shared_access:
         description:
             - shared access for a vapp across the org.
             - Possible values could be 'ReadOnly', 'Change', 'FullControl'
@@ -178,15 +184,22 @@ from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import NSMAP
 from pyvcloud.vcd.client import FenceMode
+from pyvcloud.vcd.client import MetadataDomain
+from pyvcloud.vcd.client import MetadataValueType
+from pyvcloud.vcd.client import MetadataVisibility
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException
+from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException, InvalidStateException
 
 
 VAPP_VM_STATES = ['present', 'absent']
-VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'list_vms', 'list_networks',
-                      'share', 'unshare']
 VM_STATUSES = {'3': 'SUSPENDED', '4': 'POWERED_ON', '8': 'POWERED_OFF'}
 VAPP_SHARED_ACCESS = ['ReadOnly', 'Change', 'FullControl']
+VAPP_METADATA_DOMAINS = ['GENERAL', 'SYSTEM']
+VAPP_METADATA_VISIBILITY = ['PRIVATE', 'READONLY', 'READWRITE']
+VAPP_SET_METADATA_VALUE_TYPE = ['String', 'Number', 'Boolean', 'DateTime']
+VAPP_OPERATIONS = ['poweron', 'poweroff', 'list_vms', 'list_networks',
+                   'share', 'unshare', 'set_meta', 'get_meta', 'remove_meta',
+                   'add_org_network', 'delete_org_network']
 
 
 def vapp_argument_spec():
@@ -212,18 +225,22 @@ def vapp_argument_spec():
         storage_profile=dict(type='str', required=False, default=None),
         network_adapter_type=dict(type='str', required=False, default=None),
         force=dict(type='bool', required=False, default=False),
+        metadata=dict(type='dict', required=False, default=None),
+        metadata_type=dict(type='str', required=False, default='String', choices=VAPP_SET_METADATA_VALUE_TYPE),
+        metadata_visibility=dict(type='str', required=False, default='READWRITE', choices=VAPP_METADATA_VISIBILITY),
+        metadata_domain=dict(type='str', required=False, default='GENERAL', choices=VAPP_METADATA_DOMAINS),
         fence_mode=dict(type='str', required=False, default=FenceMode.BRIDGED.value),
         shared_access=dict(type='str', required=False, choices=VAPP_SHARED_ACCESS, default="ReadOnly"),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=VAPP_VM_STATES, required=False),
-        operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
+        operation=dict(choices=VAPP_OPERATIONS, required=False),
     )
 
 
 class Vapp(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(Vapp, self).__init__(**kwargs)
-        logged_in_org = self.client.get_org()
-        self.org = Org(self.client, resource=logged_in_org)
+        self.org = self.get_org()
         vdc_resource = self.org.get_vdc(self.params.get('vdc'))
         self.vdc = VDC(self.client, href=vdc_resource.get('href'))
 
@@ -254,6 +271,29 @@ class Vapp(VcdAnsibleModule):
 
         if operation == "unshare":
             return self.unshare()
+
+        if operation == "set_meta":
+            return self.set_meta()
+
+        if operation == "get_meta":
+            return self.get_meta()
+
+        if operation == "remove_meta":
+            return self.remove_meta()
+
+        if operation == "add_org_network":
+            return self.add_org_network()
+
+        if operation == "delete_org_network":
+            return self.delete_org_network()
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
 
     def get_vapp(self):
         vapp_name = self.params.get('vapp_name')
@@ -377,10 +417,10 @@ class Vapp(VcdAnsibleModule):
     def power_on(self):
         response = dict()
         response['changed'] = False
-        vapp = self.get_vapp()
         vapp_name = self.params.get('vapp_name')
 
         try:
+            vapp = self.get_vapp()
             deploy_vapp_task = vapp.deploy()
             self.execute_task(deploy_vapp_task)
             msg = 'Vapp {} has been powered on'
@@ -388,21 +428,25 @@ class Vapp(VcdAnsibleModule):
             response['changed'] = True
         except OperationNotSupportedException as ex:
             response['warnings'] = str(ex)
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
 
         return response
 
     def power_off(self):
         response = dict()
         response['changed'] = False
-        vapp = self.get_vapp()
         vapp_name = self.params.get('vapp_name')
 
         try:
+            vapp = self.get_vapp()
             undeploy_vapp_task = vapp.undeploy(action="powerOff")
             self.execute_task(undeploy_vapp_task)
             response['msg'] = 'Vapp {} has been powered off'.format(vapp_name)
             response['changed'] = True
         except OperationNotSupportedException as ex:
+            response['warnings'] = str(ex)
+        except EntityNotFoundException as ex:
             response['warnings'] = str(ex)
 
         return response
@@ -411,51 +455,170 @@ class Vapp(VcdAnsibleModule):
         response = dict()
         response['msg'] = list()
         response['changed'] = False
-        vapp = self.get_vapp()
-        for vm in vapp.get_all_vms():
-            try:
-                ip = vapp.get_primary_ip(vm.get('name'))
-            except Exception:
-                ip = None
-            vm_details = {
-                "name": vm.get('name'),
-                "status": VM_STATUSES[vm.get('status')],
-                "deployed": vm.get('deployed') == 'true',
-                "ip_address": ip
-            }
-            response['msg'].append(vm_details)
+
+        try:
+            vapp = self.get_vapp()
+            for vm in vapp.get_all_vms():
+                try:
+                    ip = vapp.get_primary_ip(vm.get('name'))
+                except Exception:
+                    ip = None
+                finally:
+                    response['msg'].append({
+                        "name": vm.get('name'),
+                        "status": VM_STATUSES[vm.get('status')],
+                        "deployed": vm.get('deployed') == 'true',
+                        "ip_address": ip
+                    })
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
 
         return response
 
     def list_networks(self):
         response = dict()
         response['changed'] = False
-        vapp = self.get_vapp()
-        networks = vapp.get_all_networks()
-        response['msg'] = [network.get(
-            '{' + NSMAP['ovf'] + '}name') for network in networks]
+
+        try:
+            vapp = self.get_vapp()
+            networks = vapp.get_all_networks()
+            response['msg'] = [
+                network.get('{' + NSMAP['ovf'] + '}name') for network in networks
+            ]
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
 
         return response
 
     def share(self):
         response = dict()
         response['changed'] = False
-        vapp = self.get_vapp()
         access = self.params.get("shared_access")
-        vapp.share_with_org_members(everyone_access_level=access)
-        msg = "Vapp is shared across org with {0} access"
-        response['msg'] = msg.format(access)
-        response['changed'] = True
+
+        try:
+            vapp = self.get_vapp()
+            vapp.share_with_org_members(everyone_access_level=access)
+            msg = "Vapp is shared across org with {0} access"
+            response['msg'] = msg.format(access)
+            response['changed'] = True
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
 
         return response
 
     def unshare(self):
         response = dict()
         response['changed'] = False
-        vapp = self.get_vapp()
-        vapp.unshare_from_org_members()
-        response['msg'] = "Sharing has been stopped for Vapp"
-        response['changed'] = True
+
+        try:
+            vapp = self.get_vapp()
+            vapp.unshare_from_org_members()
+            response['msg'] = "Sharing has been stopped for Vapp"
+            response['changed'] = True
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
+
+        return response
+
+    def set_meta(self):
+        response = dict()
+        response['changed'] = False
+        vapp_name = self.params.get('vapp_name')
+        metadata = self.params.get('metadata')
+        domain = self.params.get("metadata_domain")
+        visibility = self.params.get("metadata_visibility")
+        metadata_type = self.params.get("metadata_type")
+        metadata_type = "Metadata{0}Value".format(metadata_type)
+
+        try:
+            vapp = self.get_vapp()
+            domain = MetadataDomain(domain)
+            visibility = MetadataVisibility(visibility)
+            metadata_type = MetadataValueType(metadata_type)
+            set_meta_task = vapp.set_multiple_metadata(metadata,
+                                                       domain=domain,
+                                                       visibility=visibility,
+                                                       metadata_value_type=metadata_type)
+            self.execute_task(set_meta_task)
+            msg = "Metadata {0} have been set to vApp {1}"
+            response["msg"] = msg.format(list(metadata.keys()), vapp_name)
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
+
+        return response
+
+    def get_meta(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = dict()
+
+        try:
+            vapp = self.get_vapp()
+            metadata = vapp.get_metadata()
+            response['msg'] = {
+                 metadata.MetadataEntry.Key.text: metadata.MetadataEntry.TypedValue.Value.text
+            }
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
+
+        return response
+
+    def remove_meta(self):
+        response = dict()
+        response['changed'] = False
+        vapp_name = self.params.get('vapp_name')
+        domain = self.params.get("metadata_domain")
+        metadata = self.params.get('metadata')
+        domain = MetadataDomain(domain)
+        response['msg'] = list()
+
+        try:
+            vapp = self.get_vapp()
+            for key in metadata:
+                remove_meta_task = vapp.remove_metadata(key, domain=domain)
+                self.execute_task(remove_meta_task)
+            msg = "Metadata {0} have been removed from vApp {1}"
+            response["msg"] = msg.format(list(metadata.keys()), vapp_name)
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
+
+        return response
+
+    def add_org_network(self):
+        response = dict()
+        response['changed'] = False
+        vapp_name = self.params.get('vapp_name')
+        network = self.params.get("network")
+
+        try:
+            vapp = self.get_vapp()
+            vapp.connect_org_vdc_network(network)
+            response['changed'] = True
+            msg = "Org Network {0} has been added to vApp {1}"
+            response['msg'] = msg.format(network, vapp_name)
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
+        except InvalidStateException as ex:
+            response['warnings'] = str(ex)
+
+        return response
+
+    def delete_org_network(self):
+        response = dict()
+        response['changed'] = False
+        vapp_name = self.params.get('vapp_name')
+        network = self.params.get("network")
+
+        try:
+            vapp = self.get_vapp()
+            vapp.disconnect_org_vdc_network(network)
+            response['changed'] = True
+            msg = "Org Network {0} has been added to vApp {1}"
+            response['msg'] = msg.format(network, vapp_name)
+        except EntityNotFoundException as ex:
+            response['warnings'] = str(ex)
+        except InvalidStateException as ex:
+            response['warnings'] = str(ex)
 
         return response
 

@@ -142,7 +142,7 @@
 - name: share vapp
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: test_vapp
     vdc: ACME_PAYG
@@ -156,7 +156,7 @@
 - name: unshare vapp
   vcd_vapp:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp_name: acme_vapp
     vdc: ACME_PAYG
@@ -164,6 +164,86 @@
   register: output
 
 - name: unshare vapp output
+  debug:
+    msg: '{{ output }}'
+
+- name: set vapp metadata
+  vcd_vapp:
+    user: acmeadmin
+    password: XXXXXXXXXX
+    org: Acme
+    vapp_name: acme_vapp
+    vdc: ACME_PAYG
+    metadata:
+      sample7: sample-value4
+      sample8: sample-value4
+      sample9: sample-value4
+    operation: set_meta
+  register: output
+
+- name: set vapp metadata output
+  debug:
+    msg: '{{ output }}'
+
+- name: get vapp metadata
+  vcd_vapp:
+    user: acmeadmin
+    password: XXXXXXXXXX
+    org: Acme
+    vapp_name: acme_vapp
+    vdc: ACME_PAYG
+    operation: get_meta
+  register: output
+
+- name: get vapp metadata output
+  debug:
+    msg: '{{ output }}'
+
+- name: remove vapp metadata
+  vcd_vapp:
+    user: acmeadmin
+    password: XXXXXXXXXX
+    org: Acme
+    vapp_name: acme_vapp
+    vdc: ACME_PAYG
+    metadata:
+      sample7: sample-value4
+      sample8: sample-value4
+      sample9: sample-value4
+    operation: remove_meta
+  register: output
+
+- name: remove vapp metadata output
+  debug:
+    msg: '{{ output }}'
+
+- name: add org network
+  vcd_vapp:
+    user: acmeadmin
+    password: XXXXXXXXXX
+    org: Acme
+    vapp_name: acme_vapp
+    vdc: ACME_PAYG
+    network: acme_internal_direct_2
+    operation: add_org_network
+  register: output
+
+- name: add org network
+  debug:
+    msg: '{{ output }}'
+
+- name: delete org network
+  vcd_vapp:
+    user: acmeadmin
+    password: XXXXXXXXXX
+    org: Acme
+    vapp_name: acme_vapp
+    vdc: ACME_PAYG
+    network: acme_internal_direct_2
+    operation: delete_org_network
+  register: output
+
+- name: delete org network
   debug:
     msg: '{{ output }}'
 

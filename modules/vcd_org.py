@@ -105,7 +105,7 @@ from pyvcloud.vcd.exceptions import EntityNotFoundException, BadRequestException
 
 VCD_ORG_STATES = ['present', 'absent', 'update']
 VCD_ORG_OPERATIONS = ['read', 'add_rights', 'remove_rights',
-                      'list_rights', 'list_roles']
+                      'list_rights', 'list_roles', 'list_vdcs']
 
 
 def org_argument_spec():
@@ -153,6 +153,15 @@ class VCDOrg(VcdAnsibleModule):
         if operation == "list_roles":
             return self.list_roles()
 
+        if operation == 'list_vdcs':
+            return self.list_vdcs()
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=resource)
+
     def create(self):
         org_name = self.params.get('org_name')
         full_name = self.params.get('full_name')
@@ -161,6 +170,9 @@ class VCDOrg(VcdAnsibleModule):
         response['changed'] = False
 
         try:
+            self.get_org()
+            response['warnings'] = 'Org {} is already present'.format(org_name)
+        except EntityNotFoundException:
             sys_admin = self.client.get_admin()
             self.system = System(self.client, admin_resource=sys_admin)
             self.system.create_org(org_name, full_name, is_enabled)
@@ -177,13 +189,15 @@ class VCDOrg(VcdAnsibleModule):
         org_details = dict()
         response['changed'] = False
 
-        resource = self.client.get_org_by_name(org_name)
-        org = Org(self.client, resource=resource)
-        org_admin_resource = org.client.get_resource(org.href_admin)
-        org_details['org_name'] = org_name
-        org_details['full_name'] = str(org_admin_resource['FullName'])
-        org_details['is_enabled'] = str(org_admin_resource['IsEnabled'])
-        response['msg'] = org_details
+        try:
+            org = self.get_org()
+            org_admin_resource = org.client.get_resource(org.href_admin)
+            org_details['org_name'] = org_name
+            org_details['full_name'] = str(org_admin_resource['FullName'])
+            org_details['is_enabled'] = str(org_admin_resource['IsEnabled'])
+            response['msg'] = org_details
+        except EntityNotFoundException:
+            response['warnings'] = "Org {0} not found".format(org_name)
 
         return response
 
@@ -193,11 +207,13 @@ class VCDOrg(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        resource = self.client.get_org_by_name(org_name)
-        org = Org(self.client, resource=resource)
-        org.update_org(is_enabled)
-        response['msg'] = "Org {} has been updated".format(org_name)
-        response['changed'] = True
+        try:
+            org = self.get_org()
+            org.update_org(is_enabled)
+            response['msg'] = "Org {} has been updated".format(org_name)
+            response['changed'] = True
+        except EntityNotFoundException:
+            response['warnings'] = "Org {0} not found".format(org_name)
 
         return response
 
@@ -209,6 +225,9 @@ class VCDOrg(VcdAnsibleModule):
         response['changed'] = False
 
         try:
+            org = self.read()['msg']
+            if org['is_enabled'] == "True":
+                org.update_org(False)
             sys_admin = self.client.get_admin()
             self.system = System(self.client, admin_resource=sys_admin)
             delete_org_task = self.system.delete_org(
@@ -227,11 +246,13 @@ class VCDOrg(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        resource = self.client.get_org_by_name(org_name)
-        org = Org(self.client, resource=resource)
-        org.add_rights(org_rights)
-        response['msg'] = "Rights has been added to org successfully."
-        response['changed'] = True
+        try:
+            org = self.get_org()
+            org.add_rights(org_rights)
+            response['msg'] = "Rights has been added to org successfully."
+            response['changed'] = True
+        except EntityNotFoundException:
+            response['warnings'] = "Org {0} not found".format(org_name)
 
         return response
 
@@ -241,11 +262,13 @@ class VCDOrg(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        resource = self.client.get_org_by_name(org_name)
-        org = Org(self.client, resource=resource)
-        org.remove_rights(org_rights)
-        response['msg'] = "Rights has been removed to org successfully."
-        response['changed'] = True
+        try:
+            org = self.get_org()
+            org.remove_rights(org_rights)
+            response['msg'] = "Rights has been removed to org successfully."
+            response['changed'] = True
+        except EntityNotFoundException:
+            response['warnings'] = "Org {0} not found".format(org_name)
 
         return response
 
@@ -254,9 +277,11 @@ class VCDOrg(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        resource = self.client.get_org_by_name(org_name)
-        org = Org(self.client, resource=resource)
-        response['msg'] = org.list_rights_of_org()
+        try:
+            org = self.get_org()
+            response['msg'] = org.list_rights_of_org()
+        except EntityNotFoundException:
+            response['warnings'] = "Org {0} not found".format(org_name)
 
         return response
 
@@ -265,9 +290,24 @@ class VCDOrg(VcdAnsibleModule):
         response = dict()
         response['changed'] = False
 
-        resource = self.client.get_org_by_name(org_name)
-        org = Org(self.client, resource=resource)
-        response['msg'] = org.list_roles()
+        try:
+            org = self.get_org()
+            response['msg'] = org.list_roles()
+        except EntityNotFoundException:
+            response['warnings'] = "Org {0} not found".format(org_name)
+
+        return response
+
+    def list_vdcs(self):
+        org_name = self.params.get('org_name')
+        response = dict()
+        response['changed'] = False
+
+        try:
+            org = self.get_org()
+            response['msg'] = [vdc.get('name') for vdc in org.list_vdcs()]
+        except EntityNotFoundException:
+            response['warnings'] = "Org {0} not found".format(org_name)
 
         return response
 

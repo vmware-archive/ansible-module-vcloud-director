@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     vapp:
         description:
             - vApp name
@@ -81,7 +87,8 @@ options:
     ip_ranges:
         description:
             - list of IP ranges used for static pool allocation in the network
-            - For example, [192.168.1.2-192.168.1.49, 192.168.1.100-192.168.1.149]
+            - For example,
+                - [192.168.1.2-192.168.1.49, 192.168.1.100-192.168.1.149]
         required: false
     is_guest_vlan_allowed:
         description:
@@ -101,7 +108,7 @@ author:
 
 EXAMPLES = '''
 - name: Test with a message
-  vcd_vapp_vm:
+  vcd_vapp_network:
     user: terraform
     password: abcd
     host: csa.sandbox.org
@@ -109,12 +116,14 @@ EXAMPLES = '''
     api_version: 30
     verify_ssl_certs: False
     network: uplink
-    dns_suffix: test_suffix
-    ip_ranges: [192.168.1.2-192.168.1.49, 192.168.1.100-192.168.1.149]
-    network_cidr: 192.168.1.1/24
-    primary_dns_ip: 192.168.1.50
     vapp: vapp1
     vdc: vdc1
+    dns_suffix: test_suffix
+    ip_ranges:
+        - 192.168.1.2-192.168.1.49
+        - 192.168.1.100-192.168.1.149
+    network_cidr: 192.168.1.1/24
+    primary_dns_ip: 192.168.1.50
     state: present
 '''
 
@@ -151,6 +160,7 @@ def vapp_network_argument_spec():
         primary_dns_ip=dict(type='str', required=False),
         secondary_dns_ip=dict(type='str', required=False),
         is_guest_vlan_allowed=dict(type='bool', required=False),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=VAPP_NETWORK_STATES, required=False),
         operation=dict(choices=VAPP_NETWORK_OPERATIONS, required=False),
     )
@@ -159,6 +169,7 @@ def vapp_network_argument_spec():
 class VappNetwork(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VappNetwork, self).__init__(**kwargs)
+        self.org = self.get_org()
         vapp_resource = self.get_resource()
         self.vapp = VApp(self.client, resource=vapp_resource)
 
@@ -178,11 +189,18 @@ class VappNetwork(VcdAnsibleModule):
         if operation == "read":
             return self.get_all_networks()
 
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
+
     def get_resource(self):
         vapp = self.params.get('vapp')
         vdc = self.params.get('vdc')
-        org_resource = Org(self.client, resource=self.client.get_org())
-        vdc_resource = VDC(self.client, resource=org_resource.get_vdc(vdc))
+        vdc_resource = VDC(self.client, resource=self.org.get_vdc(vdc))
         vapp_resource_href = vdc_resource.get_resource_href(
             name=vapp, entity_type=EntityType.VAPP)
         vapp_resource = self.client.get_resource(vapp_resource_href)
@@ -209,7 +227,6 @@ class VappNetwork(VcdAnsibleModule):
 
         return response
 
-
     def add_network(self):
         network_name = self.params.get('network')
         network_cidr = self.params.get('network_cidr')
@@ -225,19 +242,19 @@ class VappNetwork(VcdAnsibleModule):
         try:
             self.get_network()
         except EntityNotFoundException:
-            add_network_task = self.vapp.create_vapp_network(name=network_name,
-                                                             network_cidr=network_cidr,
-                                                             description=network_description,
-                                                             primary_dns_ip=primary_dns_ip,
-                                                             secondary_dns_ip=secondary_dns_ip,
-                                                             dns_suffix=dns_suffix,
-                                                             ip_ranges=ip_ranges,
-                                                             is_guest_vlan_allowed=is_guest_vlan_allowed)
+            add_network_task = self.vapp.create_vapp_network(
+                name=network_name, network_cidr=network_cidr,
+                description=network_description, primary_dns_ip=primary_dns_ip,
+                secondary_dns_ip=secondary_dns_ip, dns_suffix=dns_suffix,
+                ip_ranges=ip_ranges,
+                is_guest_vlan_allowed=is_guest_vlan_allowed)
             self.execute_task(add_network_task)
-            response['msg'] = 'Vapp Network {} has been added'.format(network_name)
+            msg = 'Vapp Network {} has been added'
+            response['msg'] = msg.format(network_name)
             response['changed'] = True
         else:
-            response['warnings'] = 'Vapp Network {} is already present.'.format(network_name)
+            msg = 'Vapp Network {} is already present'
+            response['warnings'] = msg.format(network_name)
 
         return response
 
@@ -251,13 +268,15 @@ class VappNetwork(VcdAnsibleModule):
         try:
             self.get_network()
         except EntityNotFoundException:
-            response['warnings'] = 'Vapp Network {} is not present'.format(network_name)
+            msg = 'Vapp Network {} is not present'
+            response['warnings'] = msg.format(network_name)
         else:
-            update_network_task = self.vapp.update_vapp_network(network_name=network_name,
-                                                             new_net_name=new_network_name,
-                                                             new_net_desc=network_description)
+            update_network_task = self.vapp.update_vapp_network(
+                network_name=network_name, new_net_name=new_network_name,
+                new_net_desc=network_description)
             self.execute_task(update_network_task)
-            response['msg'] = 'Vapp Network {} has been updated'.format(network_name)
+            msg = 'Vapp Network {} has been updated'
+            response['msg'] = msg.format(network_name)
             response['changed'] = True
 
         return response
@@ -270,11 +289,13 @@ class VappNetwork(VcdAnsibleModule):
         try:
             self.get_network()
         except EntityNotFoundException:
-            response['warnings'] = 'Vapp Network {} is not present'.format(network_name)
+            msg = 'Vapp Network {} is not present'
+            response['warnings'] = msg.format(network_name)
         else:
             delete_network_task = self.vapp.delete_vapp_network(network_name)
             self.execute_task(delete_network_task)
-            response['msg'] = 'Vapp Network {} has been deleted.'.format(network_name)
+            msg = 'Vapp Network {} has been deleted'
+            response['msg'] = msg.format(network_name)
             response['changed'] = True
 
         return response

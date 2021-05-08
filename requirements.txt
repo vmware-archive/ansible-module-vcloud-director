@@ -1,0 +1,3 @@
+pyvcloud
+lxml
+requests

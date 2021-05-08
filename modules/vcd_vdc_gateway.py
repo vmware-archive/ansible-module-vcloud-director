@@ -54,7 +54,7 @@ options:
         type: str
     org_name:
         description:
-            - Name of the organization the Gateway belongs to.
+            - target org name for gateway
         type: str
         required: false
     description:
@@ -274,9 +274,7 @@ class VdcGW(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VdcGW, self).__init__(**kwargs)
         self.vdc_name = self.params.get('vdc_name')
-        self.org_name = self.params.get('org_name')
-        org_resource = self.client.get_org_by_name(self.org_name)
-        self.org = Org(self.client, resource=org_resource)
+        self.org = self.get_org()
         vdc_resource = self.org.get_vdc(self.vdc_name)
         self.vdc = VDC(self.client, name=self.vdc_name, resource=vdc_resource)
 
@@ -301,6 +299,14 @@ class VdcGW(VcdAnsibleModule):
 
         if operation == "remove_network":
             return self.remove_network()
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
 
     def get_gateway(self, gateway_name):
         gateway = self.vdc.get_gateway(gateway_name)

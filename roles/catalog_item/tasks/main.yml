@@ -16,7 +16,7 @@
 
 - name: upload media output
   debug:
-    msg: '{{ output }}'  
+    msg: '{{ output }}'
 
 # ############################################ delete-media ##############################################################
 - name: delete media
@@ -28,7 +28,7 @@
 
 - name: delete media output
   debug:
-    msg: '{{ output }}'  
+    msg: '{{ output }}'
 
 
 ############################################ upload-ova ##############################################################
@@ -59,7 +59,7 @@
 
 - name: delete ova output
   debug:
-    msg: '{{ output }}'  
+    msg: '{{ output }}'
 
 ############################################ capture-vapp ##############################################################
 - name: capture vapp
@@ -80,7 +80,7 @@
 
 - name: capture vapp output
   debug:
-    msg: '{{ output }}'  
+    msg: '{{ output }}'
 
 ############################################ delete-capture-vapp ##############################################################
 - name: delete capture-vapp

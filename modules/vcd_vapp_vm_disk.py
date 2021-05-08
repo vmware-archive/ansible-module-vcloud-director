@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     disks:
         description:
             - List of Disk with its size, and attached controller
@@ -87,6 +93,7 @@ EXAMPLES = '''
     disks:
         - size: 3
           controller: lsilogic
+          name: Hard disk 1
     state = "present"
 '''
 
@@ -116,6 +123,7 @@ def vapp_vm_disk_argument_spec():
         vapp=dict(type='str', required=True),
         vdc=dict(type='str', required=True),
         disks=dict(type='list', required=False),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=VAPP_VM_DISK_STATES, required=False),
         operation=dict(choices=VAPP_VM_DISK_OPERATIONS, required=False),
     )
@@ -124,6 +132,7 @@ def vapp_vm_disk_argument_spec():
 class VappVMDisk(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VappVMDisk, self).__init__(**kwargs)
+        self.org = self.get_org()
         vapp_resource = self.get_resource()
         self.vapp = VApp(self.client, resource=vapp_resource)
 
@@ -144,11 +153,18 @@ class VappVMDisk(VcdAnsibleModule):
         if operation == "read":
             return self.read_disks()
 
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
+
     def get_resource(self):
         vapp = self.params.get('vapp')
         vdc = self.params.get('vdc')
-        org_resource = Org(self.client, resource=self.client.get_org())
-        vdc_resource = VDC(self.client, resource=org_resource.get_vdc(vdc))
+        vdc_resource = VDC(self.client, resource=self.org.get_vdc(vdc))
         vapp_resource_href = vdc_resource.get_resource_href(
             name=vapp, entity_type=EntityType.VAPP)
         vapp_resource = self.client.get_resource(vapp_resource_href)
@@ -181,17 +197,34 @@ class VappVMDisk(VcdAnsibleModule):
         response = dict()
         response['msg'] = list()
         response['changed'] = False
+        available_disks = self.read_disks().get("disks").keys()
+        warnings = list()
 
         for disk in disks:
             disk_size = int(disk.get("size"))
             disk_controller = disk.get("controller")
-            add_disk_task = self.vapp.add_disk_to_vm(
-                vm_name, disk_size, disk_controller)
-            self.execute_task(add_disk_task)
-            msg = "A disk with size {0} and controller {1} has been added to VM {2}"
-            msg = msg.format(disk_size, disk_controller, vm_name)
-            response['msg'].append(msg)
-        response['changed'] = True
+            disk_name = disk.get("name")
+            '''
+            here the condition covers both the situtation
+            1. if someone has given the disk name then first it will
+            check for disk availability first before adding it.
+            2. if someone has ignored giving the disk name then it will
+            add a new disk any way.
+            '''
+            if disk_name not in available_disks:
+                add_disk_task = self.vapp.add_disk_to_vm(
+                    vm_name, disk_size, disk_controller)
+                self.execute_task(add_disk_task)
+                msg = "A disk with size {0} and controller {1} has been added to VM {2}"
+                msg = msg.format(disk_size, disk_controller, vm_name)
+                response['changed'] = True
+                response['msg'].append(msg)
+            else:
+                warnings.append(disk_name)
+        if warnings:
+            warnings = ','.join(warnings)
+            msg = "Hard disk(s) with name '{0}' are already present"
+            response["warnings"] = msg.format(warnings)
 
         return response
 

@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         type: bool
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     role_name:
         description:
             - The name of the role
@@ -111,6 +117,7 @@ def vcd_roles_argument_spec():
         role_name=dict(type='str', required=False),
         role_description=dict(type='str', required=False, default=''),
         role_rights=dict(type='list', required=False),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=VCD_ROLE_STATES, required=False),
         operation=dict(choices=VCD_ROLE_OPERATIONS, required=False),
     )
@@ -119,7 +126,7 @@ def vcd_roles_argument_spec():
 class Roles(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(Roles, self).__init__(**kwargs)
-        self.org = Org(self.client, resource=self.client.get_org())
+        self.org = self.get_org()
 
     def manage_states(self):
         state = self.params.get('state')
@@ -139,6 +146,14 @@ class Roles(VcdAnsibleModule):
 
         if operation == "list_roles":
             return self.list_roles()
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
 
     def create(self):
         role_name = self.params.get('role_name')

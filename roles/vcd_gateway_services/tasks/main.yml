@@ -7,19 +7,43 @@
 - name: create gateway services
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
      service: firewall
      service_params:
-        name: test_firewall
-        action: accept
-        type: User
-        enabled: True
-        logging_enabled: False
+        - name: test_firewall
+          action: accept
+          type: User
+          enabled: True
+          logging_enabled: False
+          source_values:
+            - ip:
+                - "192.168.110.102-192.168.110.115"
+          destination_values:
+            - gatewayinterface:
+                - "external-network-3"
+          services:
+            - tcp:
+                source_port: any
+                destination_port: any
+        - name: test_firewall_2
+          action: accept
+          type: User
+          enabled: True
+          logging_enabled: False
+          source_values:
+            - ip:
+                - "192.168.110.102-192.168.110.115"
+          destination_values:
+            - gatewayinterface:
+                - "external-network-3"
+          services:
+            - tcp:
+                source_port: any
+                destination_port: any
      state: present
-  check_mode: yes
   register: output
 
 - name: create gateway services output
@@ -29,24 +53,35 @@
 - name: update gateway services
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
      service: firewall
      service_params:
-        name: test_firewall
-        new_name: test_firewall_2
-        source_values:
-            gatewayinterface: external-network
-        destination_values:
-            gatewayinterface: external-network
-        services:
+        - name: test_firewall
+          source_values:
+            - gatewayinterface:
+                - "external-network-3"
+          destination_values:
+            - ip:
+                - "192.168.110.102-192.168.110.115"
+          services:
+            - tcp:
+                source_port: any
+                destination_port: any
+        - name: test_firewall_2
+          source_values:
+            - gatewayinterface:
+                - "external-network-3"
+          destination_values:
+            - ip:
+                - "192.168.110.102-192.168.110.115"
+          services:
             - tcp:
                 source_port: any
                 destination_port: any
      state: update
-  check_mode: yes
   register: output
 
 - name: update gateway services output
@@ -56,13 +91,12 @@
 - name: list gateway firewalls
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
      service: firewall
      operation: list
-  check_mode: yes
   register: output
 
 - name: list gateway services output
@@ -72,15 +106,15 @@
 - name: delete gateway services
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
      service: firewall
      service_params:
-        name: test_firewall_2
+        - name: test_firewall
+        - name: test_firewall_2
      state: absent
-  check_mode: yes
   register: output
 
 - name: delete gateway services output
@@ -90,15 +124,114 @@
 - name: list gateway services
   vcd_gateway_services:
      user: acmeadmin
-     password: *****
+     password: XXXXXXXXXXXX
      org: Acme
      vdc: ACME_PAYG
      gateway: edge-gateway
      service: firewall
      operation: list
-  check_mode: yes
   register: output
 
 - name: list gateway services output
+  debug:
+    msg: '{{ output }}'
+
+- name: create nat rule
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: nat_rule
+     service_params:
+        - action: snat
+          original_address: 10.172.17.11
+          translated_address: 192.168.11.1
+     state: present
+  register: output
+
+- name: create gateway services output
+  debug:
+    msg: '{{ output }}'
+
+- name: list nat rules
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: nat_rule
+     operation: list
+  register: output
+
+- name: list nat rules output
+  debug:
+    msg: '{{ output }}'
+
+- name: update nat rule
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: nat_rule
+     service_params:
+        - nat_rule_id: "{{ output.get('msg')[0]['ID'] }}"
+          original_address: 10.172.17.20
+          translated_address: 192.168.11.50
+     state: update
+  register: output
+
+- name: update nat rule output
+  debug:
+    msg: '{{ output }}'
+
+- name: list nat rules
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: nat_rule
+     operation: list
+  register: output
+
+- name: list nat rules output
+  debug:
+    msg: '{{ output }}'
+
+- name: delete nat rule
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: nat_rule
+     service_params:
+        - nat_rule_id: "{{ output.get('msg')[0]['ID'] }}"
+     state: absent
+  register: output
+
+- name: delete nat rule output
+  debug:
+    msg: '{{ output }}'
+
+- name: list nat rules
+  vcd_gateway_services:
+     user: acmeadmin
+     password: XXXXXXXXXXXX
+     org: Acme
+     vdc: ACME_PAYG
+     gateway: edge-gateway
+     service: nat_rule
+     operation: list
+  register: output
+
+- name: list nat rules output
   debug:
     msg: '{{ output }}'

@@ -4,7 +4,7 @@
 - name: create role
   vcd_roles:
     user: acmeadmin
-    password: ******
+    password: XXXXXXXXXX
     org: Acme
     role_name: sample_role_2
     role_description: sample role
@@ -20,7 +20,7 @@
 - name: update role
   vcd_roles:
     user: acmeadmin
-    password: *****
+    password: XXXXXXXXXX
     org: Acme
     role_name: sample_role_2
     role_rights:
@@ -35,7 +35,7 @@
 - name: list roles
   vcd_roles:
     user: acmeadmin
-    password: *****
+    password: XXXXXXXXXX
     org: Acme
     operation: list_roles
   register: output
@@ -47,7 +47,7 @@
 - name: list rights
   vcd_roles:
     user: acmeadmin
-    password: *****
+    password: XXXXXXXXXX
     org: Acme
     operation: list_rights
   register: output
@@ -59,7 +59,7 @@
 - name: delete role
   vcd_roles:
     user: acmeadmin
-    password: *****
+    password: XXXXXXXXXX
     org: Acme
     role_name: sample_role_2
     state: absent

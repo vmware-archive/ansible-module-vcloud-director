@@ -32,11 +32,12 @@ options:
         required: false
     org:
         description:
-            - Organization name on vCloud Director to access
+            - vCloud Director org name to login
         required: false
     org_name:
         description:
-            - Organization name on vCloud Director where the user is created
+            - target org name
+            - required for service providers to create resources in other orgs
             - default value is module level / environment level org
         required: false
     api_version:
@@ -185,8 +186,8 @@ def user_argument_spec():
         is_external=dict(type='bool', required=False, default=False),
         is_alert_enabled=dict(type='bool', required=False, default=False),
         is_enabled=dict(type='bool', required=False, default=True),
-        state=dict(choices=USER_STATES, required=False),
         org_name=dict(type='str', required=False, default=None),
+        state=dict(choices=USER_STATES, required=False),
     )
 
 
@@ -208,8 +209,9 @@ class User(VcdAnsibleModule):
 
     def get_org(self):
         org_name = self.params.get('org_name')
-        org_resource = self.client.get_org_by_name(
-            org_name) if org_name else self.client.get_org()
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
 
         return Org(self.client, resource=org_resource)
 

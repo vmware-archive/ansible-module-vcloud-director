@@ -4,7 +4,7 @@
 - name: add vm nic
   vcd_vapp_vm_nic:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp: vApp_system_2
     vm_name: centos
@@ -24,7 +24,7 @@
 - name: update vm nic
   vcd_vapp_vm_nic:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp: vApp_system_2
     vm_name: centos
@@ -42,7 +42,7 @@
 - name: power off vm
   vcd_vapp_vm:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     target_vapp: vApp_system_2
     target_vm_name: centos
@@ -58,7 +58,7 @@
 - name: delete vm nic
   vcd_vapp_vm_nic:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp: vApp_system_2
     vm_name: centos
@@ -76,7 +76,7 @@
 - name: power on vm
   vcd_vapp_vm:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     target_vapp: vApp_system_2
     target_vm_name: centos
@@ -91,7 +91,7 @@
 - name: read vm nics
   vcd_vapp_vm_nic:
     user: acmeadmin
-    password: VMware1!
+    password: XXXXXXXXXX
     org: Acme
     vapp: vApp_system_2
     vm_name: centos

@@ -4,81 +4,89 @@
 # ---
 # tasks file for roles/org
 
-# # ############################################ Create Org ##############################################################
+---
+# tasks file for org
+
 - name: create org
   vcd_org:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
-    org_name: "{{ org_name }}"
-    full_name: "{{ org_full_name }}"
-    is_enabled : "{{ is_enabled }}"
-    state: "present"
+    org_name: acme_sample
+    full_name: acme_sample
+    is_enabled: true
+    state: present
   register: output
 
 - name: create org output
   debug:
     msg: '{{ output }}'
 
-# # ############################################ Read Org ##############################################################
+- name: update org
+  vcd_org:
+    org_name: acme_sample
+    is_enabled: false
+    state: update
+  register: output
+
+- name: update org output
+  debug:
+    msg: '{{ output }}'
+
 - name: read org
   vcd_org:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
-    org_name: "{{ org_name }}"
-    operation: "read"
+    org_name: acme_sample
+    is_enabled: true
+    operation: read
   register: output
 
 - name: read org output
   debug:
     msg: '{{ output }}'
 
-# # ############################################ Disable Org ##############################################################
-- name: disable org
+- name: add rights to org
   vcd_org:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
-    org_name: "{{ org_name }}"
-    is_enabled: "false"
-    state: "update"
+    org_name: acme_sample
+    org_rights:
+      - "Catalog: Import Media from vSphere"
+    operation: add_rights
   register: output
 
-- name: disable org output
+- name: add rights output
   debug:
     msg: '{{ output }}'
 
-# # # ############################################ Enable Org ##############################################################
-- name: enable org
+- name: list rights of org
   vcd_org:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
-    org_name: "{{ org_name }}"
-    is_enabled: "true"
-    state: "update"
+    org_name: acme_sample
+    operation: list_rights
   register: output
 
-- name: enable org output
+- name: add rights output
+  debug:
+    msg: ' {{ output }}'
+
+- name: list roles
+  vcd_org:
+    org_name: acme_sample
+    operation: list_roles
+  register: output
+
+- name: list roles output
   debug:
     msg: '{{ output }}'
 
-# # ############################################ Delete Org ##############################################################
+- name: list vdcs
+  vcd_org:
+    org_name: Acme
+    operation: list_vdcs
+  register: output
+
+- name: list vdcs output
+  debug:
+    msg: '{{ output }}'
+
 - name: delete org
   vcd_org:
-    user: XXXXXXXXXX
-    password: XXXXXXXXXX
-    host: XXXXXXXXXX
-    org: XXXXXXXXXX
-    org_name: "{{ org_name }}"
-    force: "{{ force }}"
-    recursive: "{{ recursive }}"
-    state: "absent"
+    org_name: acme_sample
+    state: absent
   register: output
 
 - name: delete org output
