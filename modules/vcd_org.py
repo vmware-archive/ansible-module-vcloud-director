@@ -124,6 +124,8 @@ def org_argument_spec():
 class VCDOrg(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VCDOrg, self).__init__(**kwargs)
+        sys_admin = self.client.get_admin()
+        self.system = System(self.client, admin_resource=sys_admin)
 
     def manage_states(self):
         state = self.params.get('state')
@@ -173,8 +175,6 @@ class VCDOrg(VcdAnsibleModule):
             self.get_org()
             response['warnings'] = 'Org {} is already present'.format(org_name)
         except EntityNotFoundException:
-            sys_admin = self.client.get_admin()
-            self.system = System(self.client, admin_resource=sys_admin)
             self.system.create_org(org_name, full_name, is_enabled)
             response['msg'] = 'Org {} has been created'.format(org_name)
             response['changed'] = True
@@ -225,11 +225,8 @@ class VCDOrg(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            org = self.read()['msg']
-            if org['is_enabled'] == "True":
-                org.update_org(False)
-            sys_admin = self.client.get_admin()
-            self.system = System(self.client, admin_resource=sys_admin)
+            org = self.get_org()
+            org.update_org(is_enabled=False)
             delete_org_task = self.system.delete_org(
                 org_name, force, recursive)
             self.execute_task(delete_org_task)

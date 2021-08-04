@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     target_vm_name:
         description:
             - target VM name
@@ -239,18 +245,25 @@ def vapp_vm_argument_spec():
         power_on=dict(type='bool', required=False, default=True),
         all_eulas_accepted=dict(type='bool', required=False, default=None),
         metadata=dict(type='dict', required=False, default=None),
-        metadata_type=dict(type='str', required=False, default='String', choices=VAPP_VM_SET_METADATA_VALUE_TYPE),
-        metadata_visibility=dict(type='str', required=False, default='READWRITE', choices=VAPP_VM_METADATA_VISIBILITY),
-        metadata_domain=dict(type='str', required=False, default='GENERAL', choices=VAPP_VM_METADATA_DOMAINS),
+        metadata_type=dict(type='str', required=False, default='String',
+                           choices=VAPP_VM_SET_METADATA_VALUE_TYPE),
+        metadata_visibility=dict(type='str', required=False,
+                                 default='READWRITE',
+                                 choices=VAPP_VM_METADATA_VISIBILITY),
+        metadata_domain=dict(type='str', required=False, default='GENERAL',
+                             choices=VAPP_VM_METADATA_DOMAINS),
+        org_name=dict(type='str', required=False, default=None),
+        force_customization=dict(type='bool', required=False, default=False),
         state=dict(choices=VAPP_VM_STATES, required=False),
         operation=dict(choices=VAPP_VM_OPERATIONS, required=False),
-        force_customization=dict(type='bool', required=False, default=False)
+        compute_policy_href=dict(type='str', required=False)
     )
 
 
 class VappVM(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VappVM, self).__init__(**kwargs)
+        self.org = self.get_org()
         vapp_resource = self.get_target_resource()
         self.vapp = VApp(self.client, resource=vapp_resource)
 
@@ -297,24 +310,31 @@ class VappVM(VcdAnsibleModule):
         if operation == "remove_meta":
             return self.remove_meta()
 
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
+
     def get_source_resource(self):
         source_catalog_name = self.params.get('source_catalog_name')
         source_template_name = self.params.get('source_template_name')
         source_vdc = self.params.get('source_vdc')
         source_vapp = self.params.get('source_vapp')
-        org_resource = Org(self.client, resource=self.client.get_org())
         source_vapp_resource = None
 
         if source_vapp:
             source_vdc_resource = VDC(
-                self.client, resource=org_resource.get_vdc(source_vdc))
+                self.client, resource=self.org.get_vdc(source_vdc))
             source_vapp_resource_href = source_vdc_resource.get_resource_href(
                 name=source_vapp, entity_type=EntityType.VAPP)
             source_vapp_resource = self.client.get_resource(
                 source_vapp_resource_href)
 
         if source_catalog_name:
-            catalog_item = org_resource.get_catalog_item(
+            catalog_item = self.org.get_catalog_item(
                 source_catalog_name, source_template_name)
             source_vapp_resource = self.client.get_resource(
                 catalog_item.Entity.get('href'))
@@ -324,20 +344,18 @@ class VappVM(VcdAnsibleModule):
     def get_target_resource(self):
         target_vapp = self.params.get('target_vapp')
         target_vdc = self.params.get('target_vdc')
-        org_resource = Org(self.client, resource=self.client.get_org())
         target_vapp_resource = None
 
         target_vdc_resource = VDC(
-            self.client, resource=org_resource.get_vdc(target_vdc))
+            self.client, resource=self.org.get_vdc(target_vdc))
         target_vapp_resource = target_vdc_resource.get_vapp(target_vapp)
 
         return target_vapp_resource
 
     def get_storage_profile(self, profile_name):
         target_vdc = self.params.get('target_vdc')
-        org_resource = Org(self.client, resource=self.client.get_org())
         vdc_resource = VDC(
-            self.client, resource=org_resource.get_vdc(target_vdc))
+            self.client, resource=self.org.get_vdc(target_vdc))
 
         return vdc_resource.get_storage_profile(profile_name)
 
@@ -433,6 +451,10 @@ class VappVM(VcdAnsibleModule):
             self.update_vm_memory()
             response['changed'] = True
 
+        if self.params.get('compute_policy_href'):
+            self.update_vm_compute_policy()
+            response['changed'] = True
+
         response['msg'] = 'VM {} has been updated.'.format(vm_name)
 
         return response
@@ -453,6 +475,14 @@ class VappVM(VcdAnsibleModule):
         update_memory_task = vm.modify_memory(memory)
 
         return self.execute_task(update_memory_task)
+
+    def update_vm_compute_policy(self):
+        compute_policy_href = self.params.get('compute_policy_href')
+
+        vm = self.get_vm()
+        update_compute_policy_task = vm.update_compute_policy(compute_policy_href)
+
+        return self.execute_task(update_compute_policy_task)
 
     def power_on_vm(self):
         vm_name = self.params.get('target_vm_name')
@@ -567,10 +597,9 @@ class VappVM(VcdAnsibleModule):
         visibility = MetadataVisibility(visibility)
         metadata_type = MetadataValueType(metadata_type)
         vm = self.get_vm()
-        set_meta_task = vm.set_multiple_metadata(metadata,
-                                                 domain=domain,
-                                                 visibility=visibility,
-                                                 metadata_value_type=metadata_type)
+        set_meta_task = vm.set_multiple_metadata(
+            metadata, domain=domain, visibility=visibility,
+            metadata_value_type=metadata_type)
         self.execute_task(set_meta_task)
         msg = "Metadata {0} have been set to vm {1}"
         response["msg"] = msg.format(list(metadata.keys()), vm_name)

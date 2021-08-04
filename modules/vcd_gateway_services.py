@@ -48,6 +48,12 @@ options:
             - whether to use secure connection to vCloud Director host
         type: bool
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     vdc:
         description:
             - vdc name
@@ -132,6 +138,7 @@ def vcd_gateway_services_argument_spec():
         gateway=dict(type='str', required=True),
         service_params=dict(type='list', required=False),
         service=dict(choices=EDGE_SERVICES, required=True),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=EDGE_SERVICES_STATES, required=False),
         operation=dict(choices=EDGE_SERVICES_OPERATIONS, required=False)
     )
@@ -140,7 +147,7 @@ def vcd_gateway_services_argument_spec():
 class EdgeServices(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(EdgeServices, self).__init__(**kwargs)
-        self.org = Org(self.client, resource=self.client.get_org())
+        self.org = self.get_org()
         vdc = self.org.get_vdc(self.params.get('vdc'))
         self.vdc = VDC(self.client, href=vdc.get('href'))
 
@@ -159,6 +166,14 @@ class EdgeServices(VcdAnsibleModule):
         operation = self.params.get("operation")
 
         return self.apply_operation_on_service(operation)
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
 
     def get_gateway(self):
         gateway_name = self.params.get("gateway")

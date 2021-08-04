@@ -42,6 +42,12 @@ options:
         description:
             - whether to use secure connection to vCloud Director host
         required: false
+    org_name:
+        description:
+            - target org name
+            - required for service providers to create resources in other orgs
+            - default value is module level / environment level org
+        required: false
     vdc_name:
         description:
             - vCloud Director ORG VDC Name
@@ -91,6 +97,7 @@ def vm_snapshot_argument_spec():
         vdc_name=dict(type='str', required=True),
         vapp_name=dict(type='str', required=True),
         vms=dict(type='list', required=True),
+        org_name=dict(type='str', required=False, default=None),
         state=dict(choices=VM_SNAPSHOT_STATES, required=False),
         operation=dict(choices=VM_SNAPSHOT_OPERATIONS, required=False),
     )
@@ -99,17 +106,7 @@ def vm_snapshot_argument_spec():
 class VMSnapShot(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VMSnapShot, self).__init__(**kwargs)
-
-    def get_vm(self, vm_name):
-        vapp_name = self.params.get('vapp_name')
-        vdc_name = self.params.get('vdc_name')
-        org_resource = Org(self.client, resource=self.client.get_org())
-        vdc_resource = VDC(
-            self.client, resource=org_resource.get_vdc(vdc_name))
-        vapp_resource = vdc_resource.get_vapp(vapp_name)
-        vapp = VApp(self.client, resource=vapp_resource)
-
-        return VM(self.client, resource=vapp.get_vm(vm_name))
+        self.org = self.get_org()
 
     def manage_states(self):
         state = self.params.get('state')
@@ -126,6 +123,24 @@ class VMSnapShot(VcdAnsibleModule):
 
         if operation == "list":
             return self.list_snapshots()
+
+    def get_org(self):
+        org_name = self.params.get('org_name')
+        org_resource = self.client.get_org()
+        if org_name:
+            org_resource = self.client.get_org_by_name(org_name)
+
+        return Org(self.client, resource=org_resource)
+
+    def get_vm(self, vm_name):
+        vapp_name = self.params.get('vapp_name')
+        vdc_name = self.params.get('vdc_name')
+        vdc_resource = VDC(
+            self.client, resource=self.org.get_vdc(vdc_name))
+        vapp_resource = vdc_resource.get_vapp(vapp_name)
+        vapp = VApp(self.client, resource=vapp_resource)
+
+        return VM(self.client, resource=vapp.get_vm(vm_name))
 
     def create_snapshot(self):
         response = dict()
