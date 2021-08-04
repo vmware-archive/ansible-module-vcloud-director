@@ -278,8 +278,8 @@ def org_vdc_argument_spec():
         network_quota=dict(type='int', required=False),
         vm_quota=dict(type='int', required=False),
         storage_profiles=dict(type='list', required=False, default=[]),
-        resource_guaranteed_memory=dict(type='float', required=False),
-        resource_guaranteed_cpu=dict(type='float', required=False),
+        resource_guaranteed_memory=dict(type='float', required=False, default=1.0),
+        resource_guaranteed_cpu=dict(type='float', required=False, default=1.0),
         vcpu_in_mhz=dict(type='int', required=False),
         is_thin_provision=dict(type='bool', required=False),
         network_pool_name=dict(type='str', required=False),
@@ -355,8 +355,8 @@ class Vdc(VcdAnsibleModule):
         nic_quota = self.params['nic_quota'] or 0
         network_quota = self.params['network_quota'] or 0
         vm_quota = self.params['vm_quota'] or 0
-        resource_guaranteed_memory = self.params['resource_guaranteed_memory'] or 1.0
-        resource_guaranteed_cpu = self.params['resource_guaranteed_cpu'] or 1.0
+        resource_guaranteed_memory = self.params['resource_guaranteed_memory']
+        resource_guaranteed_cpu = self.params['resource_guaranteed_cpu']
         vcpu_in_mhz = self.params['vcpu_in_mhz']
         is_thin_provision = self.params['is_thin_provision']
         network_pool_name = self.params['network_pool_name']
