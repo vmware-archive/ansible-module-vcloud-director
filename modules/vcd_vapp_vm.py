@@ -491,7 +491,7 @@ class VappVM(VcdAnsibleModule):
 
         vm = self.get_vm()
         if not vm.is_powered_on():
-            self.deploy_vm()
+            vm.power_on()
             response['msg'] = 'VM {} has been powered on.'.format(vm_name)
             response['changed'] = True
         else:
@@ -506,7 +506,7 @@ class VappVM(VcdAnsibleModule):
 
         vm = self.get_vm()
         if not vm.is_powered_off():
-            self.undeploy_vm()
+            self.power_off()
             response['msg'] = 'VM {} has been powered off.'.format(vm_name)
             response['changed'] = True
         else:
