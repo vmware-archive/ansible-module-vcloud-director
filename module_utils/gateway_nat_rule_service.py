@@ -45,6 +45,8 @@ class NatRuleService():
                 nat_rule_info['ID'] = int(nat_rule.ruleId)
                 nat_rule_info['Action'] = str(nat_rule.action)
                 nat_rule_info['Enabled'] = str(nat_rule.enabled)
+                if hasattr(nat_rule, 'description'):
+                    nat_rule_info['Description'] = str(nat_rule.description)
                 nat_rule_info['href'] = self.get_nat_rule_href(
                     nat_rule_info['ID'])
                 response['msg'].append(nat_rule_info)
