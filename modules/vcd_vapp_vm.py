@@ -217,7 +217,8 @@ VAPP_VM_METADATA_VISIBILITY = ['PRIVATE', 'READONLY', 'READWRITE']
 VAPP_VM_SET_METADATA_VALUE_TYPE = ['String', 'Number', 'Boolean', 'DateTime']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
                       'deploy', 'undeploy', 'list_disks', 'list_nics',
-                      'set_meta', 'get_meta', 'remove_meta']
+                      'set_meta', 'get_meta', 'remove_meta', 'copy',
+                      'move']
 
 
 def vapp_vm_argument_spec():
@@ -309,6 +310,12 @@ class VappVM(VcdAnsibleModule):
 
         if operation == "remove_meta":
             return self.remove_meta()
+
+        if operation == "move":
+            return self.move_vm()
+
+        if operation == "copy":
+            return self.copy_vm()
 
     def get_org(self):
         org_name = self.params.get('org_name')
@@ -632,6 +639,42 @@ class VappVM(VcdAnsibleModule):
             self.execute_task(remove_meta_task)
         msg = "Metadata {0} have been removed from vm {1}"
         response["msg"] = msg.format(list(metadata.keys()), vm_name)
+
+        return response
+
+    def copy_vm(self):
+        response = dict()
+        response['changed'] = False
+        target_vm_name = self.params.get('target_vm_name')
+        source_vapp_name = self.params.get('source_vapp')
+        target_vapp_name = self.params.get('target_vapp')
+        vm = self.get_vm()
+
+        try:
+            vm.copy_to(source_vapp_name, target_vapp_name, target_vm_name)
+            msg = "VM has been copied to {0} with name {1}"
+            response["msg"] = msg.format(target_vapp_name, target_vm_name)
+            response['changed'] = True
+        except Exception as ex:
+            response['msg'] = ex
+
+        return response
+
+    def move_vm(self):
+        response = dict()
+        response['changed'] = False
+        target_vm_name = self.params.get('target_vm_name')
+        source_vapp_name = self.params.get('source_vapp')
+        target_vapp_name = self.params.get('target_vapp')
+        vm = self.get_vm()
+
+        try:
+            vm.move_to(source_vapp_name, target_vapp_name, target_vm_name)
+            msg = "VM has been moved to {0} with name {1}"
+            response["msg"] = msg.format(target_vapp_name, target_vm_name)
+            response['changed'] = True
+        except Exception as ex:
+            response['msg'] = ex
 
         return response
 
