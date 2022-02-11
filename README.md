@@ -21,7 +21,7 @@
 
 ## Usage
 
-This reposiroty packaged below two components to manage VCD,
+This repository packaged below two components to manage VCD,
 
 1. Ansible Modules
 2. Ansbile Playbooks
