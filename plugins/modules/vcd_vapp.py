@@ -182,7 +182,7 @@ from pyvcloud.vcd.client import FenceMode
 from pyvcloud.vcd.client import MetadataDomain
 from pyvcloud.vcd.client import MetadataValueType
 from pyvcloud.vcd.client import MetadataVisibility
-from ansible.module_utils.vcd import VcdAnsibleModule
+from ansible_collections.vmware.vcloud_director.plugins.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException, OperationNotSupportedException, InvalidStateException
 
 

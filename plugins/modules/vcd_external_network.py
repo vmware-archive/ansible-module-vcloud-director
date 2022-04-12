@@ -136,7 +136,7 @@ changed: true if resource has been changed else false
 
 
 from pyvcloud.vcd.platform import Platform
-from ansible.module_utils.vcd import VcdAnsibleModule
+from ansible_collections.vmware.vcloud_director.plugins.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.external_network import ExternalNetwork
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
