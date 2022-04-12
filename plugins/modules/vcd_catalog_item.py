@@ -111,7 +111,7 @@ from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vapp import VApp
 from pyvcloud.vcd.client import Client
 from pyvcloud.vcd.client import QueryResultFormat
-from ansible.module_utils.vcd import VcdAnsibleModule
+from ansible_collections.vmware.vcloud_director.plugins.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 VCD_CATALOG_ITEM_STATES = ["present", "absent"]
