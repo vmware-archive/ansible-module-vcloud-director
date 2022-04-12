@@ -114,12 +114,12 @@ changed: true if resource has been changed else false
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 from pyvcloud.vcd.gateway import Gateway
-from ansible.module_utils.vcd import VcdAnsibleModule
+from ansible_collections.vmware.vcloud_director.plugins.module_utils.vcd import VcdAnsibleModule
 from pyvcloud.vcd.exceptions import EntityNotFoundException
-from ansible.module_utils.gateway_static_route import StaticRoutes
-from ansible.module_utils.gateway_nat_rule_service import NatRuleService
-from ansible.module_utils.gateway_firewall_service import FirewallService
-from ansible.module_utils.gateway_ssl_certificates import SSLCertificates
+from ansible_collections.vmware.vcloud_director.plugins.module_utils.gateway_static_route import StaticRoutes
+from ansible_collections.vmware.vcloud_director.plugins.module_utils.gateway_nat_rule_service import NatRuleService
+from ansible_collections.vmware.vcloud_director.plugins.module_utils.gateway_firewall_service import FirewallService
+from ansible_collections.vmware.vcloud_director.plugins.module_utils.gateway_ssl_certificates import SSLCertificates
 
 
 EDGE_SERVICES = ["firewall", "nat_rule", "static_route", "ssl_certificates"]
