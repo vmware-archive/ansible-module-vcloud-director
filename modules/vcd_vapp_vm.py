@@ -384,8 +384,11 @@ class VappVM(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            self.get_vm()
+            found = self.get_vm()
         except EntityNotFoundException:
+            found = None
+
+        if not found:
             spec = {
                 'source_vm_name': source_vm_name,
                 'vapp': source_vapp_resource,

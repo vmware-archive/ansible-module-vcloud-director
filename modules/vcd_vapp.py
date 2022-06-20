@@ -327,8 +327,11 @@ class Vapp(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            self.vdc.get_vapp(vapp_name)
+            found = self.vdc.get_vapp(vapp_name)
         except EntityNotFoundException:
+            found = None
+
+        if not found:
             create_vapp_task = self.vdc.instantiate_vapp(
                 name=vapp_name,
                 catalog=catalog_name,
@@ -377,8 +380,11 @@ class Vapp(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            self.vdc.get_vapp(vapp_name)
+            found = self.vdc.get_vapp(vapp_name)
         except EntityNotFoundException:
+            found = None
+
+        if not found:
             create_vapp_task = self.vdc.create_vapp(
                 name=vapp_name,
                 description=description,
@@ -402,8 +408,11 @@ class Vapp(VcdAnsibleModule):
         response['changed'] = False
 
         try:
-            self.vdc.get_vapp(vapp_name)
+            found = self.vdc.get_vapp(vapp_name)
         except EntityNotFoundException:
+            found = None
+
+        if not found:
             response['warnings'] = "Vapp {} is not present.".format(vapp_name)
         else:
             delete_vapp_task = self.vdc.delete_vapp(
