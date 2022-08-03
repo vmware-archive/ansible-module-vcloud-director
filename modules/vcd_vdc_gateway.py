@@ -326,7 +326,7 @@ class VdcGW(VcdAnsibleModule):
         if api_version == "31.0":
             return self.create_gateway_api_version_31()
 
-        if api_version == "32.0":
+        if api_version in ["32.0", "33.0", "34.0"]:
             return self.create_gateway_api_version_32()
 
     def create_gateway_api_version_30(self):
