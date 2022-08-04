@@ -216,7 +216,7 @@ VAPP_VM_METADATA_DOMAINS = ['GENERAL', 'SYSTEM']
 VAPP_VM_METADATA_VISIBILITY = ['PRIVATE', 'READONLY', 'READWRITE']
 VAPP_VM_SET_METADATA_VALUE_TYPE = ['String', 'Number', 'Boolean', 'DateTime']
 VAPP_VM_OPERATIONS = ['poweron', 'poweroff', 'reloadvm',
-                      'deploy', 'undeploy', 'list_disks', 'list_nics',
+                      'deploy', 'undeploy', 'list_disks', 'get_cpus', 'get_memory', 'list_nics',
                       'set_meta', 'get_meta', 'remove_meta']
 
 
@@ -297,6 +297,12 @@ class VappVM(VcdAnsibleModule):
 
         if operation == "list_disks":
             return self.list_disks()
+
+        if operation == "get_cpus":
+            return self.get_cpus()
+
+        if operation == "get_memory":
+            return self.get_memory()
 
         if operation == "list_nics":
             return self.list_nics()
@@ -571,6 +577,26 @@ class VappVM(VcdAnsibleModule):
         vm = self.get_vm()
         response['msg'] = vm.list_virtual_hardware_section(
             is_cpu=False, is_memory=False, is_disk=True)
+
+        return response
+
+    def get_cpus(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = list()
+
+        vm = self.get_vm()
+        response['msg'] = vm.get_cpus()
+
+        return response
+
+    def get_memory(self):
+        response = dict()
+        response['changed'] = False
+        response['msg'] = list()
+
+        vm = self.get_vm()
+        response['msg'] = vm.get_memory()
 
         return response
 
