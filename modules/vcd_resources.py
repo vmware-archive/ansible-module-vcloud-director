@@ -63,7 +63,7 @@ EXAMPLES = '''
 - name: add vcd resources
   vcd_resources
     nsxt:
-        url: ""
+      - url: ""
         username: ""
         password: ""
         networkProviderScope: ""
@@ -77,7 +77,7 @@ changed: true if resource has been changed
 '''
 
 from ansible.module_utils.vcd import VcdAnsibleModule
-from pyvcloud.vcd.nsxt_extension import NsxtExtension
+from pyvcloud.vcd.nsxt_extension import NSXTExtension
 from pyvcloud.vcd.exceptions import EntityNotFoundException
 
 VCD_RESOURCES_STATES = ['present', 'absent', 'update']
@@ -95,7 +95,7 @@ def vcd_resources_argument_spec():
 class VcdResources(VcdAnsibleModule):
     def __init__(self, **kwargs):
         super(VcdResources, self).__init__(**kwargs)
-        self.nsxt_extension = NsxtExtension(self.client)
+        self.nsxt_extension = NSXTExtension(self.client)
 
     def manage_states(self):
         state = self.params.get('state')
