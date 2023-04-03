@@ -218,7 +218,7 @@ class VappVMNIC(VcdAnsibleModule):
         for nic in nics:
             try:
                 network = nic.get('network')
-                nic_id = nic.get('nic_id')
+                nic_id = int(nic.get('nic_id'))
                 ip_address = nic.get('ip_address')
                 ip_allocation_mode = nic.get('ip_allocation_mode')
                 adapter_type = nic.get('adapter_type')
@@ -251,7 +251,7 @@ class VappVMNIC(VcdAnsibleModule):
         for nic in nics:
             try:
                 network = nic.get('network')
-                nic_id = nic.get('nic_id')
+                nic_id = int(nic.get('nic_id'))
                 ip_address = nic.get('ip_address')
                 ip_allocation_mode = nic.get('ip_allocation_mode')
                 adapter_type = nic.get('adapter_type')
