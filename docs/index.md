@@ -41,6 +41,9 @@ The end user can set login variables for specific module(s) as local variables. 
 <p>
 By default, the priority will be given to <b>Local Variables</b> than <b>Environment Variables.</b>
 </p>
+<p>
+If "API_TOKEN" is passed in the <code>user</code> variable the <code>password</code> variable will be interpreted as <a href=https://docs.vmware.com/en/VMware-Cloud-Director/10.4/VMware-Cloud-Director-Tenant-Portal-Guide/GUID-A1B3B2FA-7B2C-4EE1-9D1B-188BE703EEDE.html>API Access Token</a> and OAuth 2.0 based authentication is used instead of user credentials. This is useful if an <a href=https://docs.vmware.com/en/VMware-Cloud-Director/10.4/VMware-Cloud-Director-Service-Provider-Admin-Portal-Guide/GUID-3326986B-931C-4FDE-AF47-D5A863191072.html>external identity provider</a> is configured for the authentication with vCloud Director.
+</p>
 <li>
 <h3>Response</h3>
 <p>VCD Ansible Modules provide sort of a unanimous response across all operations. The response shall contain atleast following properties,</p>
