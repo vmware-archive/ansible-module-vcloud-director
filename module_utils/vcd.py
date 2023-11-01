@@ -7,6 +7,7 @@ from pyvcloud.vcd.client import TaskStatus
 from ansible.module_utils.basic import AnsibleModule, env_fallback
 from pyvcloud.vcd.client import BasicLoginCredentials
 from requests.packages import urllib3
+from requests import post
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -43,7 +44,15 @@ class VcdAnsibleModule(AnsibleModule):
                                  api_version=api_version,
                                  verify_ssl_certs=verify_ssl_certs)
 
-            self.client.set_credentials(BasicLoginCredentials(user, org, password))
+            if user == 'API_TOKEN':
+                oAuthResponse = post(
+                    'https://{}/oauth/tenant/{}/token'.format(host, org),
+                    data={'grant_type': 'refresh_token', 'refresh_token': password},
+                ).json()
+                access_token = oAuthResponse['access_token']
+                self.client.rehydrate_from_token(access_token, True)
+            else:
+                self.client.set_credentials(BasicLoginCredentials(user, org, password))
 
         except Exception as error:
             self.fail_json(msg='Login failed for user {} to org {}'.format(user, org))
